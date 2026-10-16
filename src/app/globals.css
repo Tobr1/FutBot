@@ -1,0 +1,158 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-heading: var(--font-display);
+  --font-display: var(--font-barlow);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-gold: var(--gold);
+  --color-team-a: var(--team-a);
+  --color-team-b: var(--team-b);
+  --color-surface: var(--surface);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * FUTBOLEROS es dark-first: un único tema oscuro.
+ * Fondo azul casi negro, azul eléctrico para acciones, verde victoria,
+ * rojo rival y dorado para destacados.
+ */
+:root,
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.145 0.025 262);
+  --foreground: oklch(0.95 0.012 255);
+  --surface: oklch(0.175 0.028 262);
+  --card: oklch(0.19 0.03 262);
+  --card-foreground: oklch(0.95 0.012 255);
+  --popover: oklch(0.21 0.032 262);
+  --popover-foreground: oklch(0.95 0.012 255);
+  --primary: oklch(0.62 0.2 258);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.24 0.035 262);
+  --secondary-foreground: oklch(0.95 0.012 255);
+  --muted: oklch(0.22 0.03 262);
+  --muted-foreground: oklch(0.7 0.03 258);
+  --accent: oklch(0.26 0.045 262);
+  --accent-foreground: oklch(0.97 0.01 255);
+  --destructive: oklch(0.67 0.21 18);
+  --success: oklch(0.77 0.17 155);
+  --warning: oklch(0.82 0.15 75);
+  --gold: oklch(0.84 0.13 88);
+  --team-a: oklch(0.65 0.19 255);
+  --team-b: oklch(0.67 0.21 18);
+  --border: oklch(0.8 0.04 260 / 11%);
+  --input: oklch(0.8 0.04 260 / 15%);
+  --ring: oklch(0.62 0.2 258);
+  --chart-1: oklch(0.62 0.2 258);
+  --chart-2: oklch(0.77 0.17 155);
+  --chart-3: oklch(0.84 0.13 88);
+  --chart-4: oklch(0.67 0.21 18);
+  --chart-5: oklch(0.7 0.15 300);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.165 0.027 262);
+  --sidebar-foreground: oklch(0.95 0.012 255);
+  --sidebar-primary: oklch(0.62 0.2 258);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.24 0.035 262);
+  --sidebar-accent-foreground: oklch(0.97 0.01 255);
+  --sidebar-border: oklch(0.8 0.04 260 / 10%);
+  --sidebar-ring: oklch(0.62 0.2 258);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(1200px 600px at 50% -200px, oklch(0.62 0.2 258 / 14%), transparent 70%),
+      radial-gradient(800px 400px at 100% 0%, oklch(0.67 0.21 18 / 6%), transparent 60%);
+    background-attachment: fixed;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: oklch(0.62 0.2 258 / 40%);
+  }
+}
+
+@layer components {
+  /* Números de estadísticas y títulos con tipografía condensada. */
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Textura de césped muy sutil para superficies destacadas. */
+  .pitch-lines {
+    background-image:
+      linear-gradient(90deg, oklch(1 0 0 / 3%) 1px, transparent 1px),
+      linear-gradient(oklch(1 0 0 / 3%) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .glass {
+    @apply border border-border bg-card/70 backdrop-blur-xl;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
