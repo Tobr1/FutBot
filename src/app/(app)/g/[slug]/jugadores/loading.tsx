@@ -1,5 +1,14 @@
-import { PageSkeleton } from "@/components/shared/skeletons";
+import { SkeletonTransition } from "@/components/motion/screen-transition";
+import { CardGridSkeleton, FilterBarSkeleton, PageHeaderSkeleton, ScreenSkeleton } from "@/components/shared/skeletons";
 
 export default function Loading() {
-  return <PageSkeleton variant="cards" />;
+  return (
+    <SkeletonTransition>
+      <ScreenSkeleton>
+        <PageHeaderSkeleton />
+        <FilterBarSkeleton />
+        <CardGridSkeleton count={6} />
+      </ScreenSkeleton>
+    </SkeletonTransition>
+  );
 }

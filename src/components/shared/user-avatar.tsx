@@ -1,30 +1,33 @@
 import { initials } from "@/domain/names/normalize";
+import { hueFor } from "@/lib/color";
 import { cn } from "@/lib/utils";
 
 const SIZES = {
-  xs: "size-6 text-[10px]",
+  xs: "size-6 text-2xs",
   sm: "size-8 text-xs",
   md: "size-10 text-sm",
   lg: "size-14 text-lg",
   xl: "size-20 text-2xl",
 } as const;
 
-/** Tono estable por nombre para que cada jugador tenga "su" color. */
-function hueFor(name: string): number {
-  let hash = 0;
-  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return hash % 360;
-}
-
+/**
+ * Avatar con foto o iniciales. Por defecto es decorativo (el nombre ya está
+ * visible al lado); con `decorative={false}` agrega el nombre para lectores.
+ */
 export function UserAvatar({
   name,
   src,
   size = "md",
+  decorative = true,
+  priority = false,
   className,
 }: {
   name: string;
   src?: string | null;
   size?: keyof typeof SIZES;
+  decorative?: boolean;
+  /** Carga inmediata con prioridad alta (avatares sobre el pliegue). */
+  priority?: boolean;
   className?: string;
 }) {
   const hue = hueFor(name);
@@ -40,11 +43,20 @@ export function UserAvatar({
       {src ? (
         // Avatares ya redimensionados al subir; no hace falta el optimizador.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
+        <img
+          src={src}
+          alt=""
+          width={256}
+          height={256}
+          className="size-full object-cover"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
+          decoding="async"
+        />
       ) : (
         <span aria-hidden="true">{initials(name)}</span>
       )}
-      <span className="sr-only">{name}</span>
+      {!decorative && <span className="sr-only">{name}</span>}
     </span>
   );
 }

@@ -7,7 +7,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Todo menos assets estáticos e imágenes.
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Todo menos assets estáticos, imágenes, manifest e íconos generados de la PWA
+    // (no tiene sentido refrescar la sesión para pedir un ícono).
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|manifest.webmanifest|apple-icon|opengraph-image|pwa/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

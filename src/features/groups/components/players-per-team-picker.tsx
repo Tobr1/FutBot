@@ -1,39 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { useId, useState } from "react";
+import { type ChoiceOption, ChoiceCards } from "@/components/shared/choice-cards";
 
-const COMMON_FORMATS = [5, 6, 7, 8, 9, 11];
+const COMMON_FORMATS = [5, 6, 7, 8, 9, 11] as const;
 
-/** Selector táctil del formato (jugadores por equipo) con opciones habituales. */
-export function PlayersPerTeamPicker({ name, defaultValue = 5 }: { name: string; defaultValue?: number }) {
-  const [value, setValue] = useState(defaultValue);
+const OPTIONS: ChoiceOption<string>[] = COMMON_FORMATS.map((n) => ({
+  value: String(n),
+  label: <span className="font-display text-xl leading-none font-extrabold">F{n}</span>,
+  description: `${n}v${n}`,
+}));
+
+/**
+ * Selector táctil del formato (jugadores por equipo): un radiogroup real con
+ * foco itinerante. No controlado: envía el valor con el formulario (`name`).
+ *
+ * Dentro de un FormField control="group" se enlaza con su etiqueta, ayuda y
+ * error con `{...groupAria(id, errors)}`. Sin etiqueta visible usa una solo
+ * para lectores de pantalla.
+ */
+export function PlayersPerTeamPicker({
+  name,
+  defaultValue = 5,
+  "aria-labelledby": labelledBy,
+  "aria-describedby": describedBy,
+  "aria-invalid": invalid,
+}: {
+  name: string;
+  defaultValue?: number;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
+}) {
+  const [value, setValue] = useState<string>(String(defaultValue));
+  const fallbackLabelId = useId();
+
   return (
-    <div>
-      <input type="hidden" name={name} value={value} />
-      <div role="radiogroup" aria-label="Jugadores por equipo" className="grid grid-cols-6 gap-2">
-        {COMMON_FORMATS.map((format) => {
-          const selected = value === format;
-          return (
-            <button
-              key={format}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => setValue(format)}
-              className={cn(
-                "flex h-14 flex-col items-center justify-center rounded-xl border font-display transition-colors focus-visible:ring-3 focus-visible:ring-ring/60 focus-visible:outline-none",
-                selected
-                  ? "border-primary bg-primary/15 text-foreground"
-                  : "border-border bg-surface/60 text-muted-foreground hover:border-primary/40 hover:text-foreground",
-              )}
-            >
-              <span className="text-xl leading-none font-extrabold">F{format}</span>
-              <span className="text-[10px] tracking-wider uppercase">{format}v{format}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <>
+      {!labelledBy && (
+        <span id={fallbackLabelId} className="sr-only">
+          Jugadores por equipo
+        </span>
+      )}
+      <ChoiceCards
+        name={name}
+        value={value}
+        // Siempre hay un formato elegido: no se permite quedar vacío.
+        onChange={(next) => next && setValue(next)}
+        options={OPTIONS}
+        columns="grid-cols-3 sm:grid-cols-6"
+        size="lg"
+        ariaLabelledBy={labelledBy ?? fallbackLabelId}
+        ariaDescribedBy={describedBy}
+        invalid={invalid}
+      />
+    </>
   );
 }

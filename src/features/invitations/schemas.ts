@@ -26,4 +26,4 @@ export const createInvitationSchema = z
 
 export type CreateInvitationInput = z.input<typeof createInvitationSchema>;
 
-export const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
+export { TOKEN_PATTERN } from "@/domain/invitations/extract-token";

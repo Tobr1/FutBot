@@ -14,6 +14,7 @@ Plataforma privada para grupos de amigos que juegan al fútbol: registra partido
 | 3 — Estadísticas | Votación anónima, valoración, rankings, historial | Votos, agregados y vistas listos (con tests); falta motor y UI |
 | 4 — Equipos inteligentes | Optimizador de equipos con restricciones | Pendiente |
 | 5 — Mejoras | Premios, rivalidades, predicciones, compartir | Pendiente |
+| UI mobile-first | Rediseño pensado para el celular: barra inferior, hojas inferiores, tarjetas de jugador, transiciones y PWA instalable que abre en el último grupo | ✅ Implementado (ver D-016 a D-021) |
 
 ## Stack
 
@@ -47,6 +48,16 @@ npm run dev
 ```
 
 Abrí <http://localhost:3000>.
+
+### Probar en el celular
+
+Con la PC y el teléfono en la misma red Wi-Fi, corré el servidor en el puerto 3001 (el 3000 puede estar ocupado) y abrí `http://<IP-de-la-PC>:3001` en el navegador del celular:
+
+```bash
+npm run dev -- -p 3001
+```
+
+`allowedDevOrigins` en `next.config.ts` ya acepta `192.168.*.*` y `10.*.*.*`. Para que los links de los emails (confirmación y recuperación) vuelvan al teléfono, agregá también `http://<IP-de-la-PC>:3001/**` a las Redirect URLs de Supabase.
 
 ## Scripts
 

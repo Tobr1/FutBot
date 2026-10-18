@@ -1,5 +1,15 @@
-import { PageSkeleton } from "@/components/shared/skeletons";
+import { StackHeaderSkeleton } from "@/components/layout/stack-header";
+import { SkeletonTransition } from "@/components/motion/screen-transition";
+import { FormSkeleton, PageHeaderSkeleton, ScreenSkeleton } from "@/components/shared/skeletons";
 
 export default function Loading() {
-  return <PageSkeleton variant="form" />;
+  return (
+    <SkeletonTransition>
+      <ScreenSkeleton>
+        <StackHeaderSkeleton />
+        <PageHeaderSkeleton />
+        <FormSkeleton fields={5} />
+      </ScreenSkeleton>
+    </SkeletonTransition>
+  );
 }

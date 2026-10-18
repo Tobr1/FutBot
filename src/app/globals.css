@@ -35,6 +35,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-solid: var(--primary-solid);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -46,6 +47,25 @@
   --color-team-a: var(--team-a);
   --color-team-b: var(--team-b);
   --color-surface: var(--surface);
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-hairline: var(--hairline);
+  --color-scrim: var(--scrim);
+  --color-win: var(--win);
+  --color-draw: var(--draw);
+  --color-loss: var(--loss);
+  --color-pos-gk: var(--pos-gk);
+  --color-pos-def: var(--pos-def);
+  --color-pos-mid: var(--pos-mid);
+  --color-pos-fwd: var(--pos-fwd);
+  --color-medal-1: var(--medal-1);
+  --color-medal-2: var(--medal-2);
+  --color-medal-3: var(--medal-3);
+  --shadow-elev-1: inset 0 1px 0 oklch(1 0 0 / 5%), 0 1px 2px oklch(0 0 0 / 40%);
+  --shadow-elev-2: inset 0 1px 0 oklch(1 0 0 / 6%), 0 16px 40px -16px oklch(0 0 0 / 75%);
+  --shadow-glow: 0 10px 30px -12px var(--primary);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -55,75 +75,258 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+  /* Escala tipográfica: nada por debajo de 11px. Barlow solo para display y números. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-display-xl: 2.75rem;
+  --text-display-xl--line-height: 0.92;
+  --text-display-lg: 2rem;
+  --text-display-lg--line-height: 0.95;
+  --text-display-md: 1.5rem;
+  --text-display-md--line-height: 1;
+  --text-stat: 1.75rem;
+  --text-stat--line-height: 1;
+  --text-stat-xl: 3rem;
+  --text-stat-xl--line-height: 0.9;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+  /* Entrada escalonada: style={{ "--i": index }} + [animation-delay:calc(min(var(--i),8)*35ms)] */
+  --animate-rise: rise 320ms var(--ease-out-quint) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 8px;
+    }
+  }
+}
+
 /*
  * FUTBOLEROS es dark-first: un único tema oscuro.
- * Fondo azul casi negro, azul eléctrico para acciones, verde victoria,
- * rojo rival y dorado para destacados.
+ * Fondo azul casi negro, azul eléctrico para acción y selección (--primary para
+ * texto, íconos y anillos; --primary-solid para rellenos con texto blanco), verde
+ * victoria, rojo rival/derrota/destructivo y dorado solo para MVP y premios.
  */
 :root,
 .dark {
   color-scheme: dark;
+
+  /* Superficies */
   --background: oklch(0.145 0.025 262);
   --foreground: oklch(0.95 0.012 255);
-  --surface: oklch(0.175 0.028 262);
-  --card: oklch(0.19 0.03 262);
+  --surface-0: var(--background);
+  --surface-1: oklch(0.185 0.03 262);
+  --surface-2: oklch(0.22 0.032 262);
+  --surface-3: oklch(0.26 0.036 262);
+  --surface: var(--surface-1);
+  --card: var(--surface-1);
   --card-foreground: oklch(0.95 0.012 255);
-  --popover: oklch(0.21 0.032 262);
+  --popover: var(--surface-2);
   --popover-foreground: oklch(0.95 0.012 255);
-  --primary: oklch(0.62 0.2 258);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.24 0.035 262);
-  --secondary-foreground: oklch(0.95 0.012 255);
-  --muted: oklch(0.22 0.03 262);
+  --muted: oklch(0.24 0.032 262);
   --muted-foreground: oklch(0.7 0.03 258);
-  --accent: oklch(0.26 0.045 262);
+  --secondary: oklch(0.25 0.035 262);
+  --secondary-foreground: oklch(0.95 0.012 255);
+  --accent: oklch(0.27 0.045 262);
   --accent-foreground: oklch(0.97 0.01 255);
-  --destructive: oklch(0.67 0.21 18);
-  --success: oklch(0.77 0.17 155);
+
+  /* Bordes y foco */
+  --hairline: oklch(0.85 0.03 260 / 10%);
+  --border: var(--hairline);
+  --input: oklch(0.8 0.04 260 / 30%);
+  --ring: oklch(0.75 0.15 250);
+  --scrim: oklch(0.09 0.02 262 / 72%);
+
+  /* Marca */
+  --primary: oklch(0.66 0.19 256);
+  --primary-solid: oklch(0.56 0.21 260);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* Semántica de resultados */
+  --win: oklch(0.77 0.17 155);
+  --success: var(--win);
+  --draw: oklch(0.72 0.02 258);
+  --loss: oklch(0.71 0.19 20);
+  --destructive: var(--loss);
   --warning: oklch(0.82 0.15 75);
   --gold: oklch(0.84 0.13 88);
-  --team-a: oklch(0.65 0.19 255);
-  --team-b: oklch(0.67 0.21 18);
-  --border: oklch(0.8 0.04 260 / 11%);
-  --input: oklch(0.8 0.04 260 / 15%);
-  --ring: oklch(0.62 0.2 258);
-  --chart-1: oklch(0.62 0.2 258);
-  --chart-2: oklch(0.77 0.17 155);
-  --chart-3: oklch(0.84 0.13 88);
-  --chart-4: oklch(0.67 0.21 18);
+  --medal-1: var(--gold);
+  --medal-2: oklch(0.82 0.01 250);
+  --medal-3: oklch(0.68 0.09 55);
+
+  /* Posiciones: tonos de categoría, nunca semánticos */
+  --pos-gk: oklch(0.78 0.13 55);
+  --pos-def: oklch(0.78 0.1 210);
+  --pos-mid: oklch(0.74 0.13 300);
+  --pos-fwd: oklch(0.74 0.15 340);
+
+  /* Equipos y gráficos */
+  --team-a: var(--primary);
+  --team-b: var(--loss);
+  --chart-1: var(--primary);
+  --chart-2: var(--win);
+  --chart-3: var(--gold);
+  --chart-4: var(--loss);
   --chart-5: oklch(0.7 0.15 300);
-  --radius: 0.875rem;
+
+  --radius: 0.625rem;
+
   --sidebar: oklch(0.165 0.027 262);
   --sidebar-foreground: oklch(0.95 0.012 255);
-  --sidebar-primary: oklch(0.62 0.2 258);
+  --sidebar-primary: var(--primary-solid);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.24 0.035 262);
+  --sidebar-accent: oklch(0.25 0.035 262);
   --sidebar-accent-foreground: oklch(0.97 0.01 255);
-  --sidebar-border: oklch(0.8 0.04 260 / 10%);
-  --sidebar-ring: oklch(0.62 0.2 258);
+  --sidebar-border: var(--hairline);
+  --sidebar-ring: var(--ring);
+}
+
+/*
+ * Variables de chrome. Viven en <html> para que los portales (sheets, toasts)
+ * también las vean.
+ */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --header-h: 3.5rem;
+  --tabs-h: 0px;
+  --bottom-nav-h: 4rem;
+  --chrome-top: calc(var(--header-h) + var(--safe-top) + var(--tabs-h));
+  --chrome-bottom: 0px;
+  --action-bar-pb: calc(0.75rem + var(--safe-bottom));
+  --float-bottom: calc(max(var(--chrome-bottom), var(--safe-bottom)) + 1rem);
+}
+
+/* Shell de grupo: la barra inferior ocupa el borde de abajo. */
+html:has([data-shell="group"]) {
+  --chrome-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom));
+  --action-bar-pb: 0.75rem;
+}
+
+@media (width >= 64rem) {
+  html:has([data-shell="group"]) {
+    --chrome-bottom: 0px;
+    --action-bar-pb: 0px;
+    --tabs-h: 2.75rem;
+  }
+}
+
+@media (width < 64rem) {
+  /* Flujos enfocados (formularios): la barra inferior se va y la de acción baja. */
+  html:has([data-focus-flow]) {
+    --chrome-bottom: 0px;
+    --action-bar-pb: calc(0.75rem + var(--safe-bottom));
+  }
+
+  html:has([data-focus-flow]) [data-bottom-nav] {
+    translate: 0 100%;
+    visibility: hidden;
+  }
+
+  /* El StackHeader reemplaza al AppHeader en el celular. */
+  [data-shell]:has([data-stack-header]) [data-app-header] {
+    display: none;
+  }
+}
+
+@media (width < 64rem) and (pointer: coarse) {
+  /* Con el teclado abierto, la barra inferior no tapa el campo ni la acción. */
+  html:has(
+      [data-shell]
+        :is(
+          input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="file"], [readonly]),
+          textarea,
+          [contenteditable="true"]
+        ):focus
+    ) {
+    --chrome-bottom: 0px;
+    --action-bar-pb: 0.75rem;
+  }
+
+  html:has(
+      [data-shell]
+        :is(
+          input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="file"], [readonly]),
+          textarea,
+          [contenteditable="true"]
+        ):focus
+    )
+    [data-bottom-nav] {
+    display: none;
+  }
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  :is(input, textarea, select):focus-visible {
+    outline-offset: 0;
+  }
+  a,
+  button,
+  [role="button"],
+  [role="radio"],
+  [role="tab"],
+  label,
+  summary {
+    touch-action: manipulation;
   }
   html {
     @apply font-sans;
     -webkit-tap-highlight-color: transparent;
+    scroll-padding-top: calc(var(--chrome-top) + 0.5rem);
+    scroll-padding-bottom: calc(var(--chrome-bottom) + 0.5rem);
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background-image:
-      radial-gradient(1200px 600px at 50% -200px, oklch(0.62 0.2 258 / 14%), transparent 70%),
-      radial-gradient(800px 400px at 100% 0%, oklch(0.67 0.21 18 / 6%), transparent 60%);
-    background-attachment: fixed;
+  }
+  /* Resplandor de fondo en una capa fija: no repinta al scrollear (iOS ignora background-attachment: fixed). */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(1200px 600px at 50% -200px, oklch(0.66 0.19 256 / 14%), transparent 70%),
+      radial-gradient(800px 400px at 100% 0%, oklch(0.71 0.19 20 / 6%), transparent 60%);
+  }
+  @media (display-mode: standalone) {
+    html,
+    body {
+      overscroll-behavior-y: none;
+    }
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   ::selection {
-    background: oklch(0.62 0.2 258 / 40%);
+    background: oklch(0.66 0.19 256 / 40%);
+  }
+
+  /* Color de posición: data-pos usa los valores del enum Position. */
+  [data-pos="goalkeeper"] {
+    --pos: var(--pos-gk);
+  }
+  [data-pos="defender"] {
+    --pos: var(--pos-def);
+  }
+  [data-pos="midfielder"] {
+    --pos: var(--pos-mid);
+  }
+  [data-pos="forward"] {
+    --pos: var(--pos-fwd);
   }
 }
 
@@ -144,8 +347,200 @@
     background-size: 28px 28px;
   }
   .glass {
-    @apply border border-border bg-card/70 backdrop-blur-xl;
+    @apply border border-hairline bg-surface-1/80 backdrop-blur-md;
   }
+}
+
+/* ---------- Utilidades (nombres fijados por el spec) ---------- */
+
+/* Superficie base: tarjetas, paneles, grupos de lista. */
+@utility panel {
+  @apply bg-surface-1 shadow-elev-1 ring-1 ring-hairline;
+}
+
+/* Superficie elevada: popovers, sheets, toasts. */
+@utility panel-raised {
+  @apply bg-surface-2 shadow-elev-2 ring-1 ring-hairline;
+}
+
+/* Lista agrupada estilo iOS: filas separadas por un hairline. */
+@utility list-group {
+  @apply panel divide-y divide-hairline overflow-hidden rounded-xl;
+}
+
+/* Respuesta táctil inmediata para tarjetas, chips y botones. */
+@utility pressable {
+  transition-property: transform, background-color, opacity;
+  transition-duration: 120ms;
+  transition-timing-function: var(--ease-out-quint);
+  touch-action: manipulation;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* Respuesta táctil para filas de lista. */
+@utility pressable-row {
+  transition-property: background-color;
+  transition-duration: 120ms;
+  transition-timing-function: var(--ease-out-quint);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: oklch(1 0 0 / 3.5%);
+    }
+  }
+
+  &:active {
+    background-color: oklch(1 0 0 / 5%);
+  }
+}
+
+/* Objetivo táctil invisible de 44px para íconos chicos. */
+@utility hit-area {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+}
+
+/* Chrome de la app: sin selección de texto ni menú de mantener presionado. */
+@utility app-chrome {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Barrido de carga para skeletons; estático con movimiento reducido. */
+@utility skeleton-shimmer {
+  background: linear-gradient(90deg, var(--surface-1), var(--surface-2) 50%, var(--surface-1)) 0 0 / 200% 100%;
+  animation: skeleton-sweep 1.4s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    background: var(--surface-2);
+    animation: none;
+  }
+}
+
+@keyframes skeleton-sweep {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- View transitions (React <ViewTransition>, ver screen-transition.tsx) ---------- */
+
+::view-transition-old(.nav-forward) {
+  --slide-offset: -60px;
+  animation:
+    150ms ease-in both vt-fade reverse,
+    360ms var(--ease-in-out-quart) both vt-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 60px;
+  animation:
+    210ms ease-out 150ms both vt-fade,
+    360ms var(--ease-in-out-quart) both vt-slide;
+}
+
+::view-transition-old(.nav-back) {
+  --slide-offset: 60px;
+  animation:
+    150ms ease-in both vt-fade reverse,
+    360ms var(--ease-in-out-quart) both vt-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -60px;
+  animation:
+    210ms ease-out 150ms both vt-fade,
+    360ms var(--ease-in-out-quart) both vt-slide;
+}
+
+/* Entrada sin dirección (tabs, revelado de Suspense). */
+::view-transition-new(.screen-in) {
+  animation: 210ms var(--ease-out-quint) both vt-rise;
+}
+
+/* El skeleton se va rápido para no competir con el contenido. */
+::view-transition-old(.skeleton-out) {
+  animation: 150ms ease-out both vt-fade reverse;
+}
+
+/* Chrome anclado: no se desliza con el contenido. */
+::view-transition-group(app-header),
+::view-transition-group(stack-header),
+::view-transition-group(bottom-nav) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(app-header),
+::view-transition-old(stack-header),
+::view-transition-old(bottom-nav) {
+  display: none;
+}
+::view-transition-new(app-header),
+::view-transition-new(stack-header),
+::view-transition-new(bottom-nav) {
+  animation: none;
+}
+
+/* Los toques durante la transición llegan a la página real. */
+::view-transition {
+  pointer-events: none;
+}
+
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vt-slide {
+  from {
+    translate: var(--slide-offset);
+  }
+  to {
+    translate: 0;
+  }
+}
+
+@keyframes vt-rise {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/*
+ * Sonner inyecta su CSS sin capa, así que les gana a las utilidades de Tailwind.
+ * Estas reglas (más específicas y también sin capa) alinean el toast con panel-raised.
+ */
+[data-sonner-toaster][data-sonner-theme] {
+  font-family: var(--font-sans);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+  box-shadow: var(--shadow-elev-2);
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:focus-visible {
+  box-shadow:
+    var(--shadow-elev-2),
+    0 0 0 2px var(--ring);
+}
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast] [data-description] {
+  color: var(--muted-foreground);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -153,6 +548,15 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

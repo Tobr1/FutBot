@@ -2,6 +2,24 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-021 · Galería `/ui-kit` solo en desarrollo
+Los componentes del rediseño móvil (tokens, botones, hojas inferiores, tarjetas, skeletons) se revisan juntos en `/ui-kit`, con datos de ejemplo y sin Supabase. En producción la ruta responde 404 (`notFound()` cuando `NODE_ENV === "production"`), así no queda expuesta ni indexada. No reemplaza a los tests: sirve para revisar contraste, tamaños táctiles y estados en el celular.
+
+## D-020 · Transiciones de pantalla con `<ViewTransition>` y LazyMotion estricto
+Las páginas se deslizan según la dirección (`nav-forward` al profundizar, `nav-back` al volver) con el `<ViewTransition>` de React 19 (`ScreenTransition` en cada `page.tsx`, `SkeletonTransition` en cada `loading.tsx`); el encabezado y la barra inferior quedan anclados. Para gestos (arrastrar hojas, la píldora de la barra) se usa `motion` dentro de `LazyMotion strict`, solo con componentes `m.*`. Solo se animan `transform` y `opacity`, nada dura más de 400 ms, nada anima durante el prerender y con movimiento reducido todo se desactiva.
+
+## D-019 · PWA instalable que abre en el último grupo
+Manifest, íconos generados (`apple-icon`, 192/512 y maskable), `viewport-fit=cover` con márgenes de área segura y `start_url` `/abrir`, que redirige al último grupo visitado o a Mis grupos. El último grupo se guarda en la cookie `fb_last_group`, que el proxy actualiza solo en cargas de documento de `/g/[slug]` (nunca en prefetches, que mentirían sobre dónde estuvo el usuario). Con sesión, `/` también redirige a ese destino en lugar de mostrar la landing. El aviso sin conexión usa `useOffline` (experimental de Next 16.4): Next deja en espera navegaciones y Server Actions y las reintenta al volver la señal. Todavía no hay service worker: el modo offline real (caché de pantallas y cola de cargas) queda para cuando haya datos de partidos que lo justifiquen.
+
+## D-018 · Tokens: `--primary` brillante y `--primary-solid` para rellenos
+Un solo acento azul eléctrico con dos tonos: `--primary` (brillante, 6,2:1 sobre el fondo) para texto, íconos, anillos y selección, y `--primary-solid` (4,69:1 con texto blanco) para botones y superficies rellenas. La combinación `bg-primary` + `text-primary-foreground` queda prohibida. Verde = victoria o positivo, rojo = rival, derrota o destructivo, dorado = MVP y premios; las posiciones tienen tonos propios de baja saturación que nunca se usan como semántica. Barlow Condensed carga solo 700 y 800 y se reserva para títulos, nombres en tarjetas y números; el resto es Inter, nunca por debajo de 11 px.
+
+## D-017 · Hojas inferiores propias en el celular, menús desplegables en escritorio
+En el teléfono los menús y acciones contextuales se abren como hoja inferior (al alcance del pulgar), no como desplegables desde una esquina superior. `BottomSheet` está hecho sobre el Dialog de Radix más `motion` para arrastrar y cerrar; se descartó `vaul` porque duplicaba `@radix-ui/react-dialog` fuera del paquete `radix-ui` y su mantenimiento es incierto. `ResponsiveMenu` arma el mismo menú como `DropdownMenu` desde 1024 px y como hoja inferior debajo. Dialog y AlertDialog se anclan abajo en pantallas chicas solo con CSS.
+
+## D-016 · "Más" como ruta en lugar de la pestaña "Grupo"
+La barra inferior del grupo queda en Inicio · Partidos · Plantel · Rankings · Más. "Más" es una página (`/g/[slug]/ajustes`) y no una hoja, para que los links directos y el botón atrás sean deterministas. El formulario general del grupo pasa a `/g/[slug]/ajustes/general`, las píldoras de navegación de ajustes desaparecen y cada subpágina vuelve a "Más" con un encabezado con botón atrás.
+
 ## D-015 · Partidos y rankings como "próximamente" en la Fase 1
 La navegación del grupo ya incluye Partidos y Rankings para fijar la estructura final, pero muestran qué llega en cada fase en lugar de pantallas vacías o datos inventados. El esquema y las RPC de esas fases ya están implementados y testeados.
 

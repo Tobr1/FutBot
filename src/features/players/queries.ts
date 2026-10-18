@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { type DominantFoot, type PlayerPositions, toPlayerPositions } from "@/domain/players/positions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,7 +65,11 @@ export interface PlayerDetail extends PlayerListItem {
   createdAt: string;
 }
 
-export async function getPlayer(groupId: string, playerId: string): Promise<PlayerDetail | null> {
+/**
+ * Ficha completa de un jugador. Memoizada por request (React cache): la
+ * página y generateMetadata comparten una sola consulta.
+ */
+export const getPlayer = cache(async (groupId: string, playerId: string): Promise<PlayerDetail | null> => {
   if (!/^[0-9a-f-]{36}$/i.test(playerId)) return null;
   const supabase = await createClient();
   const [playerResult, statsResult] = await Promise.all([
@@ -98,7 +103,7 @@ export async function getPlayer(groupId: string, playerId: string): Promise<Play
     linkedName,
     createdAt: p.created_at,
   };
-}
+});
 
 /** Fichas sin cuenta, para que un miembro nuevo reclame la suya. */
 export async function listUnclaimedPlayers(groupId: string) {

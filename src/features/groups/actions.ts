@@ -25,7 +25,7 @@ export async function createGroupAction(_prev: ActionState, formData: FormData):
   if (error || !data) return errorState(toUserMessage(error), { values: formValues(formData) });
 
   revalidatePath(routes.dashboard);
-  redirect(`${routes.group(data.slug)}?bienvenida=1`);
+  redirect(`${routes.group(data.slug)}?creado=1`);
 }
 
 export async function updateGroupSettingsAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
