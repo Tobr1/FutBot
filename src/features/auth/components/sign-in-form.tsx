@@ -1,33 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useActionState } from "react";
+import { Suspense, useActionState, useRef } from "react";
 import { fieldAria, FormField } from "@/components/shared/form-field";
 import { FormMessage } from "@/components/shared/form-message";
 import { PasswordInput } from "@/components/shared/password-input";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Input } from "@/components/ui/input";
-import { errorState, idleState } from "@/lib/action-result";
+import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
+import { idleState } from "@/lib/action-result";
 import { routes } from "@/lib/routes";
 import { signInAction } from "../actions";
+import { AuthSwitchLink, AuthSwitchLinkFallback } from "./auth-switch-link";
+import { LinkErrorNotice } from "./link-error-notice";
+import { NextPathInput } from "./next-path-input";
 
+/**
+ * Formulario de ingreso. No lee la URL en su nivel superior: lo que depende de
+ * los parámetros (next, ?error=link) va en piezas chicas dentro de <Suspense>,
+ * así los campos ya vienen en el HTML prerenderizado.
+ */
 export function SignInForm() {
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "";
-  const linkFailed = searchParams.get("error") === "link";
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, action] = useActionState(signInAction, idleState);
   const errors = state.status === "error" ? state.fieldErrors : undefined;
   const values = state.status === "error" ? state.values : undefined;
+  useFormErrorFocus(formRef, state);
 
   return (
-    <form action={action} className="grid gap-5" noValidate>
-      <input type="hidden" name="next" value={next} />
-      {linkFailed && state.status === "idle" ? (
-        <FormMessage state={errorState("El link venció o ya se usó. Pedí uno nuevo o ingresá con tu contraseña.")} />
-      ) : (
-        <FormMessage state={state} />
-      )}
+    <form ref={formRef} action={action} className="grid gap-5" noValidate>
+      <Suspense fallback={null}>
+        <NextPathInput />
+      </Suspense>
+      <Suspense fallback={null}>
+        <LinkErrorNotice show={state.status === "idle"} />
+      </Suspense>
+      <FormMessage state={state} />
 
       <FormField id="email" label="Email" errors={errors?.email}>
         <Input
@@ -35,6 +43,10 @@ export function SignInForm() {
           type="email"
           autoComplete="email"
           inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="next"
           placeholder="vos@ejemplo.com"
           defaultValue={values?.email}
           required
@@ -43,17 +55,23 @@ export function SignInForm() {
 
       <FormField
         id="password"
-        label={
-          <span className="flex w-full items-center justify-between">
-            Contraseña
-            <Link href={routes.forgotPassword} className="text-xs font-normal text-primary hover:underline">
-              ¿La olvidaste?
-            </Link>
-          </span>
-        }
+        label="Contraseña"
         errors={errors?.password}
+        aside={
+          <Link
+            href={routes.forgotPassword}
+            className="-my-2 inline-flex min-h-11 items-center text-xs text-primary hover:underline"
+          >
+            ¿La olvidaste?
+          </Link>
+        }
       >
-        <PasswordInput {...fieldAria("password", errors?.password)} autoComplete="current-password" required />
+        <PasswordInput
+          {...fieldAria("password", errors?.password)}
+          autoComplete="current-password"
+          enterKeyHint="go"
+          required
+        />
       </FormField>
 
       <SubmitButton size="lg" className="w-full" pendingText="Ingresando…">
@@ -62,12 +80,9 @@ export function SignInForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         ¿No tenés cuenta?{" "}
-        <Link
-          href={next ? `${routes.signup}?next=${encodeURIComponent(next)}` : routes.signup}
-          className="font-medium text-primary hover:underline"
-        >
-          Registrate
-        </Link>
+        <Suspense fallback={<AuthSwitchLinkFallback href={routes.signup} label="Registrate" />}>
+          <AuthSwitchLink href={routes.signup} label="Registrate" />
+        </Suspense>
       </p>
     </form>
   );

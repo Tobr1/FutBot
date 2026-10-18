@@ -17,9 +17,9 @@ export function AcceptInvitationButton({ token, groupName }: { token: string; gr
   }
 
   return (
-    <Button size="lg" className="w-full" onClick={accept} disabled={isPending}>
-      {isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <LogIn aria-hidden="true" />}
-      Unirme a {groupName}
+    <Button size="lg" className="w-full" onClick={accept} disabled={isPending} aria-busy={isPending || undefined}>
+      {isPending ? <Loader2 className="motion-safe:animate-spin" aria-hidden="true" /> : <LogIn aria-hidden="true" />}
+      <span className="truncate">{isPending ? "Uniéndote…" : `Unirme a ${groupName}`}</span>
     </Button>
   );
 }

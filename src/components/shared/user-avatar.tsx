@@ -1,4 +1,5 @@
 import { initials } from "@/domain/names/normalize";
+import { hueFor } from "@/lib/color";
 import { cn } from "@/lib/utils";
 
 const SIZES = {
@@ -8,13 +9,6 @@ const SIZES = {
   lg: "size-14 text-lg",
   xl: "size-20 text-2xl",
 } as const;
-
-/** Tono estable por nombre para que cada jugador tenga "su" color. */
-function hueFor(name: string): number {
-  let hash = 0;
-  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return hash % 360;
-}
 
 /**
  * Avatar con foto o iniciales. Por defecto es decorativo (el nombre ya está

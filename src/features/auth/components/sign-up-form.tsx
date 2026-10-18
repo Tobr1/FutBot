@@ -1,24 +1,26 @@
 "use client";
 
 import { MailCheck } from "lucide-react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useActionState } from "react";
+import { Suspense, useActionState, useRef } from "react";
 import { fieldAria, FormField } from "@/components/shared/form-field";
 import { FormMessage } from "@/components/shared/form-message";
 import { PasswordInput } from "@/components/shared/password-input";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Input } from "@/components/ui/input";
+import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { idleState } from "@/lib/action-result";
 import { routes } from "@/lib/routes";
 import { signUpAction } from "../actions";
+import { AuthSwitchLink, AuthSwitchLinkFallback } from "./auth-switch-link";
+import { InvitationNextHint, NextPathInput } from "./next-path-input";
 
+/** Formulario de registro. Igual que el de ingreso, prerenderizable (ver SignInForm). */
 export function SignUpForm() {
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "";
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, action] = useActionState(signUpAction, idleState);
   const errors = state.status === "error" ? state.fieldErrors : undefined;
   const values = state.status === "error" ? state.values : undefined;
+  useFormErrorFocus(formRef, state);
 
   if (state.status === "success") {
     return (
@@ -27,8 +29,11 @@ export function SignUpForm() {
           <MailCheck className="size-7" aria-hidden="true" />
         </span>
         <div className="space-y-1.5">
-          <h2 className="font-display text-2xl font-bold uppercase">Revisá tu email</h2>
+          <h2 className="font-display text-display-md font-extrabold tracking-wide uppercase">Revisá tu email</h2>
           <p className="text-sm text-muted-foreground">{state.message}</p>
+          <Suspense fallback={null}>
+            <InvitationNextHint />
+          </Suspense>
           <p className="text-xs text-muted-foreground">Si no lo ves en unos minutos, buscá en spam o promociones.</p>
         </div>
       </div>
@@ -36,14 +41,18 @@ export function SignUpForm() {
   }
 
   return (
-    <form action={action} className="grid gap-5" noValidate>
-      <input type="hidden" name="next" value={next} />
+    <form ref={formRef} action={action} className="grid gap-5" noValidate>
+      <Suspense fallback={null}>
+        <NextPathInput />
+      </Suspense>
       <FormMessage state={state} />
 
       <FormField id="displayName" label="Tu nombre" hint="Así te van a ver tus compañeros." errors={errors?.displayName}>
         <Input
           {...fieldAria("displayName", errors?.displayName, true)}
-          autoComplete="nickname"
+          autoComplete="name"
+          autoCapitalize="words"
+          enterKeyHint="next"
           placeholder="Ej.: Agustín"
           defaultValue={values?.displayName}
           maxLength={40}
@@ -57,6 +66,10 @@ export function SignUpForm() {
           type="email"
           autoComplete="email"
           inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="next"
           placeholder="vos@ejemplo.com"
           defaultValue={values?.email}
           required
@@ -64,7 +77,12 @@ export function SignUpForm() {
       </FormField>
 
       <FormField id="password" label="Contraseña" hint="Mínimo 8 caracteres, con letras y números." errors={errors?.password}>
-        <PasswordInput {...fieldAria("password", errors?.password, true)} autoComplete="new-password" required />
+        <PasswordInput
+          {...fieldAria("password", errors?.password, true)}
+          autoComplete="new-password"
+          enterKeyHint="done"
+          required
+        />
       </FormField>
 
       <SubmitButton size="lg" className="w-full" pendingText="Creando cuenta…">
@@ -73,12 +91,9 @@ export function SignUpForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         ¿Ya tenés cuenta?{" "}
-        <Link
-          href={next ? `${routes.login}?next=${encodeURIComponent(next)}` : routes.login}
-          className="font-medium text-primary hover:underline"
-        >
-          Ingresá
-        </Link>
+        <Suspense fallback={<AuthSwitchLinkFallback href={routes.login} label="Ingresá" />}>
+          <AuthSwitchLink href={routes.login} label="Ingresá" />
+        </Suspense>
       </p>
     </form>
   );
