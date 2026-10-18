@@ -25,7 +25,7 @@ export function SettingsNav({ slug, isAdmin }: { slug: string; isAdmin: boolean 
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex h-9 shrink-0 items-center rounded-lg px-3.5 text-sm font-medium transition-colors",
-              active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              active ? "bg-primary-solid text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             {item.label}

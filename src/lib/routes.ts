@@ -6,6 +6,8 @@ export const routes = {
   forgotPassword: "/recuperar",
   resetPassword: "/nueva-clave",
   dashboard: "/inicio",
+  /** Destino de arranque de la PWA: redirige al último grupo (ver lib/launch.ts). */
+  launch: "/abrir",
   profile: "/perfil",
   newGroup: "/grupos/nuevo",
   invitation: (token: string) => `/invitacion/${token}`,
@@ -17,6 +19,7 @@ export const routes = {
   groupMatches: (slug: string) => `/g/${slug}/partidos`,
   groupRankings: (slug: string) => `/g/${slug}/rankings`,
   groupSettings: (slug: string) => `/g/${slug}/ajustes`,
+  groupGeneralSettings: (slug: string) => `/g/${slug}/ajustes/general`,
   groupMembers: (slug: string) => `/g/${slug}/ajustes/miembros`,
   groupInvitations: (slug: string) => `/g/${slug}/ajustes/invitaciones`,
   groupSeasons: (slug: string) => `/g/${slug}/ajustes/temporadas`,
@@ -24,7 +27,7 @@ export const routes = {
 } as const;
 
 /** Prefijos que requieren sesión (chequeo optimista en el proxy). */
-export const PROTECTED_PREFIXES = ["/inicio", "/perfil", "/grupos", "/g/", "/nueva-clave"];
+export const PROTECTED_PREFIXES = ["/inicio", "/perfil", "/grupos", "/g/", "/nueva-clave", "/abrir"];
 
 /** Páginas que no tienen sentido con sesión iniciada. */
 export const AUTH_PAGES = ["/ingresar", "/registro", "/recuperar"];

@@ -1,57 +1,56 @@
 "use client";
 
 import { LayoutGrid, LogOut, UserRound } from "lucide-react";
-import Link from "next/link";
 import { useTransition } from "react";
 import { UserAvatar } from "@/components/shared/user-avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ResponsiveMenu } from "@/components/ui/responsive-menu";
 import { signOutAction } from "@/features/auth/actions";
 import { routes } from "@/lib/routes";
 
 export function UserMenu({ name, email, avatarUrl }: { name: string; email: string | null; avatarUrl: string | null }) {
   const [isSigningOut, startTransition] = useTransition();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className="rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/60"
-        aria-label="Menú de cuenta"
-      >
-        <UserAvatar name={name} src={avatarUrl} size="sm" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
-        <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="truncate font-semibold text-foreground">{name}</span>
-          {email && <span className="truncate text-xs font-normal text-muted-foreground">{email}</span>}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href={routes.dashboard}>
-              <LayoutGrid aria-hidden="true" />
-              Mis grupos
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={routes.profile}>
-              <UserRound aria-hidden="true" />
-              Mi perfil
-            </Link>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" disabled={isSigningOut} onSelect={() => startTransition(() => signOutAction())}>
-          <LogOut aria-hidden="true" />
-          Cerrar sesión
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <ResponsiveMenu
+      title="Tu cuenta"
+      align="end"
+      trigger={
+        <button
+          type="button"
+          aria-label="Menú de cuenta"
+          className="pressable grid size-11 shrink-0 place-items-center rounded-full"
+        >
+          <UserAvatar name={name} src={avatarUrl} size="sm" />
+        </button>
+      }
+      header={
+        <div className="flex items-center gap-3">
+          <UserAvatar name={name} src={avatarUrl} size="md" />
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">{name}</p>
+            {email ? <p className="truncate text-xs text-muted-foreground">{email}</p> : null}
+          </div>
+        </div>
+      }
+      sections={[
+        {
+          items: [
+            { key: "grupos", label: "Mis grupos", icon: LayoutGrid, href: routes.dashboard },
+            { key: "perfil", label: "Mi perfil", icon: UserRound, href: routes.profile, transitionTypes: ["nav-forward"] },
+          ],
+        },
+        {
+          items: [
+            {
+              key: "salir",
+              label: isSigningOut ? "Cerrando sesión…" : "Cerrar sesión",
+              icon: LogOut,
+              destructive: true,
+              disabled: isSigningOut,
+              onSelect: () => startTransition(() => signOutAction()),
+            },
+          ],
+        },
+      ]}
+    />
   );
 }

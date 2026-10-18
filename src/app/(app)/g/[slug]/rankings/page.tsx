@@ -16,7 +16,6 @@ export default async function RankingsPage({ params }: PageProps<"/g/[slug]/rank
       <ComingSoon
         icon={Trophy}
         title="Rankings en camino"
-        phase="Fase 3"
         items={[
           "Mejor jugador, goleador, asistidor y más MVP.",
           "Mejor promedio, más regular y mejor momento.",

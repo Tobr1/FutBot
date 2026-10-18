@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/** Tile de una estadística suelta. Para varias en fila, preferir <StatStrip>. */
 export function StatTile({
   label,
   value,
@@ -23,8 +24,8 @@ export function StatTile({
   }[tone];
 
   return (
-    <div className={cn("rounded-xl border border-border bg-surface/70 p-3", className)}>
-      <div className="flex items-center gap-1.5 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+    <div className={cn("panel rounded-xl p-3", className)}>
+      <div className="flex items-center gap-1.5 text-2xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">
         {Icon && <Icon className="size-3.5" aria-hidden="true" />}
         {label}
       </div>

@@ -16,7 +16,6 @@ export default async function MatchesPage({ params }: PageProps<"/g/[slug]/parti
       <ComingSoon
         icon={CalendarDays}
         title="Partidos en camino"
-        phase="Fase 2"
         items={[
           "Crear partidos con fecha, hora, cancha y formato.",
           "Pegar la lista de WhatsApp y reconocer a cada jugador.",

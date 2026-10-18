@@ -1,16 +1,20 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 /**
  * Muestra un toast según parámetros de la URL dejados por una redirección
- * (p. ej. `?ficha=vinculada`) y limpia la URL. Usar dentro de <Suspense>.
+ * (p. ej. `?ficha=vinculada`) y limpia la URL. Usar dentro de <Suspense>
+ * (lee useSearchParams).
+ *
+ * La limpieza usa window.history.replaceState: Next integra la History API
+ * nativa (usePathname/useSearchParams se sincronizan) sin pedir otro render
+ * del servidor, a diferencia de router.replace.
  */
 export function FlashToast({ messages }: { messages: Record<string, Record<string, string>> }) {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   const shown = useRef(false);
 
@@ -29,9 +33,9 @@ export function FlashToast({ messages }: { messages: Record<string, Record<strin
     if (found) {
       shown.current = true;
       const query = next.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
     }
-  }, [messages, pathname, router, searchParams]);
+  }, [messages, pathname, searchParams]);
 
   return null;
 }

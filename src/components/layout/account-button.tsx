@@ -8,6 +8,11 @@ export async function AccountButton() {
   return <UserMenu name={profile.displayName} email={profile.email} avatarUrl={profile.avatarUrl} />;
 }
 
+/** Misma caja de 44px que el disparador del menú de cuenta. */
 export function AccountButtonSkeleton() {
-  return <Skeleton className="size-8 rounded-full" />;
+  return (
+    <div aria-hidden="true" className="grid size-11 shrink-0 place-items-center">
+      <Skeleton className="size-8 rounded-full" />
+    </div>
+  );
 }

@@ -1,35 +1,53 @@
+import type { CSSProperties } from "react";
 import { POSITION_LABELS, type Position } from "@/domain/players/positions";
 import { cn } from "@/lib/utils";
 
-const POSITION_STYLES: Record<Position, string> = {
-  goalkeeper: "bg-warning/15 text-warning ring-warning/30",
-  defender: "bg-success/15 text-success ring-success/30",
-  midfielder: "bg-primary/15 text-primary ring-primary/30",
-  forward: "bg-destructive/15 text-destructive ring-destructive/30",
+/**
+ * Color de categoría por posición (nunca semántico: no usa success,
+ * destructive ni warning). Sirve para puntos de filtros y acentos.
+ */
+export const POSITION_COLOR_VAR: Record<Position, string> = {
+  goalkeeper: "var(--pos-gk)",
+  defender: "var(--pos-def)",
+  midfielder: "var(--pos-mid)",
+  forward: "var(--pos-fwd)",
 };
+
+const SIZES = {
+  sm: "h-5 rounded px-1 text-2xs",
+  md: "h-6 rounded-md px-1.5 text-xs",
+} as const;
 
 export function PositionBadge({
   position,
   variant = "short",
   muted = false,
+  size = "md",
   className,
 }: {
   position: Position;
   variant?: "short" | "long";
   muted?: boolean;
+  size?: keyof typeof SIZES;
   className?: string;
 }) {
   const label = POSITION_LABELS[position];
   return (
     <span
-      title={label.long}
+      data-pos={position}
+      // --pos también llega por [data-pos] en globals.css; el inline lo hace autosuficiente.
+      style={{ "--pos": POSITION_COLOR_VAR[position] } as CSSProperties}
       className={cn(
-        "inline-flex h-6 items-center rounded-md px-1.5 font-display text-xs font-bold tracking-wider uppercase ring-1",
-        muted ? "bg-muted text-muted-foreground ring-border" : POSITION_STYLES[position],
+        "relative inline-flex shrink-0 items-center font-display leading-none font-bold tracking-wider uppercase",
+        SIZES[size],
+        muted
+          ? "bg-muted text-muted-foreground ring-1 ring-hairline ring-inset"
+          : "bg-[color-mix(in_oklch,var(--pos)_16%,transparent)] text-[var(--pos)] ring-1 ring-[color-mix(in_oklch,var(--pos)_32%,transparent)] ring-inset",
         className,
       )}
     >
-      {label[variant]}
+      <span aria-hidden="true">{label[variant]}</span>
+      <span className="sr-only">{label.long}</span>
     </span>
   );
 }
