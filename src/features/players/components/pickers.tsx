@@ -1,64 +1,63 @@
 "use client";
 
+import { useId, useState } from "react";
+import { type ChoiceOption, ChoiceCards } from "@/components/shared/choice-cards";
+import { groupAria } from "@/components/shared/form-field";
+import { POSITION_COLOR_VAR } from "@/components/shared/position-badge";
 import { DOMINANT_FEET, type DominantFoot, FOOT_LABELS, POSITION_LABELS, POSITIONS, type Position } from "@/domain/players/positions";
-import { cn } from "@/lib/utils";
 
-interface Option<T extends string> {
-  value: T | "";
-  label: string;
-  sublabel?: string;
+/** Enlace con un FormField control="group" (labelledBy = "{id}-label"). */
+interface GroupWiring {
+  labelledBy?: string;
+  describedBy?: string;
+  invalid?: boolean;
 }
 
-/** Grupo de opciones táctiles con un input oculto para el formulario. */
-function ChoiceGroup<T extends string>({
-  name,
-  label,
-  options,
-  value,
-  onChange,
-  disabledValues = [],
-  columns,
-}: {
-  name: string;
-  label: string;
-  options: Option<T>[];
-  value: T | "";
-  onChange: (value: T | "") => void;
-  disabledValues?: Array<T | "">;
-  columns: string;
-}) {
-  return (
-    <div>
-      <input type="hidden" name={name} value={value} />
-      <div role="radiogroup" aria-label={label} className={cn("grid gap-2", columns)}>
-        {options.map((option) => {
-          const selected = option.value === value;
-          const disabled = disabledValues.includes(option.value);
-          return (
-            <button
-              key={option.value || "none"}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              disabled={disabled}
-              onClick={() => onChange(option.value)}
-              className={cn(
-                "flex h-12 flex-col items-center justify-center rounded-xl border px-2 transition-colors focus-visible:ring-3 focus-visible:ring-ring/60 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-35",
-                selected
-                  ? "border-primary bg-primary/15 text-foreground"
-                  : "border-border bg-surface/60 text-muted-foreground hover:border-primary/40 hover:text-foreground",
-              )}
-            >
-              <span className="font-display text-base leading-none font-bold tracking-wide uppercase">{option.label}</span>
-              {option.sublabel && <span className="mt-0.5 text-[10px] leading-none">{option.sublabel}</span>}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+/**
+ * Props para un picker dentro de un FormField control="group" (mismos ids
+ * que groupAria): `<PositionPicker {...pickerAria("primaryPosition", errors)} />`.
+ */
+export function pickerAria(id: string, errors?: string[], hint?: boolean): GroupWiring {
+  const aria = groupAria(id, errors, hint);
+  return {
+    labelledBy: aria["aria-labelledby"],
+    describedBy: aria["aria-describedby"],
+    invalid: aria["aria-invalid"],
+  };
 }
 
+/** Principal + secundaria: elegir como principal la secundaria la deja vacía. */
+export function usePositionsState(initialPrimary: Position | "", initialSecondary: Position | "") {
+  const [primary, setPrimaryState] = useState<Position | "">(initialPrimary);
+  const [secondary, setSecondary] = useState<Position | "">(initialSecondary);
+  function setPrimary(next: Position | "") {
+    setPrimaryState(next);
+    if (next && next === secondary) setSecondary("");
+  }
+  return { primary, secondary, setPrimary, setSecondary };
+}
+
+/**
+ * Sin `labelledBy` el grupo necesita un nombre igual: se usa una etiqueta
+ * solo para lectores de pantalla.
+ */
+function useGroupLabel(label: string, labelledBy?: string) {
+  const fallbackId = useId();
+  return {
+    labelId: labelledBy ?? fallbackId,
+    fallback: labelledBy ? null : (
+      <span id={fallbackId} className="sr-only">
+        {label}
+      </span>
+    ),
+  };
+}
+
+/**
+ * Posición en 4 tarjetas con la sigla (ARQ/DEF/MED/DEL); el nombre largo se
+ * ve desde sm. La posición excluida (la principal, al elegir la secundaria)
+ * queda deshabilitada con el motivo visible. Sin selección se envía "".
+ */
 export function PositionPicker({
   name,
   label,
@@ -66,6 +65,9 @@ export function PositionPicker({
   onChange,
   exclude,
   allowNone = true,
+  labelledBy,
+  describedBy,
+  invalid,
 }: {
   name: string;
   label: string;
@@ -73,36 +75,75 @@ export function PositionPicker({
   onChange: (value: Position | "") => void;
   exclude?: Position | "";
   allowNone?: boolean;
-}) {
-  const options: Option<Position>[] = [
-    ...POSITIONS.map((p) => ({ value: p, label: POSITION_LABELS[p].short, sublabel: POSITION_LABELS[p].long })),
-    ...(allowNone ? [{ value: "" as const, label: "—", sublabel: "Ninguna" }] : []),
-  ];
+} & GroupWiring) {
+  const { labelId, fallback } = useGroupLabel(label, labelledBy);
+  const options: ChoiceOption<Position>[] = POSITIONS.map((p) => ({
+    value: p,
+    label: (
+      <span className="font-display text-lg leading-none font-bold tracking-wide">
+        <span aria-hidden="true">{POSITION_LABELS[p].short}</span>
+        <span className="sr-only">{POSITION_LABELS[p].long}</span>
+      </span>
+    ),
+    description: <span aria-hidden="true">{POSITION_LABELS[p].long}</span>,
+    descriptionClassName: "hidden sm:block text-2xs",
+    accent: POSITION_COLOR_VAR[p],
+    disabled: exclude === p,
+    disabledReason: exclude === p ? "Es la principal" : undefined,
+  }));
+
   return (
-    <ChoiceGroup
-      name={name}
-      label={label}
-      options={options}
-      value={value}
-      onChange={onChange}
-      disabledValues={exclude ? [exclude] : []}
-      columns={allowNone ? "grid-cols-5" : "grid-cols-4"}
-    />
+    <>
+      {fallback}
+      <ChoiceCards
+        name={name}
+        value={value}
+        onChange={onChange}
+        options={options}
+        columns="grid-cols-4"
+        size="lg"
+        clearLabel={allowNone ? "Sin posición" : undefined}
+        ariaLabelledBy={labelId}
+        ariaDescribedBy={describedBy}
+        invalid={invalid}
+      />
+    </>
   );
 }
 
+/** Pierna hábil: Derecha / Izquierda / Ambas. Sin selección se envía "". */
 export function FootPicker({
   name,
   value,
   onChange,
+  labelledBy,
+  describedBy,
+  invalid,
 }: {
   name: string;
   value: DominantFoot | "";
   onChange: (value: DominantFoot | "") => void;
-}) {
-  const options: Option<DominantFoot>[] = [
-    ...DOMINANT_FEET.map((f) => ({ value: f, label: FOOT_LABELS[f] })),
-    { value: "", label: "—", sublabel: "Sin dato" },
-  ];
-  return <ChoiceGroup name={name} label="Pierna hábil" options={options} value={value} onChange={onChange} columns="grid-cols-4" />;
+} & GroupWiring) {
+  const { labelId, fallback } = useGroupLabel("Pierna hábil", labelledBy);
+  const options: ChoiceOption<DominantFoot>[] = DOMINANT_FEET.map((f) => ({
+    value: f,
+    label: <span className="text-sm font-semibold">{FOOT_LABELS[f]}</span>,
+  }));
+
+  return (
+    <>
+      {fallback}
+      <ChoiceCards
+        name={name}
+        value={value}
+        onChange={onChange}
+        options={options}
+        columns="grid-cols-3"
+        clearLabel="Sin dato"
+        ariaLabelledBy={labelId}
+        ariaDescribedBy={describedBy}
+        invalid={invalid}
+      />
+    </>
+  );
 }

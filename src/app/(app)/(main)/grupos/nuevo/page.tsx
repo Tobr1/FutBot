@@ -1,29 +1,29 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { StackHeader } from "@/components/layout/stack-header";
+import { ScreenTransition } from "@/components/motion/screen-transition";
 import { PageHeader } from "@/components/shared/page-header";
 import { FormSkeleton } from "@/components/shared/skeletons";
-import { Card, CardContent } from "@/components/ui/card";
 import { CreateGroupForm } from "@/features/groups/components/create-group-form";
 import { getCurrentProfile } from "@/lib/auth/session";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Crear grupo" };
 
 export default function NewGroupPage() {
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      <PageHeader
-        eyebrow="Nuevo grupo"
-        title="Crear grupo"
-        description="Vas a ser administrador: cargás jugadores, armás partidos e invitás al resto."
-      />
-      <Card>
-        <CardContent>
+    <ScreenTransition>
+      <div className="mx-auto max-w-2xl space-y-6">
+        <StackHeader backHref={routes.dashboard} backLabel="Mis grupos" title="Crear grupo" focusFlow />
+        <PageHeader title="Crear grupo" description="Vas a ser administrador del grupo." />
+        {/* Sin Card ni overflow-hidden: la barra de acciones tiene que poder pegarse abajo. */}
+        <div className="lg:panel lg:rounded-xl lg:p-6">
           <Suspense fallback={<FormSkeleton />}>
             <CreateGroupFormWithDefaults />
           </Suspense>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </ScreenTransition>
   );
 }
 

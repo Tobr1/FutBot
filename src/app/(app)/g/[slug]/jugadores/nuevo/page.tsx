@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { StackHeader } from "@/components/layout/stack-header";
+import { ScreenTransition } from "@/components/motion/screen-transition";
 import { AccessDenied } from "@/components/shared/access-denied";
 import { FlashToast } from "@/components/shared/flash-toast";
 import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent } from "@/components/ui/card";
 import { getGroupContext } from "@/features/groups/queries";
 import { PlayerForm } from "@/features/players/components/player-form";
 import { routes } from "@/lib/routes";
@@ -16,25 +17,25 @@ export default async function NewPlayerPage({ params, searchParams }: PageProps<
   if (!ctx.isAdmin) return <AccessDenied backHref={routes.groupPlayers(slug)} />;
 
   const created = (await searchParams).creado;
-  const flash: Record<string, Record<string, string>> =
-    typeof created === "string" ? { creado: { [created]: `${created} ya está en el plantel.` } } : {};
+  const isReentry = typeof created === "string";
+  const flash: Record<string, Record<string, string>> = isReentry
+    ? { creado: { [created]: `${created} ya está en el plantel.` } }
+    : {};
 
   return (
-    <div className="space-y-6">
-      <Suspense fallback={null}>
-        <FlashToast messages={flash} />
-      </Suspense>
-      <PageHeader
-        eyebrow="Plantel"
-        title="Nuevo jugador"
-        description="No hace falta que tenga cuenta. Si después se suma, vincula esta ficha y conserva sus estadísticas."
-      />
-      <Card>
-        <CardContent>
+    <ScreenTransition>
+      <div className="space-y-6 lg:space-y-8">
+        <Suspense fallback={null}>
+          <FlashToast messages={flash} />
+        </Suspense>
+        <StackHeader backHref={routes.groupPlayers(slug)} backLabel="Plantel" title="Nuevo jugador" focusFlow />
+        <PageHeader title="Nuevo jugador" description="No hace falta que tenga cuenta." />
+        {/* Sin Card: su overflow-hidden rompería la barra de acciones pegajosa en el teléfono. */}
+        <div className="lg:panel lg:rounded-xl lg:p-6">
           {/* key: el formulario se reinicia al cargar otro jugador */}
-          <PlayerForm key={typeof created === "string" ? created : "new"} groupId={ctx.group.id} />
-        </CardContent>
-      </Card>
-    </div>
+          <PlayerForm key={isReentry ? created : "new"} groupId={ctx.group.id} autoFocusNickname={isReentry} />
+        </div>
+      </div>
+    </ScreenTransition>
   );
 }

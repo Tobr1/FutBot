@@ -1,10 +1,9 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { StackHeader } from "@/components/layout/stack-header";
+import { ScreenTransition } from "@/components/motion/screen-transition";
 import { AccessDenied } from "@/components/shared/access-denied";
 import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent } from "@/components/ui/card";
 import { getGroupContext } from "@/features/groups/queries";
 import { OwnPlayerForm } from "@/features/players/components/own-player-form";
 import { PlayerForm } from "@/features/players/components/player-form";
@@ -22,18 +21,15 @@ export default async function EditPlayerPage({ params }: PageProps<"/g/[slug]/ju
   const isMine = ctx.myPlayer?.id === player.id;
   if (!ctx.isAdmin && !isMine) return <AccessDenied backHref={routes.player(slug, player.id)} />;
 
+  const title = ctx.isAdmin ? `Editar a ${player.nickname}` : "Editar mi ficha";
+
   return (
-    <div className="space-y-6">
-      <Link
-        href={routes.player(slug, player.id)}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        {player.nickname}
-      </Link>
-      <PageHeader eyebrow="Plantel" title={ctx.isAdmin ? `Editar a ${player.nickname}` : "Editar mi ficha"} />
-      <Card>
-        <CardContent>
+    <ScreenTransition>
+      <div className="space-y-6 lg:space-y-8">
+        <StackHeader backHref={routes.player(slug, player.id)} backLabel={player.nickname} title={title} focusFlow />
+        <PageHeader title={title} />
+        {/* Sin Card: su overflow-hidden rompería la barra de acciones pegajosa en el teléfono. */}
+        <div className="lg:panel lg:rounded-xl lg:p-6">
           {ctx.isAdmin ? (
             <PlayerForm
               groupId={ctx.group.id}
@@ -59,8 +55,8 @@ export default async function EditPlayerPage({ params }: PageProps<"/g/[slug]/ju
               }}
             />
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </ScreenTransition>
   );
 }

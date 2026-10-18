@@ -1,7 +1,9 @@
 import { Shield, UserPlus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ListGroup, ListRow } from "@/components/shared/list-group";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MemberActions } from "@/features/groups/components/member-actions";
 import { SettingsShell } from "@/features/groups/components/settings-shell";
@@ -17,55 +19,60 @@ export default async function MembersPage({ params }: PageProps<"/g/[slug]/ajust
   const members = await listMembers(ctx.group.id);
 
   return (
-    <SettingsShell ctx={ctx} title="Miembros" description={`${members.length} ${members.length === 1 ? "persona" : "personas"} con cuenta en el grupo.`}>
-      {ctx.isAdmin && (
-        <div>
-          <Button asChild>
-            <Link href={routes.groupInvitations(slug)}>
+    <SettingsShell
+      slug={slug}
+      title="Miembros"
+      description={`${members.length} con cuenta`}
+      actions={
+        ctx.isAdmin ? (
+          <Button asChild className="max-sm:size-11 max-sm:px-0">
+            <Link href={routes.groupInvitations(slug)} transitionTypes={["nav-forward"]}>
               <UserPlus aria-hidden="true" />
-              Invitar
+              <span className="max-sm:sr-only">Invitar</span>
             </Link>
           </Button>
-        </div>
-      )}
-      <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card/70">
+        ) : undefined
+      }
+    >
+      <ListGroup label="Miembros">
         {members.map((member) => {
           const isMe = member.profileId === ctx.userId;
+          const since = `desde ${formatDate(member.joinedAt)}`;
           return (
-            <li key={member.profileId} className="flex items-center gap-3 px-4 py-3">
-              <UserAvatar name={member.displayName} src={member.avatarUrl} size="md" />
-              <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2 truncate font-medium">
+            <ListRow
+              key={member.profileId}
+              leading={<UserAvatar name={member.displayName} src={member.avatarUrl} size="md" />}
+              title={
+                <>
                   {member.displayName}
-                  {isMe && <span className="text-xs text-muted-foreground">(vos)</span>}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {member.player ? (
-                    <Link href={routes.player(slug, member.player.id)} className="hover:text-foreground">
-                      Ficha: {member.player.nickname}
-                    </Link>
-                  ) : (
-                    "Sin ficha vinculada"
-                  )}
-                  {" · "}desde {formatDate(member.joinedAt)}
-                </p>
-              </div>
-              {member.role === "admin" && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-gold uppercase">
-                  <Shield className="size-3" aria-hidden="true" />
-                  Admin
-                </span>
-              )}
-              {ctx.isAdmin && !isMe && (
-                <MemberActions
-                  groupId={ctx.group.id}
-                  member={{ profileId: member.profileId, displayName: member.displayName, role: member.role }}
-                />
-              )}
-            </li>
+                  {isMe && <span className="ml-1.5 text-xs font-normal text-muted-foreground">(vos)</span>}
+                </>
+              }
+              subtitle={member.player ? `Ficha: ${member.player.nickname} · ${since}` : `Sin ficha vinculada · ${since}`}
+              trailing={
+                member.role === "admin" || (ctx.isAdmin && !isMe) ? (
+                  <>
+                    {member.role === "admin" && (
+                      <Badge tone="neutral" size="sm">
+                        <Shield className="text-primary" aria-hidden="true" />
+                        Admin
+                      </Badge>
+                    )}
+                    {ctx.isAdmin && !isMe && (
+                      <span className="-mr-2">
+                        <MemberActions
+                          groupId={ctx.group.id}
+                          member={{ profileId: member.profileId, displayName: member.displayName, role: member.role }}
+                        />
+                      </span>
+                    )}
+                  </>
+                ) : undefined
+              }
+            />
           );
         })}
-      </ul>
+      </ListGroup>
     </SettingsShell>
   );
 }

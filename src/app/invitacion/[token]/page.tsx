@@ -82,7 +82,7 @@ async function InvitationContent({ params }: { params: PageProps<"/invitacion/[t
             {preview.role === "admin" ? "Como administrador" : "Como jugador"}
           </span>
           {preview.playerNickname && (
-            <span className="rounded-full bg-gold/15 px-2.5 py-1 text-xs font-medium text-gold">Ficha: {preview.playerNickname}</span>
+            <span className="rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">Ficha: {preview.playerNickname}</span>
           )}
         </div>
         {preview.playerNickname && (

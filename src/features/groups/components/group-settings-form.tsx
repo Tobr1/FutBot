@@ -1,36 +1,60 @@
 "use client";
 
-import { useActionState } from "react";
-import { fieldAria, FormField } from "@/components/shared/form-field";
+import { useActionState, useRef } from "react";
+import { StickyActionBar } from "@/components/layout/sticky-action-bar";
+import { fieldAria, FormField, groupAria } from "@/components/shared/form-field";
 import { FormMessage } from "@/components/shared/form-message";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { idleState } from "@/lib/action-result";
 import type { Tables } from "@/types/database";
 import { updateGroupSettingsAction } from "../actions";
 import { PlayersPerTeamPicker } from "./players-per-team-picker";
 
+/** Campos numéricos: teclado numérico sin las flechitas de type="number" (zod coerciona en el servidor). */
+const NUMERIC = { type: "text", inputMode: "numeric", pattern: "[0-9]*", enterKeyHint: "done" } as const;
+
 export function GroupSettingsForm({ group }: { group: Tables<"groups"> }) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, action] = useActionState(updateGroupSettingsAction, idleState);
+  useFormErrorFocus(formRef, state);
   const errors = state.status === "error" ? state.fieldErrors : undefined;
   const values = state.status === "error" ? state.values : undefined;
 
   return (
-    <form action={action} className="grid gap-6" noValidate>
+    <form ref={formRef} action={action} className="grid gap-6" noValidate>
       <input type="hidden" name="groupId" value={group.id} />
       <FormMessage state={state} />
 
       <FormField id="name" label="Nombre" errors={errors?.name}>
-        <Input {...fieldAria("name", errors?.name)} defaultValue={values?.name ?? group.name} maxLength={60} required />
+        <Input
+          {...fieldAria("name", errors?.name)}
+          defaultValue={values?.name ?? group.name}
+          maxLength={60}
+          autoCapitalize="sentences"
+          autoComplete="off"
+          required
+        />
       </FormField>
 
       <FormField id="description" label="Descripción" errors={errors?.description}>
-        <Textarea {...fieldAria("description", errors?.description)} defaultValue={values?.description ?? group.description ?? ""} maxLength={280} rows={3} />
+        <Textarea
+          {...fieldAria("description", errors?.description)}
+          defaultValue={values?.description ?? group.description ?? ""}
+          maxLength={280}
+          rows={3}
+          autoCapitalize="sentences"
+        />
       </FormField>
 
-      <FormField id="defaultPlayersPerTeam" label="Formato habitual" errors={errors?.defaultPlayersPerTeam}>
-        <PlayersPerTeamPicker name="defaultPlayersPerTeam" defaultValue={Number(values?.defaultPlayersPerTeam ?? group.default_players_per_team)} />
+      <FormField id="defaultPlayersPerTeam" label="Formato habitual" control="group" errors={errors?.defaultPlayersPerTeam}>
+        <PlayersPerTeamPicker
+          {...groupAria("defaultPlayersPerTeam", errors?.defaultPlayersPerTeam)}
+          name="defaultPlayersPerTeam"
+          defaultValue={Number(values?.defaultPlayersPerTeam ?? group.default_players_per_team)}
+        />
       </FormField>
 
       <div className="grid gap-6 sm:grid-cols-2">
@@ -42,10 +66,8 @@ export function GroupSettingsForm({ group }: { group: Tables<"groups"> }) {
         >
           <Input
             {...fieldAria("votingWindowHours", errors?.votingWindowHours, true)}
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={336}
+            {...NUMERIC}
+            maxLength={3}
             defaultValue={values?.votingWindowHours ?? group.voting_window_hours}
           />
         </FormField>
@@ -57,18 +79,18 @@ export function GroupSettingsForm({ group }: { group: Tables<"groups"> }) {
         >
           <Input
             {...fieldAria("rankingMinMatches", errors?.rankingMinMatches, true)}
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={50}
+            {...NUMERIC}
+            maxLength={2}
             defaultValue={values?.rankingMinMatches ?? group.ranking_min_matches}
           />
         </FormField>
       </div>
 
-      <div>
-        <SubmitButton pendingText="Guardando…">Guardar cambios</SubmitButton>
-      </div>
+      <StickyActionBar>
+        <SubmitButton size="lg" pendingText="Guardando…" className="w-full lg:w-auto">
+          Guardar cambios
+        </SubmitButton>
+      </StickyActionBar>
     </form>
   );
 }

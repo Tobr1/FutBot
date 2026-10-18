@@ -1,29 +1,60 @@
 "use client";
 
-import { Link2, Loader2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { ChevronDown, Link2, Loader2 } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { FormField } from "@/components/shared/form-field";
+import { ChoiceCards } from "@/components/shared/choice-cards";
+import { fieldAria, FormField, groupAria } from "@/components/shared/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { createInvitationAction } from "../actions";
-import { EXPIRY_OPTIONS } from "../schemas";
+import { createInvitationSchema, EXPIRY_OPTIONS } from "../schemas";
 import { ShareInvite } from "./share-invite";
 
+type Role = "player" | "admin";
 type Expiry = (typeof EXPIRY_OPTIONS)[number]["value"];
 
-/** Genera un link de invitación general (sin ficha puntual). */
+const ROLE_OPTIONS: { value: Role; label: string }[] = [
+  { value: "player", label: "Jugador" },
+  { value: "admin", label: "Administrador" },
+];
+
+const EXPIRY_CHOICES = EXPIRY_OPTIONS.map((o) => ({ value: o.value as Expiry, label: o.label }));
+
+/**
+ * Genera un link de invitación general (sin ficha puntual). Por defecto:
+ * jugador, 7 días, sin límite de usos; lo demás va en "Opciones avanzadas".
+ */
 export function CreateInvitation({ groupId, groupName }: { groupId: string; groupName: string }) {
-  const [role, setRole] = useState<"player" | "admin">("player");
+  const [role, setRole] = useState<Role>("player");
   const [expiresIn, setExpiresIn] = useState<Expiry>("7");
   const [maxUses, setMaxUses] = useState("");
+  const [maxUsesError, setMaxUsesError] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const advancedRef = useRef<HTMLDetailsElement>(null);
+  const maxUsesRef = useRef<HTMLInputElement>(null);
+
+  function showMaxUsesError(message: string) {
+    setMaxUsesError(message);
+    toast.error(message);
+    if (advancedRef.current) advancedRef.current.open = true;
+    requestAnimationFrame(() => maxUsesRef.current?.focus());
+  }
 
   function create() {
+    const input = { groupId, role, expiresIn, maxUses };
+    // Misma validación que el servidor, para marcar el campo antes de enviar.
+    const parsed = createInvitationSchema.safeParse(input);
+    const maxUsesIssue = parsed.success ? undefined : parsed.error.issues.find((issue) => issue.path[0] === "maxUses");
+    if (maxUsesIssue) {
+      showMaxUsesError(maxUsesIssue.message);
+      return;
+    }
+    setMaxUsesError(null);
+
     startTransition(async () => {
-      const result = await createInvitationAction({ groupId, role, expiresIn, maxUses });
+      const result = await createInvitationAction(input);
       if (result.ok && result.data) {
         setUrl(result.data.url);
         toast.success(result.message);
@@ -35,90 +66,80 @@ export function CreateInvitation({ groupId, groupName }: { groupId: string; grou
 
   if (url) {
     return (
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         <ShareInvite url={url} message={`Sumate a "${groupName}" en FUTBOLEROS:`} />
-        <Button variant="ghost" onClick={() => setUrl(null)} className="justify-self-start">
-          Crear otra invitación
+        <Button type="button" variant="ghost" onClick={() => setUrl(null)} className="justify-self-center">
+          Crear otro link
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-5">
-      <FormField id="invite-role" label="Rol">
-        <Segmented
-          label="Rol"
-          value={role}
-          onChange={setRole}
-          options={[
-            { value: "player", label: "Jugador" },
-            { value: "admin", label: "Administrador" },
-          ]}
-        />
-      </FormField>
-      <FormField id="invite-expiry" label="Vence en">
-        <Segmented
-          label="Vencimiento"
-          value={expiresIn}
-          onChange={setExpiresIn}
-          options={EXPIRY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-        />
-      </FormField>
-      <FormField id="invite-max" label="Usos máximos (opcional)" hint="Vacío = sin límite. Ideal para pegar en el grupo de WhatsApp.">
-        <Input
-          id="invite-max"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={500}
-          value={maxUses}
-          onChange={(e) => setMaxUses(e.target.value)}
-          placeholder="Sin límite"
-          className="max-w-40"
-        />
-      </FormField>
-      <div>
-        <Button onClick={create} disabled={isPending} size="lg">
-          {isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Link2 aria-hidden="true" />}
-          Generar link
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function Segmented<T extends string>({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: T;
-  onChange: (value: T) => void;
-  options: Array<{ value: T; label: string }>;
-}) {
-  return (
-    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
-      {options.map((option) => {
-        const selected = option.value === value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onChange(option.value)}
-            className={cn(
-              "h-10 rounded-xl border px-4 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/60 focus-visible:outline-none",
-              selected ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:text-foreground",
-            )}
+    <form
+      noValidate
+      className="grid gap-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        create();
+      }}
+    >
+      <details ref={advancedRef} className="group/advanced">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-muted-foreground select-none [&::-webkit-details-marker]:hidden">
+          Opciones avanzadas
+          <ChevronDown className="size-4 transition-transform group-open/advanced:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="grid gap-5 pt-2 pb-2">
+          <FormField id="invite-role" label="Rol" control="group">
+            <ChoiceCards
+              name="role"
+              value={role}
+              onChange={(next) => next && setRole(next)}
+              options={ROLE_OPTIONS}
+              columns="grid-cols-2"
+              {...groupAria("invite-role")}
+            />
+          </FormField>
+          <FormField id="invite-expiry" label="Vence en" control="group">
+            <ChoiceCards
+              name="expiresIn"
+              value={expiresIn}
+              onChange={(next) => next && setExpiresIn(next)}
+              options={EXPIRY_CHOICES}
+              columns="grid-cols-4"
+              {...groupAria("invite-expiry")}
+            />
+          </FormField>
+          <FormField
+            id="invite-max"
+            label="Usos máximos (opcional)"
+            hint="Vacío = sin límite. Ideal para pegar en el grupo de WhatsApp."
+            errors={maxUsesError ? [maxUsesError] : undefined}
           >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
+            <Input
+              ref={maxUsesRef}
+              {...fieldAria("invite-max", maxUsesError ? [maxUsesError] : undefined, true)}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              enterKeyHint="done"
+              maxLength={3}
+              value={maxUses}
+              onChange={(e) => {
+                setMaxUses(e.target.value.replace(/\D/g, ""));
+                if (maxUsesError) setMaxUsesError(null);
+              }}
+              placeholder="Sin límite"
+              className="max-w-40"
+            />
+          </FormField>
+        </div>
+      </details>
+
+      <Button type="submit" size="lg" disabled={isPending} aria-busy={isPending || undefined} className="w-full">
+        {isPending ? <Loader2 className="motion-safe:animate-spin" aria-hidden="true" /> : <Link2 aria-hidden="true" />}
+        Generar link del grupo
+      </Button>
+    </form>
   );
 }

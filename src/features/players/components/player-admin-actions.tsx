@@ -1,34 +1,40 @@
 "use client";
 
-import { Link2, Pencil, Power, PowerOff, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { useState, useTransition } from "react";
+import { Link2, MoreHorizontal, Power, PowerOff, Trash2 } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { BottomSheet, BottomSheetContent } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { type MenuItemDef, ResponsiveMenu } from "@/components/ui/responsive-menu";
 import { createInvitationAction } from "@/features/invitations/actions";
 import { ShareInvite } from "@/features/invitations/components/share-invite";
-import { routes } from "@/lib/routes";
 import { deletePlayerAction, setPlayerActiveAction } from "../actions";
 
-export function PlayerAdminActions({
-  slug,
+/**
+ * Menú ⋯ de la ficha para admins (en el StackHeader). En mobile es una hoja
+ * inferior; en escritorio, un dropdown. Las acciones destructivas confirman
+ * con un diálogo que se abre recién cuando el menú terminó de cerrarse.
+ */
+export function PlayerAdminMenu({
   groupId,
   groupName,
   player,
 }: {
+  /** Reservado (rutas del grupo); hoy las acciones solo necesitan el id. */
   slug: string;
   groupId: string;
   groupName: string;
   player: { id: string; nickname: string; isActive: boolean; isLinked: boolean; matches: number };
 }) {
   const ref = { groupId, playerId: player.id };
+  const [confirm, setConfirm] = useState<"deactivate" | "delete" | null>(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   function createInvite() {
+    if (isPending) return;
     startTransition(async () => {
       const result = await createInvitationAction({ groupId, playerId: player.id, expiresIn: "30" });
       if (result.ok && result.data) setInviteUrl(result.data.url);
@@ -36,92 +42,100 @@ export function PlayerAdminActions({
     });
   }
 
+  function reactivate() {
+    if (isPending) return;
+    startTransition(async () => {
+      const result = await setPlayerActiveAction(ref, true);
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+    });
+  }
+
+  const canDelete = player.matches === 0;
+  const fichaItems: MenuItemDef[] = [];
+  if (!player.isLinked) {
+    fichaItems.push({ key: "invite", label: "Invitar a vincular", icon: Link2, onSelect: createInvite });
+  }
+  fichaItems.push(
+    player.isActive
+      ? { key: "deactivate", label: "Desactivar", icon: PowerOff, onSelect: () => setConfirm("deactivate") }
+      : { key: "reactivate", label: "Reactivar", icon: Power, onSelect: reactivate },
+  );
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button variant="secondary" asChild>
-        <Link href={routes.editPlayer(slug, player.id)}>
-          <Pencil aria-hidden="true" />
-          Editar
-        </Link>
-      </Button>
+    <>
+      <ResponsiveMenu
+        title={player.nickname}
+        trigger={
+          <Button
+            ref={triggerRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            // Sin `disabled` mientras corre una acción: perdería el foco que le devolvió el menú.
+            aria-busy={isPending || undefined}
+            aria-label={`Más acciones para ${player.nickname}`}
+          >
+            <MoreHorizontal className="size-5" aria-hidden="true" />
+          </Button>
+        }
+        sections={[
+          { items: fichaItems },
+          {
+            items: [
+              {
+                key: "delete",
+                label: "Eliminar ficha",
+                icon: Trash2,
+                destructive: true,
+                disabled: !canDelete,
+                description: canDelete ? undefined : "Tiene partidos jugados: desactivalo para conservar su historial.",
+                onSelect: () => setConfirm("delete"),
+              },
+            ],
+          },
+        ]}
+      />
 
-      {!player.isLinked && (
-        <Button variant="secondary" onClick={createInvite} disabled={isPending}>
-          <Link2 aria-hidden="true" />
-          Invitar a vincular
-        </Button>
-      )}
+      <ConfirmDialog
+        open={confirm === "deactivate"}
+        onOpenChange={(open) => !open && setConfirm(null)}
+        title={`¿Desactivar a ${player.nickname}?`}
+        description="No va a aparecer al armar partidos ni en el plantel por defecto. Sus estadísticas se conservan y podés reactivarlo cuando quieras."
+        confirmLabel="Desactivar"
+        onConfirm={() => setPlayerActiveAction(ref, false)}
+      />
 
-      {player.isActive ? (
-        <ConfirmDialog
-          trigger={
-            <Button variant="ghost">
-              <PowerOff aria-hidden="true" />
-              Desactivar
-            </Button>
-          }
-          title={`¿Desactivar a ${player.nickname}?`}
-          description="No va a aparecer al armar partidos ni en el plantel por defecto. Sus estadísticas se conservan y podés reactivarlo cuando quieras."
-          confirmLabel="Desactivar"
-          onConfirm={() => setPlayerActiveAction(ref, false)}
-        />
-      ) : (
-        <Button
-          variant="ghost"
-          disabled={isPending}
-          onClick={() =>
-            startTransition(async () => {
-              const result = await setPlayerActiveAction(ref, true);
-              if (result.ok) toast.success(result.message);
-              else toast.error(result.message);
-            })
-          }
+      <ConfirmDialog
+        open={confirm === "delete"}
+        onOpenChange={(open) => !open && setConfirm(null)}
+        title={`¿Eliminar a ${player.nickname}?`}
+        description="Se borra la ficha definitivamente. Solo es posible porque todavía no jugó ningún partido."
+        confirmLabel="Eliminar"
+        onConfirm={() => deletePlayerAction(ref)}
+      />
+
+      <BottomSheet open={inviteUrl !== null} onOpenChange={(open) => !open && setInviteUrl(null)}>
+        <BottomSheetContent
+          title={`Invitación para ${player.nickname}`}
+          description="Mandale este link. Al aceptarlo, su cuenta queda vinculada a esta ficha. Sirve una sola vez y vence en 30 días."
+          showCancel="Cerrar"
+          onCloseAutoFocus={(event) => {
+            // La hoja no tiene disparador propio: el foco vuelve al botón ⋯.
+            event.preventDefault();
+            triggerRef.current?.focus({ preventScroll: true });
+          }}
         >
-          <Power aria-hidden="true" />
-          Reactivar
-        </Button>
-      )}
-
-      {player.matches === 0 ? (
-        <ConfirmDialog
-          trigger={
-            <Button variant="destructive">
-              <Trash2 aria-hidden="true" />
-              Eliminar
-            </Button>
-          }
-          title={`¿Eliminar a ${player.nickname}?`}
-          description="Se borra la ficha definitivamente. Solo es posible porque todavía no jugó ningún partido."
-          confirmLabel="Eliminar"
-          onConfirm={() => deletePlayerAction(ref)}
-        />
-      ) : (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span tabIndex={0}>
-              <Button variant="destructive" disabled>
-                <Trash2 aria-hidden="true" />
-                Eliminar
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Tiene partidos jugados: desactivalo para conservar su historial.</TooltipContent>
-        </Tooltip>
-      )}
-
-      <Dialog open={inviteUrl !== null} onOpenChange={(open) => !open && setInviteUrl(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Invitación para {player.nickname}</DialogTitle>
-            <DialogDescription>
-              Mandale este link. Al aceptarlo, su cuenta queda vinculada a esta ficha. Sirve una sola vez y vence en 30 días.
-            </DialogDescription>
-          </DialogHeader>
           {inviteUrl && (
-            <ShareInvite url={inviteUrl} message={`${player.nickname}, sumate a "${groupName}" en FUTBOLEROS para ver tus estadísticas:`} />
+            <div className="pb-2">
+              <ShareInvite
+                url={inviteUrl}
+                message={`${player.nickname}, sumate a "${groupName}" en FUTBOLEROS para ver tus estadísticas:`}
+              />
+            </div>
           )}
-        </DialogContent>
-      </Dialog>
-    </div>
+        </BottomSheetContent>
+      </BottomSheet>
+    </>
   );
 }

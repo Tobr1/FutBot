@@ -1,14 +1,20 @@
-import { ArrowLeft, Award, Goal, HandHelping, Link2, Link2Off, LineChart, Pencil, Percent, Shirt, Swords } from "lucide-react";
+import { LineChart, Link2, Link2Off, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { StackHeader } from "@/components/layout/stack-header";
+import { ScreenTransition } from "@/components/motion/screen-transition";
 import { EmptyState } from "@/components/shared/empty-state";
-import { PlayerCard } from "@/components/shared/player-card";
+import { ListGroup, ListRow } from "@/components/shared/list-group";
 import { PositionBadge } from "@/components/shared/position-badge";
-import { StatTile } from "@/components/shared/stat-tile";
+import { RecordBar } from "@/components/shared/record-bar";
+import { SectionHeader } from "@/components/shared/section-header";
+import { StatStrip } from "@/components/shared/stat-strip";
 import { Button } from "@/components/ui/button";
 import { FOOT_LABELS } from "@/domain/players/positions";
+import { effectiveness } from "@/domain/players/stats";
 import { getGroupContext } from "@/features/groups/queries";
-import { PlayerAdminActions } from "@/features/players/components/player-admin-actions";
+import { PlayerAdminMenu } from "@/features/players/components/player-admin-actions";
+import { PlayerHero } from "@/features/players/components/player-hero";
 import { getPlayer } from "@/features/players/queries";
 import { routes } from "@/lib/routes";
 
@@ -27,124 +33,117 @@ export default async function PlayerPage({ params }: PageProps<"/g/[slug]/jugado
 
   const isMine = ctx.myPlayer?.id === player.id;
   const { stats } = player;
-  const winRate = stats.matches > 0 ? Math.round(((stats.wins + stats.draws * 0.5) / stats.matches) * 100) : null;
+  const winRate = effectiveness(stats);
 
   return (
-    <div className="space-y-6">
-      <Link href={routes.groupPlayers(slug)} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        Plantel
-      </Link>
-
-      <div className="grid gap-6 md:grid-cols-[240px_1fr]">
-        <div className="mx-auto w-full max-w-[240px]">
-          <PlayerCard
-            player={{
-              nickname: player.nickname,
-              fullName: player.fullName,
-              avatarUrl: player.avatarUrl,
-              rating: player.baseRating,
-              primaryPosition: player.positions.primary,
-              isProvisional: stats.matches < 3,
-              isLinked: player.isLinked,
-              isActive: player.isActive,
-              stats,
-            }}
-          />
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-4xl leading-none font-extrabold tracking-wide uppercase">{player.nickname}</h1>
-              {!player.isActive && <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Inactivo</span>}
-              {isMine && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Sos vos</span>}
-            </div>
-            {player.fullName && <p className="text-muted-foreground">{player.fullName}</p>}
-            <dl className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
-              <div className="space-y-1">
-                <dt className="text-xs text-muted-foreground">Posiciones</dt>
-                <dd className="flex gap-1.5">
-                  {player.positions.primary ? <PositionBadge position={player.positions.primary} variant="long" /> : <span>—</span>}
-                  {player.positions.secondary && <PositionBadge position={player.positions.secondary} variant="long" muted />}
-                </dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-xs text-muted-foreground">Pierna hábil</dt>
-                <dd className="flex h-6 items-center">{player.dominantFoot ? FOOT_LABELS[player.dominantFoot] : "—"}</dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-xs text-muted-foreground">Cuenta</dt>
-                <dd className="flex h-6 items-center gap-1.5">
-                  {player.isLinked ? (
-                    <>
-                      <Link2 className="size-4 text-success" aria-hidden="true" />
-                      {player.linkedName ?? "Vinculada"}
-                    </>
-                  ) : (
-                    <>
-                      <Link2Off className="size-4 text-muted-foreground" aria-hidden="true" />
-                      Sin vincular
-                    </>
-                  )}
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {ctx.isAdmin ? (
-            <PlayerAdminActions
-              slug={slug}
-              groupId={ctx.group.id}
-              groupName={ctx.group.name}
-              player={{
-                id: player.id,
-                nickname: player.nickname,
-                isActive: player.isActive,
-                isLinked: player.isLinked,
-                matches: stats.matches,
-              }}
-            />
-          ) : (
-            isMine && (
-              <Button variant="secondary" asChild>
-                <Link href={routes.editPlayer(slug, player.id)}>
-                  <Pencil aria-hidden="true" />
-                  Editar mi ficha
-                </Link>
-              </Button>
-            )
-          )}
-
-          <section aria-labelledby="stats-title" className="space-y-3">
-            <h2 id="stats-title" className="font-display text-xl font-bold tracking-wide uppercase">
-              Estadísticas
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <StatTile label="Partidos" value={stats.matches} icon={Shirt} />
-              <StatTile label="G · E · P" value={`${stats.wins}·${stats.draws}·${stats.losses}`} icon={Swords} />
-              <StatTile label="Efectividad" value={winRate === null ? "—" : `${winRate}%`} icon={Percent} tone="success" />
-              <StatTile label="Goles" value={stats.goals} icon={Goal} tone="primary" />
-              <StatTile label="Asistencias" value={stats.assists} icon={HandHelping} />
-              <StatTile label="MVP" value={stats.mvps} icon={Award} tone="gold" />
-            </div>
-            {stats.matches === 0 && (
-              <p className="text-xs text-muted-foreground">Las estadísticas se completan solas a medida que se cargan resultados.</p>
-            )}
-          </section>
-        </div>
-      </div>
-
-      <section aria-labelledby="evolution-title" className="space-y-3">
-        <h2 id="evolution-title" className="font-display text-xl font-bold tracking-wide uppercase">
-          Evolución
-        </h2>
-        <EmptyState
-          icon={LineChart}
-          title="Sin historial todavía"
-          description="El gráfico de evolución y la comparación con otros jugadores aparecen con los primeros partidos votados (Fase 3)."
+    <ScreenTransition>
+      <div className="space-y-6 lg:space-y-8">
+        <StackHeader
+          backHref={routes.groupPlayers(slug)}
+          backLabel="Plantel"
+          title={player.nickname}
+          actions={
+            <>
+              {(ctx.isAdmin || isMine) && (
+                <Button asChild variant="ghost" size="icon">
+                  <Link href={routes.editPlayer(slug, player.id)} transitionTypes={["nav-forward"]} aria-label="Editar">
+                    <Pencil className="size-5" aria-hidden="true" />
+                  </Link>
+                </Button>
+              )}
+              {ctx.isAdmin && (
+                <PlayerAdminMenu
+                  slug={slug}
+                  groupId={ctx.group.id}
+                  groupName={ctx.group.name}
+                  player={{
+                    id: player.id,
+                    nickname: player.nickname,
+                    isActive: player.isActive,
+                    isLinked: player.isLinked,
+                    matches: stats.matches,
+                  }}
+                />
+              )}
+            </>
+          }
         />
-      </section>
-    </div>
+
+        <PlayerHero player={player} isMine={isMine} isAdmin={ctx.isAdmin} />
+
+        <section aria-label="Estadísticas" className="space-y-4">
+          <StatStrip
+            items={[
+              { label: "PJ", srLabel: "Partidos jugados", value: stats.matches },
+              { label: "Goles", value: stats.goals, tone: "primary" },
+              { label: "Asist.", srLabel: "Asistencias", value: stats.assists },
+              { label: "MVP", value: stats.mvps, tone: "gold" },
+              {
+                label: "%Vic",
+                srLabel: "Efectividad",
+                value: winRate === null ? "—" : `${winRate}%`,
+                tone: winRate === null ? "default" : "success",
+              },
+            ]}
+          />
+          <RecordBar wins={stats.wins} draws={stats.draws} losses={stats.losses} />
+        </section>
+
+        <section aria-labelledby="detalles" className="space-y-3">
+          <SectionHeader title="Detalles" id="detalles" />
+          <ListGroup>
+            <ListRow
+              title="Posiciones"
+              trailing={
+                player.positions.primary ? (
+                  <>
+                    <PositionBadge position={player.positions.primary} variant="long" />
+                    {player.positions.secondary && (
+                      <PositionBadge position={player.positions.secondary} variant="long" muted />
+                    )}
+                  </>
+                ) : (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )
+              }
+            />
+            <ListRow
+              title="Pierna hábil"
+              trailing={
+                <span className="text-sm text-muted-foreground">
+                  {player.dominantFoot ? FOOT_LABELS[player.dominantFoot] : "—"}
+                </span>
+              }
+            />
+            <ListRow
+              title="Cuenta"
+              trailing={
+                player.isLinked ? (
+                  <span className="flex max-w-[45vw] items-center gap-1.5 text-sm lg:max-w-xs">
+                    <Link2 className="size-4 shrink-0 text-success" aria-hidden="true" />
+                    <span className="truncate">{player.linkedName ?? "Vinculada"}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Link2Off className="size-4 shrink-0" aria-hidden="true" />
+                    Sin vincular
+                  </span>
+                )
+              }
+            />
+          </ListGroup>
+        </section>
+
+        <section aria-labelledby="evolucion" className="space-y-3">
+          <SectionHeader title="Evolución" id="evolucion" />
+          <EmptyState
+            size="sm"
+            icon={LineChart}
+            title="Muy pronto"
+            description={`Vas a ver ${isMine ? "tu" : "su"} evolución partido a partido.`}
+          />
+        </section>
+      </div>
+    </ScreenTransition>
   );
 }
