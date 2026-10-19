@@ -39,6 +39,12 @@ export default async function MatchResultPage({ params }: PageProps<"/g/[slug]/p
       return p ? [{ id: p.id, nickname: p.nickname, avatarUrl: p.avatarUrl }] : [];
     }),
   });
+  // Un MVP que ya no está en ningún equipo (se lo sacó al corregir) no se
+  // precarga: la RPC lo rechazaría y no habría forma de guardar.
+  const adminMvp =
+    match.mvp?.source === "admin" && (match.teams.a.memberIds.includes(match.mvp.playerId) || match.teams.b.memberIds.includes(match.mvp.playerId))
+      ? match.mvp.playerId
+      : null;
 
   return (
     <ScreenTransition>
@@ -52,7 +58,7 @@ export default async function MatchResultPage({ params }: PageProps<"/g/[slug]/p
               matchId={match.id}
               teams={{ a: team("a"), b: team("b") }}
               initial={eventsToDraft(match.teams.a.score, match.teams.b.score, match.events)}
-              initialMvp={match.mvp?.source === "admin" ? match.mvp.playerId : null}
+              initialMvp={adminMvp}
               initialNotes={match.notes ?? ""}
               isCorrection={isCorrection}
             />

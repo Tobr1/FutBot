@@ -224,6 +224,19 @@ export function assignmentFromSplit(split: Pick<TeamSplit, "a" | "b">): Record<s
   return Object.fromEntries([...split.a.map((id) => [id, "a"] as const), ...split.b.map((id) => [id, "b"] as const)]);
 }
 
+/**
+ * Fijados después de aplicar una alternativa: como al mover a mano, cada
+ * fijado sigue a su jugador al equipo que le tocó y se suelta si quedó sin
+ * equipo. Así nunca queda un fijado en un equipo distinto del que se ve
+ * (pasa al aplicar una alternativa generada antes de cambiar los fijados).
+ */
+export function pinsAfterApply(pins: Readonly<Record<string, Side>>, split: Pick<TeamSplit, "a" | "b">): Record<string, Side> {
+  const sides = assignmentFromSplit(split);
+  const next: Record<string, Side> = {};
+  for (const id of Object.keys(pins)) if (sides[id]) next[id] = sides[id];
+  return next;
+}
+
 /** La asignación actual es exactamente esta alternativa (mismos colores, nadie sin equipo). */
 export function matchesSplit(assignment: Readonly<Record<string, Side | null>>, split: Pick<TeamSplit, "a" | "b">): boolean {
   const assigned = Object.values(assignment).filter(Boolean).length;

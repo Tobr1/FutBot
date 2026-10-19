@@ -46,6 +46,35 @@ describe("zonedDateTimeToIso", () => {
     expect(zonedDateTimeToIso("2026-07-15", "20:00", "Europe/Madrid")).toBe("2026-07-15T18:00:00.000Z");
   });
 
+  it("una hora que no existe (adelanto) se corre hacia adelante, nunca al día anterior", () => {
+    // Santiago: el 6/9/2026 a las 00:00 pasa a 01:00 (UTC−4 → UTC−3).
+    const santiago = zonedDateTimeToIso("2026-09-06", "00:30", "America/Santiago");
+    expect(isoToZoned(santiago, "America/Santiago")).toMatchObject({ date: "2026-09-06", time: "01:30" });
+    expect(zonedDateTimeToIso("2026-09-06", "00:00", "America/Santiago")).toBe("2026-09-06T04:00:00.000Z");
+    // Nueva York: el 8/3/2026 a las 02:00 pasa a 03:00.
+    expect(zonedDateTimeToIso("2026-03-08", "02:30", "America/New_York")).toBe("2026-03-08T07:30:00.000Z");
+    // Madrid: el 29/3/2026 a las 02:00 pasa a 03:00.
+    expect(zonedDateTimeToIso("2026-03-29", "02:30", "Europe/Madrid")).toBe("2026-03-29T01:30:00.000Z");
+  });
+
+  it("una hora repetida (atraso) es la primera", () => {
+    expect(zonedDateTimeToIso("2026-11-01", "01:30", "America/New_York")).toBe("2026-11-01T05:30:00.000Z");
+    expect(zonedDateTimeToIso("2026-10-25", "02:30", "Europe/Madrid")).toBe("2026-10-25T00:30:00.000Z");
+  });
+
+  it("la fecha local nunca cambia (todo el año, cada media hora, varias zonas)", () => {
+    for (const zone of ["America/Santiago", "America/New_York", "Europe/Madrid", "Australia/Sydney", "America/Asuncion", BA]) {
+      for (let d = 0; d < 366; d += 1) {
+        const date = addDays("2026-01-01", d);
+        for (const time of ["00:00", "00:30", "01:00", "01:30", "02:00", "02:30", "03:00", "23:30"]) {
+          const local = isoToZoned(zonedDateTimeToIso(date, time, zone), zone);
+          expect(local.date).toBe(date);
+          expect(local.time >= time).toBe(true);
+        }
+      }
+    }
+  });
+
   it("funciona en UTC", () => {
     expect(zonedDateTimeToIso("2026-10-25", "22:00", "UTC")).toBe("2026-10-25T22:00:00.000Z");
   });

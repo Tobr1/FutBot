@@ -99,7 +99,8 @@ export const recordResultSchema = matchRefSchema.extend({
   scoreB: score,
   events: z.array(matchEventSchema).max(300, "Hay demasiados eventos."),
   mvpPlayerId: z.uuid().nullable(),
-  notes: optionalText(500, "Usá como máximo 500 caracteres."),
+  /** Sin el campo, las notas no se tocan; vacío las borra (la RPC trata '' como borrar). */
+  notes: z.string().trim().max(500, "Usá como máximo 500 caracteres.").optional(),
 });
 
 const importNickname = z

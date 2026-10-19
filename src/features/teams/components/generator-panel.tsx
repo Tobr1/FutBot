@@ -257,7 +257,7 @@ function TeamList({
             <li key={id} className="flex min-h-8 items-center gap-1.5 text-sm">
               <UserAvatar name={nickname} src={player?.avatarUrl} size="xs" />
               <span className="min-w-0 flex-1 truncate font-medium">{nickname}</span>
-              {pins[id] && <Pin className="size-3.5 shrink-0 text-primary" aria-label="Fijado" />}
+              {pins[id] === side && <Pin className="size-3.5 shrink-0 text-primary" aria-label="Fijado" />}
               <span className="shrink-0 font-display text-sm font-bold text-muted-foreground tabular">
                 {formatDecimal(skillOf.get(id) ?? 0)}
               </span>

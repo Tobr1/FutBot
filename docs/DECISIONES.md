@@ -2,6 +2,23 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-045 · Correcciones coherentes y cambios de hora "compatibles"
+- **MVP:** si una corrección de equipos saca al MVP de los dos equipos, `set_match_teams` lo borra, venga del admin o de los votos (migración `20261019000600`). Si era por votos, `finalize_match_voting` lo vuelve a elegir con los votos que quedan. "Corregir resultado" no precarga un MVP que ya no está en un equipo.
+- **Notas:** en `record_match_result`, `p_notes` null deja las notas como están y `''` las borra, igual que al editar el partido.
+- **Premios del mes:** un mes no se cierra mientras algún partido suyo tenga la votación abierta. El MVP elegido por votos se fija recién cuando alguien abre el partido (D-028), así que hasta entonces el MVP del mes todavía puede cambiar.
+- **Fechas:** `zonedDateTimeToIso` resuelve los cambios de horario como Temporal y Postgres. Una hora repetida toma su primer instante. Una hora que no existe se corre hacia adelante lo que dura el salto. Así una fecha nunca cae en el día anterior, y "00:00" es siempre el primer instante del día local, que es lo que usan los límites de temporada.
+- **Fijados:** al aplicar una alternativa, los fijados siguen a su jugador, igual que al moverlo a mano (D-032).
+- **Redirecciones:** `safeNextPath` rechaza también barras invertidas y caracteres de control, porque el parser de URL descarta tabs y saltos de línea, y `/\t/otro-sitio` terminaba en otro origen.
+
+## D-044 · Listas con datos anidados embebidos por el `max-rows` de PostgREST
+PostgREST corta cada respuesta en 1000 filas sin avisar, también la de un `.in("match_id", ids)` aparte. Las listas de partidos ("Partidos" y el historial, que acumula hasta 500) piden convocatoria, equipos y goles embebidos en la consulta de `matches` (`match_participants!…(status)`, `teams!…`, `match_events!…`): el límite cuenta solo las filas de partidos y la URL no lleva cientos de ids. Las lecturas de todo el grupo (`player_match_lines`, `get_rating_aggregates`) siguen paginando de a 1000 (D-025) y, si pasaran el tope de 100 000 filas, fallan en lugar de devolver un historial cortado. Si algún día se baja `max-rows` del proyecto, hay que bajar igual el tamaño de página de `fetchAll`.
+
+## D-043 · Reglas de armado únicas por pareja, sin importar orden ni tipo
+`team_constraints` tiene un índice único sobre `(group_id, least(player_a, player_b), greatest(player_a, player_b))`: A-B y B-A son la misma regla, y una pareja no puede estar a la vez "juntos" y "separados". Para cambiar el tipo se borra la regla y se crea otra (no hay UPDATE). El intento repetido devuelve `team_constraints_pair_key`, que `src/lib/errors.ts` traduce a "Ya hay una restricción para esos dos jugadores.". Así el optimizador nunca recibe contradicciones guardadas; las que surgen con los fijados de la sesión se detectan antes de optimizar (D-032).
+
+## D-042 · Cualquier miembro refresca la caché del motor
+`replace_skill_history` (migración `20261019000500`) es `SECURITY DEFINER` y la puede llamar cualquier miembro del grupo, no solo admins: los valores son deterministas a partir de datos que ese miembro ya puede leer (líneas de partido y agregados de votaciones cerradas) y la caché se dispara al ver un partido recién cerrado (D-027), que lo hace cualquiera. La RPC valida rangos, que jugadores y partidos sean del grupo, sin pares repetidos y hasta 5000 filas, y serializa refrescos concurrentes con un advisory lock. Lo peor que puede hacer un miembro malicioso es escribir valores en rango pero falsos en una caché que ninguna pantalla lee (D-026); se reconstruye con la próxima sincronización. Con más de 5000 filas (unos 350 partidos de 7 contra 7) la app deja de sincronizar: si algún día se lee la caché, habrá que partir el envío.
+
 ## D-041 · Votaciones pendientes también en Mis grupos
 `/inicio` muestra el mismo aviso "Votación abierta" que el inicio del grupo, pero con las votaciones de todos los grupos donde tengo ficha (`listMyPendingVotings`, que reutiliza `listPendingVotings` por ficha). Con más de un grupo, el aviso dice de qué grupo es. La hora se lee después de `connection()`.
 

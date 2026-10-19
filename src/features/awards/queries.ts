@@ -18,6 +18,24 @@ import {
 import type { RatingPosition } from "@/domain/rating";
 import { seasonRange } from "@/domain/stats/seasons";
 import { getGroupRatings, listSeasonsForStats, loadGroupHistory } from "@/features/stats/queries";
+import { createClient } from "@/lib/supabase/server";
+
+/**
+ * Partidos jugados con la votación abierta (pocos: los de los últimos días).
+ * Sus meses no se premian todavía. Quien llama ya pasó por connection().
+ */
+async function listOpenVotingDates(groupId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("matches")
+    .select("scheduled_at")
+    .eq("group_id", groupId)
+    .eq("status", "finished")
+    .gt("voting_closes_at", new Date().toISOString())
+    .limit(200);
+  if (error) throw error;
+  return data.map((m) => m.scheduled_at);
+}
 
 /*
  * DAL de premios y logros (D-035, D-036). Se calculan al leer desde los mismos hechos
@@ -33,10 +51,11 @@ export interface GroupAwardsData {
 }
 
 const awardsFor = cache(async (groupId: string, today: string | null, minMatches: number): Promise<GroupAwardsData> => {
-  const [history, result, seasons] = await Promise.all([
+  const [history, result, seasons, openVotingAt] = await Promise.all([
     loadGroupHistory(groupId),
     getGroupRatings(groupId),
     listSeasonsForStats(groupId),
+    today ? listOpenVotingDates(groupId) : Promise.resolve([]),
   ]);
 
   // Mejor promedio de cada temporada ya terminada (cada una corre el motor en su rango, memoizado).
@@ -60,7 +79,7 @@ const awardsFor = cache(async (groupId: string, today: string | null, minMatches
     players[p.id] = { nickname: p.nickname, avatarUrl: p.avatarUrl };
   }
 
-  const input = { lines: history.lines, timeZone: history.timeZone, positions, today, performances: result.byMatch, seasonChampions };
+  const input = { lines: history.lines, timeZone: history.timeZone, positions, today, performances: result.byMatch, seasonChampions, openVotingAt };
   return {
     awards: computeAwards(input),
     months: monthlyAwards(input),

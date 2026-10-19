@@ -9,6 +9,7 @@ import {
   mergeConstraints,
   NEW_PLAYER_SIGMA,
   pairKey,
+  pinsAfterApply,
   pinsAfterMove,
   pinsKey,
   roundProbabilities,
@@ -150,6 +151,13 @@ describe("fijados de la sesión", () => {
     expect(pinsAfterMove({ x: "a" }, "x", "b")).toEqual({ x: "b" });
     expect(pinsAfterMove({ x: "a" }, "x", null)).toEqual({});
     expect(pinsAfterMove({ x: "a" }, "y", "b")).toEqual({ x: "a" });
+  });
+
+  it("pinsAfterApply: los fijados siguen a su jugador en la alternativa aplicada", () => {
+    const split = { a: ["x", "z"], b: ["y"] };
+    // x estaba fijado en Rojo pero la alternativa (vieja) lo pone en Azul.
+    expect(pinsAfterApply({ x: "b", y: "b", w: "a" }, split)).toEqual({ x: "a", y: "b" });
+    expect(pinsAfterApply({}, split)).toEqual({});
   });
 
   it("pinsKey no depende del orden", () => {

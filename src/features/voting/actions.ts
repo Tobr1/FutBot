@@ -15,7 +15,7 @@ import { submitRatingsSchema } from "./schemas";
 export async function submitRatingsAction(input: unknown): Promise<MutationResult> {
   const parsed = submitRatingsSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Datos inválidos.");
-  const { groupId, matchId, ratings } = parsed.data;
+  const { matchId, ratings } = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("submit_match_ratings", {
@@ -24,7 +24,11 @@ export async function submitRatingsAction(input: unknown): Promise<MutationResul
   });
   if (error) return fail(toUserMessage(error));
 
-  const { data: group } = await supabase.from("groups").select("slug").eq("id", groupId).maybeSingle();
+  // El grupo sale del partido (RLS), no del groupId que manda el cliente.
+  const { data: match } = await supabase.from("matches").select("group_id").eq("id", matchId).maybeSingle();
+  const { data: group } = match
+    ? await supabase.from("groups").select("slug").eq("id", match.group_id).maybeSingle()
+    : { data: null };
   revalidatePath("/g/[slug]", "layout");
   if (group) redirect(`${routes.match(group.slug, matchId)}?votos=1`);
   return { ok: true, message: "¡Votos enviados!" };

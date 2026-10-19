@@ -311,3 +311,59 @@ describe("cara a cara (get_head_to_head)", () => {
     );
   });
 });
+
+describe("corrección de equipos con MVP", () => {
+  let g: GroupFixture;
+  let ids: string[];
+
+  beforeAll(async () => {
+    g = await createGroupWithAdmin(t);
+    ids = [g.adminPlayerId];
+    for (const name of ["Manu", "Vece", "Paramo", "Tadeo", "Fran", "Boni", "Matías"]) ids.push(await addPlayer(t, g, name));
+  });
+
+  async function mvpOf(matchId: string) {
+    const [row] = await t.sql<{ mvp_player_id: string | null; mvp_source: string | null }>(
+      "select mvp_player_id, mvp_source from public.matches where id = $1",
+      [matchId],
+    );
+    return row;
+  }
+
+  it("si el MVP queda afuera de los equipos se borra y el resultado se puede corregir", async () => {
+    const matchId = await finishedMatch(g, ids.slice(0, 4), ids.slice(4, 8), 2, 1);
+    await t.rpc(g.adminId, "record_match_result", { p_match_id: matchId, p_score_a: 2, p_score_b: 1, p_mvp_player_id: ids[1] });
+    expect(await mvpOf(matchId)).toEqual({ mvp_player_id: ids[1], mvp_source: "admin" });
+
+    // Se saca al MVP (sigue convocado, pero sin equipo).
+    await t.rpc(g.adminId, "set_match_teams", { p_match_id: matchId, p_team_a: [ids[0], ids[2], ids[3]], p_team_b: ids.slice(4, 8) });
+    expect(await mvpOf(matchId)).toEqual({ mvp_player_id: null, mvp_source: null });
+
+    await t.rpc(g.adminId, "record_match_result", { p_match_id: matchId, p_score_a: 3, p_score_b: 1 });
+    const [match] = await t.sql<{ status: string }>("select status from public.matches where id = $1", [matchId]);
+    expect(match.status).toBe("finished");
+  });
+
+  it("las notas del resultado: null no las toca y vacío las borra", async () => {
+    const matchId = await finishedMatch(g, ids.slice(0, 4), ids.slice(4, 8), 0, 0);
+    const notesOf = async () =>
+      (await t.sql<{ notes: string | null }>("select notes from public.matches where id = $1", [matchId]))[0].notes;
+    await t.rpc(g.adminId, "record_match_result", { p_match_id: matchId, p_score_a: 0, p_score_b: 0, p_notes: "Se cortó la luz" });
+    expect(await notesOf()).toBe("Se cortó la luz");
+    await t.rpc(g.adminId, "record_match_result", { p_match_id: matchId, p_score_a: 1, p_score_b: 0 });
+    expect(await notesOf()).toBe("Se cortó la luz");
+    await t.rpc(g.adminId, "record_match_result", { p_match_id: matchId, p_score_a: 1, p_score_b: 0, p_notes: "  " });
+    expect(await notesOf()).toBeNull();
+  });
+
+  it("mover al MVP al otro equipo no lo borra", async () => {
+    const matchId = await finishedMatch(g, ids.slice(0, 4), ids.slice(4, 8), 1, 1);
+    await t.rpc(g.adminId, "record_match_result", { p_match_id: matchId, p_score_a: 1, p_score_b: 1, p_mvp_player_id: ids[1] });
+    await t.rpc(g.adminId, "set_match_teams", {
+      p_match_id: matchId,
+      p_team_a: [ids[0], ids[2], ids[3], ids[4]],
+      p_team_b: [ids[1], ...ids.slice(5, 8)],
+    });
+    expect(await mvpOf(matchId)).toEqual({ mvp_player_id: ids[1], mvp_source: "admin" });
+  });
+});

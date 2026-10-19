@@ -4,7 +4,7 @@ import type { MatchStatus, ParticipantStatus } from "@/domain/matches/status";
 import type { Side, StoredEvent } from "@/domain/matches/result";
 import { type PlayerPositions, type Position, toPlayerPositions } from "@/domain/players/positions";
 import { createClient } from "@/lib/supabase/server";
-import type { Json } from "@/types/database";
+import type { Enums, Json } from "@/types/database";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32,54 +32,46 @@ type MatchRow = {
   players_per_team: number;
   status: MatchStatus;
   mvp_player_id: string | null;
+  match_participants: Array<{ status: Enums<"participant_status"> }>;
+  teams: Array<{ side: Side; name: string; score: number | null }>;
 };
 
-const LIST_COLUMNS = "id, scheduled_at, venue, players_per_team, status, mvp_player_id" as const;
+/**
+ * Convocatoria y equipos embebidos: max-rows de PostgREST limita solo las
+ * filas de partidos, no las anidadas (con `.in()` aparte, 100 partidos con
+ * 20 convocados ya truncaban los conteos en silencio).
+ */
+const LIST_COLUMNS =
+  "id, scheduled_at, venue, players_per_team, status, mvp_player_id, match_participants!match_participants_match_fkey(status), teams!teams_match_fkey(side, name, score)" as const;
 
 /** Completa filas de matches con conteo de convocados, equipos y MVP. */
 async function hydrateList(rows: MatchRow[]): Promise<MatchListItem[]> {
   if (rows.length === 0) return [];
-  const supabase = await createClient();
-  const ids = rows.map((m) => m.id);
   const mvpIds = [...new Set(rows.map((m) => m.mvp_player_id).filter((id): id is string => Boolean(id)))];
 
-  const [participants, teams, mvps] = await Promise.all([
-    supabase.from("match_participants").select("match_id, status").in("match_id", ids),
-    supabase.from("teams").select("match_id, side, name, score").in("match_id", ids),
-    mvpIds.length > 0
-      ? supabase.from("players").select("id, nickname").in("id", mvpIds)
-      : Promise.resolve({ data: [] as Array<{ id: string; nickname: string }>, error: null }),
-  ]);
-  if (participants.error) throw participants.error;
-  if (teams.error) throw teams.error;
-  if (mvps.error) throw mvps.error;
-
-  const counts = new Map<string, { confirmed: number; reserve: number }>();
-  for (const p of participants.data) {
-    const entry = counts.get(p.match_id) ?? { confirmed: 0, reserve: 0 };
-    if (p.status === "confirmed") entry.confirmed += 1;
-    else if (p.status === "reserve") entry.reserve += 1;
-    counts.set(p.match_id, entry);
+  let mvpNames = new Map<string, string>();
+  if (mvpIds.length > 0) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("players").select("id, nickname").in("id", mvpIds);
+    if (error) throw error;
+    mvpNames = new Map(data.map((p) => [p.id, p.nickname]));
   }
-  const teamMap = new Map<string, Record<Side, TeamScore>>();
-  for (const t of teams.data) {
-    const entry = teamMap.get(t.match_id) ?? { a: { name: "Azul", score: null }, b: { name: "Rojo", score: null } };
-    entry[t.side] = { name: t.name, score: t.score };
-    teamMap.set(t.match_id, entry);
-  }
-  const mvpNames = new Map(mvps.data.map((p) => [p.id, p.nickname]));
 
-  return rows.map((m) => ({
-    id: m.id,
-    scheduledAt: m.scheduled_at,
-    venue: m.venue,
-    playersPerTeam: m.players_per_team,
-    status: m.status,
-    confirmed: counts.get(m.id)?.confirmed ?? 0,
-    reserve: counts.get(m.id)?.reserve ?? 0,
-    teams: teamMap.get(m.id) ?? { a: { name: "Azul", score: null }, b: { name: "Rojo", score: null } },
-    mvp: m.mvp_player_id ? { id: m.mvp_player_id, nickname: mvpNames.get(m.mvp_player_id) ?? "—" } : null,
-  }));
+  return rows.map((m) => {
+    const teams: Record<Side, TeamScore> = { a: { name: "Azul", score: null }, b: { name: "Rojo", score: null } };
+    for (const t of m.teams) teams[t.side] = { name: t.name, score: t.score };
+    return {
+      id: m.id,
+      scheduledAt: m.scheduled_at,
+      venue: m.venue,
+      playersPerTeam: m.players_per_team,
+      status: m.status,
+      confirmed: m.match_participants.filter((p) => p.status === "confirmed").length,
+      reserve: m.match_participants.filter((p) => p.status === "reserve").length,
+      teams,
+      mvp: m.mvp_player_id ? { id: m.mvp_player_id, nickname: mvpNames.get(m.mvp_player_id) ?? "—" } : null,
+    };
+  });
 }
 
 export interface MatchLists {
@@ -277,7 +269,8 @@ export const getMatch = cache(async (groupId: string, matchId: string): Promise<
   if (members.error) throw members.error;
   if (events.error) throw events.error;
 
-  // El MVP siempre jugó (FK a team_members), así que está entre los convocados.
+  // El MVP siempre jugó: record_match_result lo exige en team_members y
+  // set_match_teams lo borra si queda afuera (migración 20261019000600).
   const playerIds = participants.data.map((p) => p.player_id);
   let players = new Map<string, MatchPlayer>();
   if (playerIds.length > 0) {

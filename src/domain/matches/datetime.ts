@@ -75,9 +75,16 @@ function offsetMs(utcMs: number, timeZone: string): number {
   return asUtc - (utcMs - (((utcMs % 1000) + 1000) % 1000));
 }
 
+const HALF_DAY_MS = 12 * 3_600_000;
+
 /**
- * Fecha + hora locales de una zona horaria → instante ISO (UTC).
- * Corrige dos veces el desfasaje para respetar cambios de horario de verano.
+ * Fecha + hora locales de una zona horaria → instante ISO (UTC), con la
+ * semántica "compatible" (la de Temporal y Postgres) en los cambios de hora:
+ * - hora repetida (atraso): el primer instante;
+ * - hora que no existe (adelanto): se corre hacia adelante lo que dura el
+ *   salto ("00:30" en un día que arranca a la 01:00 → 01:30 de ese día).
+ * Así una fecha nunca cae en el día anterior y "00:00" es siempre el primer
+ * instante del día local (inicio de temporada, filtros por rango).
  */
 export function zonedDateTimeToIso(date: string, time: string, timeZone: string): string {
   if (!isValidDateIso(date)) throw new RangeError(`Fecha inválida: ${date}`);
@@ -85,8 +92,13 @@ export function zonedDateTimeToIso(date: string, time: string, timeZone: string)
   const [year, month, day] = date.split("-").map(Number);
   const [hour, minute] = time.split(":").map(Number);
   const naive = Date.UTC(year, month - 1, day, hour, minute);
-  let utc = naive - offsetMs(naive, timeZone);
-  utc = naive - offsetMs(utc, timeZone);
+
+  // Desfasajes antes y después del posible cambio (nunca hay dos en 24 h).
+  const before = offsetMs(naive - HALF_DAY_MS, timeZone);
+  const after = offsetMs(naive + HALF_DAY_MS, timeZone);
+  const valid = [naive - before, naive - after].filter((utc) => offsetMs(utc, timeZone) === naive - utc);
+  // Repetida: la más temprana. Inexistente: el desfasaje previo al salto la corre hacia adelante.
+  const utc = valid.length > 0 ? Math.min(...valid) : naive - before;
   return new Date(utc).toISOString();
 }
 

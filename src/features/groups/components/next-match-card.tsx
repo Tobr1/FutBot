@@ -1,5 +1,6 @@
 import { ChevronRight, MapPin, Star, Users } from "lucide-react";
 import Link from "next/link";
+import { useId } from "react";
 import { LinkPending } from "@/components/shared/link-pending";
 import { Badge } from "@/components/ui/badge";
 import { DateChip, Scoreline } from "@/features/matches/components/match-card";
@@ -35,6 +36,8 @@ export function NextMatchCard({
   isAdmin: boolean;
   className?: string;
 }) {
+  // Id único por tarjeta: puede haber más de una en la misma pantalla (ui-kit).
+  const titleId = useId();
   if (!featured) {
     const content = (
       <>
@@ -44,7 +47,7 @@ export function NextMatchCard({
           <span className={SHIELD} />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 id="next-match-title" className={OVERLINE}>
+          <h2 id={titleId} className={OVERLINE}>
             Próximo partido
           </h2>
           <p className="mt-0.5 text-[13px] leading-[18px] text-muted-foreground">
@@ -59,14 +62,14 @@ export function NextMatchCard({
       <Link
         href={routes.newMatch(slug)}
         transitionTypes={["nav-forward"]}
-        aria-labelledby="next-match-title"
+        aria-labelledby={titleId}
         className={cn(base, "pressable relative focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring")}
       >
         {content}
         <LinkPending />
       </Link>
     ) : (
-      <section aria-labelledby="next-match-title" className={base}>
+      <section aria-labelledby={titleId} className={base}>
         {content}
       </section>
     );
@@ -77,7 +80,7 @@ export function NextMatchCard({
   const title = kind === "next" ? "Próximo partido" : "Último resultado";
 
   return (
-    <section aria-labelledby="next-match-title" className={className}>
+    <section aria-labelledby={titleId} className={className}>
       <Link
         href={routes.match(slug, match.id)}
         transitionTypes={["nav-forward"]}
@@ -86,7 +89,7 @@ export function NextMatchCard({
         <DateChip scheduledAt={match.scheduledAt} timeZone={timeZone} today={kind === "next" ? today : undefined} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <h2 id="next-match-title" className={OVERLINE}>
+            <h2 id={titleId} className={OVERLINE}>
               {title}
             </h2>
             {kind === "next" ? (

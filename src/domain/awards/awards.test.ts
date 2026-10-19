@@ -137,6 +137,19 @@ describe("premios del mes", () => {
     expect(monthlyAwards({ lines, timeZone: TZ, today: "2026-12-01" }).map((m) => m.key)).toEqual(["2026-11", "2026-10"]);
   });
 
+  it("un mes con la votación de un partido todavía abierta no se cierra", () => {
+    // 31/10 22:00 en Buenos Aires, votación abierta hasta el 1/11 22:00.
+    const edge = [...lines, ...matchLines("o3", "2026-11-01T01:00:00Z", ["brito"], ["manu"], [0, 1], { manu: { g: 1 } })];
+    expect(monthlyAwards({ lines: edge, timeZone: TZ, today: "2026-11-01", openVotingAt: ["2026-11-01T01:00:00Z"] })).toEqual([]);
+    expect(
+      computeAwards({ lines: edge, timeZone: TZ, today: "2026-11-01", openVotingAt: ["2026-11-01T01:00:00Z"] }).filter((a) =>
+        a.kind.startsWith("month-"),
+      ),
+    ).toEqual([]);
+    // Cerrada la votación, se premia octubre.
+    expect(monthlyAwards({ lines: edge, timeZone: TZ, today: "2026-11-02", openVotingAt: [] }).map((m) => m.key)).toEqual(["2026-10"]);
+  });
+
   it("usa la fecha local del grupo para el mes", () => {
     // 31/10 22:00 en Buenos Aires = 01:00 Z del 1/11: cuenta para octubre.
     const edge = matchLines("e", "2026-11-01T01:00:00Z", ["p"], ["q"], [1, 0], { p: { g: 1 } });

@@ -78,7 +78,7 @@ export interface PlayerDetail extends PlayerListItem {
  * página y generateMetadata comparten una sola consulta.
  */
 export const getPlayer = cache(async (groupId: string, playerId: string): Promise<PlayerDetail | null> => {
-  if (!/^[0-9a-f-]{36}$/i.test(playerId)) return null;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(playerId)) return null;
   const supabase = await createClient();
   const [playerResult, statsResult, ratingOf] = await Promise.all([
     supabase.from("players").select(PLAYER_COLUMNS).eq("group_id", groupId).eq("id", playerId).maybeSingle(),

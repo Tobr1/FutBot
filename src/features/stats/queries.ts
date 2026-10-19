@@ -47,14 +47,17 @@ async function fetchAll<T>(
   page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
 ): Promise<T[]> {
   const out: T[] = [];
+  // Supone max-rows >= PAGE (el default de Supabase es 1000): una página
+  // incompleta es la última. Si algún día se baja max-rows del proyecto por
+  // debajo de 1000, PAGE tiene que bajar al mismo valor.
   for (let from = 0; from < MAX_ROWS; from += PAGE) {
     const { data, error } = await page(from, from + PAGE - 1);
     if (error) throw error;
     const rows = data ?? [];
     out.push(...rows);
-    if (rows.length < PAGE) break;
+    if (rows.length < PAGE) return out;
   }
-  return out;
+  throw new Error(`fetchAll: más de ${MAX_ROWS} filas`);
 }
 
 export interface RosterEntry {
@@ -363,6 +366,12 @@ export interface HistoryPage {
   total: number;
 }
 
+function historyTeams(rows: ReadonlyArray<{ side: "a" | "b"; name: string; score: number | null }>): HistoryMatch["teams"] {
+  const teams: HistoryMatch["teams"] = { a: { name: "Azul", score: null }, b: { name: "Rojo", score: null } };
+  for (const t of rows) teams[t.side] = { name: t.name, score: t.score };
+  return teams;
+}
+
 /** Partidos jugados del grupo (del más reciente al más viejo), opcionalmente en un rango. */
 export async function listMatchHistory(groupId: string, options: { range: DateRange; limit: number }): Promise<HistoryPage> {
   const supabase = await createClient();
@@ -371,9 +380,15 @@ export async function listMatchHistory(groupId: string, options: { range: DateRa
 
   let query = supabase
     .from("matches")
-    .select("id, scheduled_at, venue, mvp_player_id", { count: "exact" })
+    // Equipos y goles embebidos: max-rows limita solo las filas de partidos
+    // (hasta 500 con el tope de páginas), no las anidadas, y se evita un
+    // `.in()` con cientos de ids en la URL.
+    .select("id, scheduled_at, venue, mvp_player_id, teams!teams_match_fkey(side, name, score), match_events!match_events_match_fkey(player_id, event_type)", {
+      count: "exact",
+    })
     .eq("group_id", groupId)
-    .eq("status", "finished");
+    .eq("status", "finished")
+    .eq("match_events.event_type", "goal");
   if (fromIso) query = query.gte("scheduled_at", fromIso);
   if (toIsoExclusive) query = query.lt("scheduled_at", toIsoExclusive);
   const { data, error, count } = await query
@@ -383,24 +398,8 @@ export async function listMatchHistory(groupId: string, options: { range: DateRa
   if (error) throw error;
   if (data.length === 0) return { items: [], total: count ?? 0 };
 
-  const ids = data.map((m) => m.id);
-  const [teams, goals] = await Promise.all([
-    supabase.from("teams").select("match_id, side, name, score").in("match_id", ids),
-    supabase.from("match_events").select("match_id, player_id").in("match_id", ids).eq("event_type", "goal"),
-  ]);
-  if (teams.error) throw teams.error;
-  if (goals.error) throw goals.error;
-
   const names = new Map(history.roster.map((p) => [p.id, p.nickname]));
   const nameOf = (id: string) => names.get(id) ?? "—";
-  const teamMap = new Map<string, HistoryMatch["teams"]>();
-  for (const t of teams.data) {
-    const entry = teamMap.get(t.match_id) ?? { a: { name: "Azul", score: null }, b: { name: "Rojo", score: null } };
-    entry[t.side] = { name: t.name, score: t.score };
-    teamMap.set(t.match_id, entry);
-  }
-  const goalsByMatch = new Map<string, Array<{ playerId: string | null }>>();
-  for (const g of goals.data) goalsByMatch.set(g.match_id, [...(goalsByMatch.get(g.match_id) ?? []), { playerId: g.player_id }]);
   const avgByMatch = new Map<string, Array<number | null>>();
   for (const a of history.aggregates) avgByMatch.set(a.matchId, [...(avgByMatch.get(a.matchId) ?? []), a.adjustedAverage]);
 
@@ -410,8 +409,14 @@ export async function listMatchHistory(groupId: string, options: { range: DateRa
       id: m.id,
       scheduledAt: m.scheduled_at,
       venue: m.venue,
-      teams: teamMap.get(m.id) ?? { a: { name: "Azul", score: null }, b: { name: "Rojo", score: null } },
-      scorers: scorersText(tallyScorers(goalsByMatch.get(m.id) ?? [], nameOf), nameOf),
+      teams: historyTeams(m.teams),
+      scorers: scorersText(
+        tallyScorers(
+          m.match_events.filter((e) => e.event_type === "goal").map((e) => ({ playerId: e.player_id })),
+          nameOf,
+        ),
+        nameOf,
+      ),
       mvp: m.mvp_player_id ? { id: m.mvp_player_id, nickname: nameOf(m.mvp_player_id) } : null,
       averageRating: averageRating(avgByMatch.get(m.id) ?? []),
     })),

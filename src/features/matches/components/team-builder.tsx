@@ -24,6 +24,7 @@ import {
   formatWinProbability,
   matchesSplit,
   mergeConstraints,
+  pinsAfterApply,
   pinsAfterMove,
   pinsKey,
   shareOf,
@@ -215,6 +216,7 @@ export function TeamBuilder({
 
   function apply(split: TeamSplit) {
     setAssignment(Object.fromEntries([...players.map((p) => [p.id, null]), ...Object.entries(assignmentFromSplit(split))]));
+    setPins((current) => pinsAfterApply(current, split));
     setPanelOpen(false);
     setPinMode(false);
     toast.success("Equipos listos. Ajustalos si querés y guardalos.");

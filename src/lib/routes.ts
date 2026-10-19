@@ -52,9 +52,12 @@ export const AUTH_PAGES = ["/ingresar", "/registro", "/recuperar"];
 /**
  * Sanea un destino de redirección: solo rutas internas absolutas.
  * Evita open redirects del tipo `?next=https://malicioso` o `//malicioso`.
+ * Rechaza también barras invertidas y caracteres de control: el parser de
+ * URL descarta tabs y saltos de línea, así que `/\t/malicioso` terminaría
+ * siendo `//malicioso` (otro origen).
  */
 export function safeNextPath(next: string | null | undefined, fallback: string = routes.dashboard): string {
   if (!next || typeof next !== "string") return fallback;
-  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;
+  if (!next.startsWith("/") || next.startsWith("//") || /[\\\u0000-\u001f\u007f]/.test(next)) return fallback;
   return next;
 }

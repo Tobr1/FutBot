@@ -69,6 +69,11 @@ export interface AwardsInput {
   performances?: Readonly<Record<string, { performances: Readonly<Record<string, number>> }>>;
   /** Mejor promedio de cada temporada ya terminada. */
   seasonChampions?: readonly SeasonChampion[];
+  /**
+   * Fecha (ISO) de los partidos jugados con la votación todavía abierta. Su
+   * mes no se cierra hasta que voten: el MVP y los promedios pueden cambiar.
+   */
+  openVotingAt?: readonly string[];
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -286,13 +291,17 @@ function leaders(values: Map<string, number>, tiebreak?: Map<string, number>): M
   return tied.sort().map((playerId) => ({ playerId, value: best }));
 }
 
-/** Goleador y MVP de cada mes ya cerrado, del más reciente al más viejo. */
+/**
+ * Goleador y MVP de cada mes ya cerrado, del más reciente al más viejo. Un mes
+ * está cerrado cuando terminó y ninguno de sus partidos tiene la votación abierta.
+ */
 export function monthlyAwards(input: AwardsInput): MonthAwards[] {
   const matches = summarizeMatches(input.lines);
   if (matches.length === 0) return [];
   const lastMonth = monthKeyOf(matches[matches.length - 1].scheduledAt, input.timeZone);
   const todayMonth = input.today ? input.today.slice(0, 7) : null;
-  const isClosed = (key: string) => key < lastMonth || (todayMonth !== null && key < todayMonth);
+  const pending = new Set((input.openVotingAt ?? []).map((iso) => monthKeyOf(iso, input.timeZone)));
+  const isClosed = (key: string) => !pending.has(key) && (key < lastMonth || (todayMonth !== null && key < todayMonth));
 
   const months = new Map<string, { lastMatchAt: string; matches: number; goals: Map<string, number>; mvps: Map<string, number>; perf: Map<string, number[]> }>();
   for (const match of matches) {

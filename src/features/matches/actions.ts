@@ -29,6 +29,18 @@ async function groupInfo(groupId: string): Promise<{ slug: string; timezone: str
   return data ?? null;
 }
 
+/**
+ * Slug del grupo al que pertenece el partido (RLS: solo si sos miembro). Para
+ * redirigir después de una RPC que recibe solo el partido: el groupId que
+ * manda el cliente no se usa para decidir a dónde volver.
+ */
+async function matchGroupSlug(matchId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("matches").select("group_id").eq("id", matchId).maybeSingle();
+  if (!data) return null;
+  return (await groupInfo(data.group_id))?.slug ?? null;
+}
+
 /** Todo lo del grupo depende de los partidos (inicio, listas, fichas). */
 function revalidateGroup() {
   revalidatePath("/g/[slug]", "layout");
@@ -202,7 +214,7 @@ export async function setParticipantsAction(input: unknown): Promise<MutationRes
 export async function setTeamsAction(input: unknown): Promise<MutationResult> {
   const parsed = setTeamsSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Datos inválidos.");
-  const { groupId, matchId, teamA, teamB, nameA, nameB } = parsed.data;
+  const { matchId, teamA, teamB, nameA, nameB } = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_match_teams", {
@@ -214,9 +226,9 @@ export async function setTeamsAction(input: unknown): Promise<MutationResult> {
   });
   if (error) return fail(toUserMessage(error));
 
-  const group = await groupInfo(groupId);
+  const slug = await matchGroupSlug(matchId);
   revalidateGroup();
-  if (group) redirect(`${routes.match(group.slug, matchId)}?equipos=1`);
+  if (slug) redirect(`${routes.match(slug, matchId)}?equipos=1`);
   return ok("Equipos guardados.");
 }
 
@@ -237,8 +249,8 @@ export async function recordResultAction(input: unknown): Promise<MutationResult
   });
   if (error) return fail(toUserMessage(error));
 
-  const group = await groupInfo(v.groupId);
+  const slug = await matchGroupSlug(v.matchId);
   revalidateGroup();
-  if (group) redirect(`${routes.match(group.slug, v.matchId)}?resultado=1`);
+  if (slug) redirect(`${routes.match(slug, v.matchId)}?resultado=1`);
   return ok("Resultado guardado.");
 }

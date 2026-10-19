@@ -7,12 +7,31 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/invitacion/abc?x=1")).toBe("/invitacion/abc?x=1");
   });
 
-  it.each(["https://malicioso.com", "//malicioso.com", "/\\malicioso.com", "javascript:alert(1)", "", null, undefined])(
+  it.each([
+    "https://malicioso.com",
+    "//malicioso.com",
+    "/\\malicioso.com",
+    "/\t/malicioso.com",
+    "/\n/malicioso.com",
+    "/\r\n/malicioso.com",
+    "/g/x\\..\\..\\/malicioso.com",
+    "javascript:alert(1)",
+    "",
+    null,
+    undefined,
+  ])(
     "rechaza %j y usa el destino por defecto",
     (value) => {
       expect(safeNextPath(value)).toBe(routes.dashboard);
     },
   );
+
+  it("lo que acepta nunca sale del origen al resolverlo como URL", () => {
+    const base = "https://futboleros.app";
+    for (const value of ["/inicio", "/g/x?next=//y", "/a/%2F%2Fevil", "/\t/evil", "/ /evil", "/%09/evil"]) {
+      expect(new URL(safeNextPath(value), base).origin).toBe(base);
+    }
+  });
 
   it("acepta el destino de arranque de la PWA", () => {
     expect(safeNextPath(routes.launch)).toBe("/abrir");

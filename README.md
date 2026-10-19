@@ -13,7 +13,7 @@ Plataforma privada para grupos de amigos que juegan al fútbol: registra partido
 | 2 — Partidos | Crear partidos, importar listas de WhatsApp, equipos manuales, resultados, registro de cambios | ✅ Implementada (ver D-022 a D-024) |
 | 3 — Estadísticas | Votación anónima, motor de valoración, fichas con evolución, rankings, historial, comparador | ✅ Implementada (ver D-025 a D-030) |
 | 4 — Equipos inteligentes | Optimizador de equipos con restricciones, alternativas explicadas, pronóstico | ✅ Implementada (ver D-031 a D-034) |
-| 5 — Mejoras | Premios y logros, Salón de la fama, duplas y rivales, precisión del pronóstico, imágenes para compartir, análisis del grupo | ✅ Implementada (ver D-035 a D-041); notificaciones pendientes |
+| 5 — Mejoras | Premios y logros, Salón de la fama, duplas y rivales, precisión del pronóstico, imágenes para compartir, análisis del grupo | ✅ Implementada (ver D-035 a D-041). Pendientes: pronósticos de los miembros y notificaciones (necesitan almacenamiento propio) |
 | UI mobile-first | Rediseño pensado para el celular: barra inferior, hojas inferiores, tarjetas de jugador, transiciones y PWA instalable que abre en el último grupo | ✅ Implementado (ver D-016 a D-021) |
 
 ## Stack
@@ -78,7 +78,7 @@ supabase/migrations/  Esquema versionado (tablas, RLS, RPC, triggers)
 supabase/tests/       Tests de seguridad y reglas de negocio en Postgres (PGlite)
 scripts/              Generador de tipos de la base
 src/app/              Rutas (solo composición de UI)
-src/features/         Módulos: auth, profile, groups, invitations, players (queries · actions · schemas · components)
+src/features/         Módulos: auth, profile, groups, invitations, players, matches, voting, teams, stats, awards, share (queries · actions · schemas · components)
 src/domain/           Lógica pura y testeable (nombres, posiciones, valoración…)
 src/lib/              Supabase, sesión, errores, utilidades
 src/components/       UI base (shadcn), layout y componentes compartidos
@@ -89,7 +89,8 @@ src/components/       UI base (shadcn), layout y componentes compartidos
 - RLS en todas las tablas; la app siempre consulta como el usuario logueado.
 - Operaciones de varios pasos en funciones transaccionales con verificaciones explícitas.
 - Votos individuales visibles solo para quien votó; los agregados se publican al cerrar la votación.
-- Auditoría de cambios relevantes (miembros, jugadores, invitaciones, partidos, resultados).
+- Auditoría de cambios relevantes (miembros, jugadores, invitaciones, partidos, resultados, reglas de armado), visible para admins en Más › Registro de cambios.
+- Imágenes para compartir solo con sesión y membresía, nunca cacheadas públicamente.
 
 ## Deploy
 
