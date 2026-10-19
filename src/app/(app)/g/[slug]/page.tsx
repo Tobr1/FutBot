@@ -12,6 +12,7 @@ import { PlayerCard } from "@/components/shared/player-card";
 import { PlayerRow } from "@/components/shared/player-row";
 import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
+import { formatMatchDate } from "@/domain/matches/datetime";
 import { topByRating } from "@/domain/players/sort";
 import { GroupHero } from "@/features/groups/components/group-hero";
 import { NextMatchCard } from "@/features/groups/components/next-match-card";
@@ -20,6 +21,8 @@ import { getGroupContext, listMembers, listSeasons } from "@/features/groups/que
 import { getNextMatch } from "@/features/matches/queries";
 import { MyPlayerStrip } from "@/features/players/components/my-player-strip";
 import { listPlayers } from "@/features/players/queries";
+import { PendingVotingBanner } from "@/features/voting/components/voting-section";
+import { listPendingVotings } from "@/features/voting/queries";
 import { todayIso } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
@@ -48,6 +51,7 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
   // La hora actual solo después de connection(): la página es dinámica.
   await connection();
   const now = new Date();
+  const pendingVotings = ctx.myPlayer ? await listPendingVotings(ctx.group.id, ctx.myPlayer.id, now.toISOString()) : [];
 
   const activePlayers = players.filter((p) => p.isActive);
   const currentSeason = seasons.find((s) => !s.ends_on) ?? seasons[0];
@@ -103,6 +107,18 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
             !ctx.myPlayer && <ClaimBanner slug={slug} />
           )}
 
+          <PendingVotingBanner
+            nowMs={now.getTime()}
+            items={pendingVotings.map((v) => ({
+              matchId: v.matchId,
+              href: routes.matchVote(slug, v.matchId),
+              dayLabel: formatMatchDate(v.scheduledAt, ctx.group.timezone),
+              closesAt: v.closesAt,
+              rated: v.rated,
+              total: v.total,
+            }))}
+          />
+
           <InstallAppCard />
 
           {showOnboarding && <OnboardingChecklist steps={steps} />}
@@ -151,14 +167,16 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
                         nickname: player.nickname,
                         fullName: player.fullName,
                         avatarUrl: player.avatarUrl,
-                        rating: player.baseRating,
+                        rating: player.rating,
                         primaryPosition: player.positions.primary,
                         stats: player.stats,
                       }}
                     />
                   ))}
                 </ListGroup>
-                <p className="mt-2 text-xs text-muted-foreground">Ordenado por nivel inicial hasta que haya partidos.</p>
+                {!players.some((p) => p.stats.matches > 0) && (
+                  <p className="mt-2 text-xs text-muted-foreground">Ordenado por nivel inicial hasta que haya partidos.</p>
+                )}
               </>
             )}
           </section>
@@ -178,9 +196,9 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
                   nickname: myPlayer.nickname,
                   fullName: myPlayer.fullName,
                   avatarUrl: myPlayer.avatarUrl,
-                  rating: myPlayer.baseRating,
+                  rating: myPlayer.rating,
                   primaryPosition: myPlayer.positions.primary,
-                  isProvisional: myPlayer.stats.matches < 3,
+                  isProvisional: myPlayer.isProvisional,
                   stats: myPlayer.stats,
                 }}
               />

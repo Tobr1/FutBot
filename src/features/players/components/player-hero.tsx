@@ -5,17 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { PlayerDetail } from "../queries";
 
-/** Partidos por debajo de los cuales la valoración se considera provisional. */
-const PROVISIONAL_MATCHES = 3;
-
 /**
  * Banda superior de la ficha: carta del jugador e identidad (el único h1 de
  * la página, #page-title, que StackHeader observa para mostrar el título
  * compacto al scrollear). A todo el ancho y al ras del header en mobile.
  */
 export function PlayerHero({ player, isMine, isAdmin }: { player: PlayerDetail; isMine: boolean; isAdmin: boolean }) {
-  const tier = tierStyle(player.baseRating);
-  const isProvisional = player.stats.matches < PROVISIONAL_MATCHES;
+  const tier = tierStyle(player.rating);
+  const { isProvisional } = player;
 
   return (
     <div
@@ -35,7 +32,7 @@ export function PlayerHero({ player, isMine, isAdmin }: { player: PlayerDetail; 
           player={{
             nickname: player.nickname,
             avatarUrl: player.avatarUrl,
-            rating: player.baseRating,
+            rating: player.rating,
             primaryPosition: player.positions.primary,
             isProvisional,
             isLinked: player.isLinked,

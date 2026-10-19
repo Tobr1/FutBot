@@ -2,6 +2,24 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-030 · Comparador como subruta con `?con=`
+Comparar dos jugadores vive en `/g/[slug]/jugadores/[id]/comparar?con=<otro>` (no en una hoja con datos cargados en el cliente): el link se comparte, el botón atrás funciona y el cara a cara (`get_head_to_head`) se pide en el servidor. Desde la ficha, "Comparar" abre una hoja para elegir al otro jugador; sin `?con=` la página muestra la misma lista.
+
+## D-029 · Filtros de estadísticas en la URL y historial paginado
+Rankings e historial leen la temporada (`?temporada=<id>|todas`, por defecto la actual en la zona del grupo) y el mínimo de partidos (`?min=`, por defecto `ranking_min_matches`) de la URL; la pestaña del ranking (`?ranking=`) se cambia en el cliente con `history.replaceState` porque las 8 listas ya llegan calculadas. "Partidos › Jugados" muestra los últimos 20 (antes había un tope fijo de 120) y enlaza al historial, que pagina con `?page=` acumulativo de a 20 (tope 25 páginas) agrupado por mes.
+
+## D-028 · Votación móvil, editable hasta el cierre y MVP perezoso
+Cada jugador se califica con una escala 1-10 (radiogroup, 5 × 2 botones de 44 px en el teléfono, 10 en fila desde sm). Se puede enviar una parte y completar o cambiar después: la RPC hace upsert hasta `voting_closes_at`. El texto "Cierra en…" se calcula en el servidor después de `connection()` (no hay reloj en vivo; se actualiza al navegar). Al ver un partido con la votación cerrada y sin MVP, el servidor llama a `finalize_match_voting` (idempotente) y muestra el resultado sin esperar otra carga. En el detalle solo se muestran cantidades de votantes, nunca quiénes.
+
+## D-027 · `player_skill_history` como caché opcional
+La caché del motor se sincroniza solo cuando alguien ve un partido con la votación recién cerrada (junto con el MVP perezoso): se recalcula, se compara con lo guardado para `ENGINE_VERSION` y se llama a `replace_skill_history` solo si cambió. Ninguna pantalla lee de la caché y cualquier error se ignora: si se borra o queda vieja, no pasa nada.
+
+## D-026 · La valoración visible es la del motor, con respaldo en el nivel inicial
+Tarjetas, listas, ficha, "Top del plantel", tu ficha, el armado manual y los nombres del comparador muestran la habilidad S del motor (histórico completo). Si un jugador no tiene datos se usa `base_rating`, y el distintivo "Provisional" sale de `isProvisional` del motor (menos de 3 partidos). `base_rating` sigue siendo el nivel inicial que edita un admin y el punto de partida del motor. Reemplaza lo provisorio de D-013 y D-022.
+
+## D-025 · Valoración calculada al leer, memoizada por request
+`features/stats` carga una vez por request (React `cache`) el plantel, `player_match_lines` y `get_rating_aggregates` del grupo —paginando de a 1000 filas para no chocar con el `max-rows` de PostgREST— y corre `computeRatings`. Con un filtro de temporada el motor recorre solo los partidos de ese rango de fechas locales (zona del grupo), así el "Mejor jugador" de la temporada no arrastra el historial. Cientos de partidos se procesan en milisegundos; si algún día no alcanza, la caché de D-027 ya existe.
+
 ## D-024 · Registro de cambios legible y sin duplicados
 `/g/[slug]/ajustes/auditoria` (solo admins, como la política de `audit_logs`) traduce cada fila a una frase en tercera persona con `src/domain/audit/describe.ts` ("Brito" + "cargó el resultado 3–2 del partido del Sáb 24/10"). El UPDATE de `matches` que acompaña a `result_recorded`/`result_corrected` se omite porque la fila de la RPC ya lo cuenta con más detalle. Muestra los últimos 100 cambios; si hace falta más historia se pagina después.
 

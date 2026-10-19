@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { isPlayerSortKey, PLAYER_SORT_KEYS, sortPlayers, topByRating, type SortablePlayer } from "./sort";
 
-const player = (nickname: string, baseRating: number, matches = 0, goals = 0, assists = 0): SortablePlayer & { id: string } => ({
+const player = (nickname: string, rating: number, matches = 0, goals = 0, assists = 0): SortablePlayer & { id: string } => ({
   id: nickname.toLowerCase(),
   nickname,
-  baseRating,
+  rating,
   stats: { matches, goals, assists },
 });
 

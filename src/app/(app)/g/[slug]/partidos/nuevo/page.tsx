@@ -7,6 +7,7 @@ import { getGroupContext } from "@/features/groups/queries";
 import { CreateMatchForm } from "@/features/matches/components/create-match-form";
 import { listRosterForMatches } from "@/features/matches/queries";
 import { timeZoneLabel } from "@/features/matches/time-zone";
+import { getGroupRatings } from "@/features/stats/queries";
 import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Nuevo partido" };
@@ -16,7 +17,7 @@ export default async function NewMatchPage({ params }: PageProps<"/g/[slug]/part
   const ctx = await getGroupContext(slug);
   if (!ctx.isAdmin) return <AccessDenied backHref={routes.groupMatches(slug)} />;
 
-  const roster = await listRosterForMatches(ctx.group.id);
+  const [roster, engine] = await Promise.all([listRosterForMatches(ctx.group.id), getGroupRatings(ctx.group.id)]);
 
   return (
     <ScreenTransition>
@@ -36,7 +37,7 @@ export default async function NewMatchPage({ params }: PageProps<"/g/[slug]/part
               fullName: p.fullName,
               aliases: p.aliases,
               avatarUrl: p.avatarUrl,
-              baseRating: p.baseRating,
+              baseRating: engine.byPlayer[p.id]?.skill ?? p.baseRating,
               primaryPosition: p.positions.primary,
               isActive: p.isActive,
             }))}

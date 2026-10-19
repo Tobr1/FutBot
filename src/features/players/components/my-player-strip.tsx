@@ -42,7 +42,7 @@ export function MyPlayerStrip({
           </span>
         </p>
       </div>
-      <RatingPill rating={player.baseRating} size="lg" />
+      <RatingPill rating={player.rating} size="lg" />
       <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
       <LinkPending />
     </Link>

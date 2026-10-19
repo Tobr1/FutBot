@@ -1,4 +1,4 @@
-import { LineChart, Link2, Link2Off, Pencil } from "lucide-react";
+import { History, LineChart, Link2, Link2Off, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StackHeader } from "@/components/layout/stack-header";
@@ -15,7 +15,11 @@ import { effectiveness } from "@/domain/players/stats";
 import { getGroupContext } from "@/features/groups/queries";
 import { PlayerAdminMenu } from "@/features/players/components/player-admin-actions";
 import { PlayerHero } from "@/features/players/components/player-hero";
-import { getPlayer } from "@/features/players/queries";
+import { getPlayer, listPlayers } from "@/features/players/queries";
+import { ComparePicker } from "@/features/stats/components/compare-picker";
+import { EvolutionChart } from "@/features/stats/components/evolution-chart";
+import { RecentMatches } from "@/features/stats/components/recent-matches";
+import { getPlayerEvolution, getRecentMatches } from "@/features/stats/queries";
 import { routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/g/[slug]/jugadores/[playerId]">) {
@@ -30,6 +34,21 @@ export default async function PlayerPage({ params }: PageProps<"/g/[slug]/jugado
   const ctx = await getGroupContext(slug);
   const player = await getPlayer(ctx.group.id, playerId);
   if (!player) notFound();
+
+  const [evolution, recent, roster] = await Promise.all([
+    getPlayerEvolution(ctx.group.id, player.id),
+    getRecentMatches(ctx.group.id, player.id, 5),
+    listPlayers(ctx.group.id),
+  ]);
+  const compareOptions = roster
+    .filter((p) => p.id !== player.id && p.isActive)
+    .map((p) => ({
+      id: p.id,
+      nickname: p.nickname,
+      avatarUrl: p.avatarUrl,
+      rating: p.rating,
+      href: routes.comparePlayers(slug, player.id, p.id),
+    }));
 
   const isMine = ctx.myPlayer?.id === player.id;
   const { stats } = player;
@@ -87,6 +106,31 @@ export default async function PlayerPage({ params }: PageProps<"/g/[slug]/jugado
             ]}
           />
           <RecordBar wins={stats.wins} draws={stats.draws} losses={stats.losses} />
+          {compareOptions.length > 0 && <ComparePicker options={compareOptions} className="w-full lg:w-auto" />}
+        </section>
+
+        <section aria-labelledby="evolucion" className="space-y-3">
+          <SectionHeader title="Evolución" id="evolucion" />
+          {evolution.length === 0 ? (
+            <EmptyState
+              size="sm"
+              icon={LineChart}
+              tone="neutral"
+              title="Sin partidos todavía"
+              description={`Después de cada partido vas a ver cómo cambia ${isMine ? "tu" : "su"} valoración.`}
+            />
+          ) : (
+            <EvolutionChart points={evolution} />
+          )}
+        </section>
+
+        <section aria-labelledby="ultimos" className="space-y-3">
+          <SectionHeader title="Últimos partidos" id="ultimos" />
+          {recent.length === 0 ? (
+            <EmptyState size="sm" icon={History} tone="neutral" title="Todavía no jugó" description="Los resultados van a aparecer acá." />
+          ) : (
+            <RecentMatches matches={recent} timeZone={ctx.group.timezone} matchHref={(id) => routes.match(slug, id)} />
+          )}
         </section>
 
         <section aria-labelledby="detalles" className="space-y-3">
@@ -132,16 +176,6 @@ export default async function PlayerPage({ params }: PageProps<"/g/[slug]/jugado
               }
             />
           </ListGroup>
-        </section>
-
-        <section aria-labelledby="evolucion" className="space-y-3">
-          <SectionHeader title="Evolución" id="evolucion" />
-          <EmptyState
-            size="sm"
-            icon={LineChart}
-            title="Muy pronto"
-            description={`Vas a ver ${isMine ? "tu" : "su"} evolución partido a partido.`}
-          />
         </section>
       </div>
     </ScreenTransition>

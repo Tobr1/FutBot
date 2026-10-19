@@ -5,6 +5,7 @@ import { ChromeSection } from "./sections/chrome";
 import { MatchesSection } from "./sections/matches";
 import { PrimitivesSection } from "./sections/primitives";
 import { SharedSection } from "./sections/shared";
+import { StatsSection } from "./sections/stats";
 import { TokensSection } from "./sections/tokens";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ const SECTIONS = [
   { id: "primitivas", label: "Primitivas" },
   { id: "compartidos", label: "Compartidos" },
   { id: "partidos", label: "Partidos" },
+  { id: "estadisticas", label: "Estadísticas" },
   { id: "chrome", label: "Chrome" },
   { id: "pwa", label: "PWA" },
 ] as const;
@@ -67,6 +69,9 @@ export default function UiKitPage() {
         </div>
         <div id="partidos" className="scroll-mt-6">
           <MatchesSection />
+        </div>
+        <div id="estadisticas" className="scroll-mt-6">
+          <StatsSection />
         </div>
         <div id="chrome" className="scroll-mt-6">
           <ChromeSection />

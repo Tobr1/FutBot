@@ -85,27 +85,44 @@ async function hydrateList(rows: MatchRow[]): Promise<MatchListItem[]> {
 export interface MatchLists {
   /** Programados y en curso, del más cercano al más lejano. */
   upcoming: MatchListItem[];
-  /** Jugados y cancelados, del más reciente al más viejo. */
+  /** Últimos jugados y cancelados, del más reciente al más viejo (el resto, en el historial). */
   past: MatchListItem[];
+  /** Total de jugados y cancelados. */
+  pastTotal: number;
 }
 
-/** Partidos del grupo separados en próximos y jugados. */
+/** Cuántos jugados se muestran en "Partidos"; el resto vive en el historial paginado. */
+export const PAST_PREVIEW_LIMIT = 20;
+
+/** Partidos del grupo separados en próximos y últimos jugados. */
 export async function listMatches(groupId: string): Promise<MatchLists> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("matches")
-    .select(LIST_COLUMNS)
-    .eq("group_id", groupId)
-    .order("scheduled_at", { ascending: false })
-    .limit(120);
-  if (error) throw error;
+  const [open, closed] = await Promise.all([
+    supabase
+      .from("matches")
+      .select(LIST_COLUMNS)
+      .eq("group_id", groupId)
+      .in("status", ["scheduled", "in_progress"])
+      .order("scheduled_at", { ascending: true })
+      .limit(100),
+    supabase
+      .from("matches")
+      .select(LIST_COLUMNS, { count: "exact" })
+      .eq("group_id", groupId)
+      .in("status", ["finished", "cancelled"])
+      .order("scheduled_at", { ascending: false })
+      .limit(PAST_PREVIEW_LIMIT),
+  ]);
+  if (open.error) throw open.error;
+  if (closed.error) throw closed.error;
 
-  const items = await hydrateList(data);
-  const upcoming = items
-    .filter((m) => m.status === "scheduled" || m.status === "in_progress")
-    .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
-  const past = items.filter((m) => m.status === "finished" || m.status === "cancelled");
-  return { upcoming, past };
+  const items = await hydrateList([...open.data, ...closed.data]);
+  const openIds = new Set(open.data.map((m) => m.id));
+  return {
+    upcoming: items.filter((m) => openIds.has(m.id)),
+    past: items.filter((m) => !openIds.has(m.id)),
+    pastTotal: closed.count ?? closed.data.length,
+  };
 }
 
 export interface MatchesOverview {

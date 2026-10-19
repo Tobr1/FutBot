@@ -9,7 +9,8 @@ export type PlayerSortKey = (typeof PLAYER_SORT_KEYS)[number];
 
 export interface SortablePlayer {
   nickname: string;
-  baseRating: number;
+  /** Valoración visible (motor o nivel inicial). */
+  rating: number;
   stats: { matches: number; goals: number; assists: number };
 }
 
@@ -20,7 +21,7 @@ export function isPlayerSortKey(value: unknown): value is PlayerSortKey {
 const byNickname = (a: SortablePlayer, b: SortablePlayer) => a.nickname.localeCompare(b.nickname, "es-AR");
 
 const METRIC: Record<Exclude<PlayerSortKey, "name">, (p: SortablePlayer) => number> = {
-  rating: (p) => p.baseRating,
+  rating: (p) => p.rating,
   matches: (p) => p.stats.matches,
   goals: (p) => p.stats.goals,
   assists: (p) => p.stats.assists,

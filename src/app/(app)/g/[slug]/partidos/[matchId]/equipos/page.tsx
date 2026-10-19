@@ -14,6 +14,7 @@ import { canEditTeams, formatLabel } from "@/domain/matches/status";
 import { getGroupContext } from "@/features/groups/queries";
 import { TeamBuilder } from "@/features/matches/components/team-builder";
 import { getMatch } from "@/features/matches/queries";
+import { getGroupRatings } from "@/features/stats/queries";
 import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Armar equipos" };
@@ -27,6 +28,7 @@ export default async function MatchTeamsPage({ params }: PageProps<"/g/[slug]/pa
   const matchHref = routes.match(slug, match.id);
   if (!ctx.isAdmin) return <AccessDenied backHref={matchHref} />;
 
+  const engine = await getGroupRatings(ctx.group.id);
   const dayLabel = formatMatchDate(match.scheduledAt, ctx.group.timezone);
   const confirmed = match.participants.filter((p) => p.status === "confirmed");
   const initial: Record<string, Side> = {};
@@ -38,7 +40,7 @@ export default async function MatchTeamsPage({ params }: PageProps<"/g/[slug]/pa
         <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title="Armar equipos" focusFlow />
         <PageHeader
           title="Armar equipos"
-          description={`${formatLabel(match.playersPerTeam)} · ${confirmed.length} titulares. El nivel es el inicial de cada ficha.`}
+          description={`${formatLabel(match.playersPerTeam)} · ${confirmed.length} titulares. El nivel es la valoración actual de cada uno.`}
         />
         {!canEditTeams(match.status) ? (
           <EmptyState
@@ -80,7 +82,7 @@ export default async function MatchTeamsPage({ params }: PageProps<"/g/[slug]/pa
               id: p.id,
               nickname: p.nickname,
               avatarUrl: p.avatarUrl,
-              rating: p.baseRating,
+              rating: engine.byPlayer[p.id]?.skill ?? p.baseRating,
               position: p.positions.primary,
             }))}
           />

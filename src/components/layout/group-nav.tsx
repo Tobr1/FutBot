@@ -27,7 +27,13 @@ export interface GroupNavItem {
 export function NAV_ITEMS(slug: string): GroupNavItem[] {
   return [
     { key: "inicio", href: routes.group(slug), label: "Inicio", icon: House, exact: true, matches: [routes.group(slug)] },
-    { key: "partidos", href: routes.groupMatches(slug), label: "Partidos", icon: CalendarDays, matches: [routes.groupMatches(slug)] },
+    {
+      key: "partidos",
+      href: routes.groupMatches(slug),
+      label: "Partidos",
+      icon: CalendarDays,
+      matches: [routes.groupMatches(slug), routes.groupHistory(slug)],
+    },
     { key: "plantel", href: routes.groupPlayers(slug), label: "Plantel", icon: Users, matches: [routes.groupPlayers(slug)] },
     { key: "rankings", href: routes.groupRankings(slug), label: "Rankings", icon: Trophy, matches: [routes.groupRankings(slug)] },
     {

@@ -1,4 +1,4 @@
-import { CalendarDays, CalendarPlus, History, Plus } from "lucide-react";
+import { CalendarDays, CalendarPlus, ChevronRight, History, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -23,7 +23,7 @@ const FLASH = { eliminado: { "1": "Partido eliminado." } };
 export default async function MatchesPage({ params }: PageProps<"/g/[slug]/partidos">) {
   const { slug } = await params;
   const ctx = await getGroupContext(slug);
-  const { upcoming, past } = await listMatches(ctx.group.id);
+  const { upcoming, past, pastTotal } = await listMatches(ctx.group.id);
 
   // La hora actual solo después de connection(): la página es dinámica.
   await connection();
@@ -56,7 +56,7 @@ export default async function MatchesPage({ params }: PageProps<"/g/[slug]/parti
     </Button>
   );
 
-  const total = upcoming.length + past.length;
+  const total = upcoming.length + pastTotal;
 
   return (
     <ScreenTransition>
@@ -70,7 +70,7 @@ export default async function MatchesPage({ params }: PageProps<"/g/[slug]/parti
             description={
               total === 0
                 ? "Todavía sin partidos"
-                : `${upcoming.length} ${upcoming.length === 1 ? "próximo" : "próximos"} · ${past.length} ${past.length === 1 ? "jugado" : "jugados"}`
+                : `${upcoming.length} ${upcoming.length === 1 ? "próximo" : "próximos"} · ${pastTotal} ${pastTotal === 1 ? "jugado" : "jugados"}`
             }
             actions={
               ctx.isAdmin && (
@@ -100,7 +100,7 @@ export default async function MatchesPage({ params }: PageProps<"/g/[slug]/parti
           ) : (
             <MatchLists
               upcomingCount={upcoming.length}
-              pastCount={past.length}
+              pastCount={pastTotal}
               upcoming={
                 upcoming.length === 0 ? (
                   <EmptyState
@@ -122,7 +122,16 @@ export default async function MatchesPage({ params }: PageProps<"/g/[slug]/parti
                     description="Los resultados van a quedar acá."
                   />
                 ) : (
-                  list(past)
+                  <div className="space-y-3">
+                    {list(past)}
+                    <Button asChild variant="secondary" size="lg" className="w-full lg:w-auto">
+                      <Link href={routes.groupHistory(slug)} transitionTypes={["nav-forward"]}>
+                        <History aria-hidden="true" />
+                        {pastTotal > past.length ? `Ver historial completo (${pastTotal})` : "Ver historial"}
+                        <ChevronRight aria-hidden="true" />
+                      </Link>
+                    </Button>
+                  </div>
                 )
               }
             />

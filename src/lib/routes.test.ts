@@ -30,6 +30,15 @@ describe("routes", () => {
   });
 });
 
+describe("rutas de estadísticas", () => {
+  it("arma votación, historial y comparación", () => {
+    expect(routes.matchVote("x", "m1")).toBe("/g/x/partidos/m1/votar");
+    expect(routes.groupHistory("x")).toBe("/g/x/historial");
+    expect(routes.comparePlayers("x", "p1")).toBe("/g/x/jugadores/p1/comparar");
+    expect(routes.comparePlayers("x", "p1", "p2")).toBe("/g/x/jugadores/p1/comparar?con=p2");
+  });
+});
+
 describe("PROTECTED_PREFIXES", () => {
   const isProtected = (pathname: string) =>
     PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix));

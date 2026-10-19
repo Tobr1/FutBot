@@ -1,4 +1,4 @@
-import { CalendarRange, History, IdCard, LayoutGrid, LogOut, Settings2, UserPlus, UserRound, Users } from "lucide-react";
+import { CalendarCheck, CalendarRange, History, IdCard, LayoutGrid, LogOut, Settings2, UserPlus, UserRound, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
@@ -52,7 +52,7 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
                   nickname: player.nickname,
                   fullName: player.fullName,
                   avatarUrl: player.avatarUrl,
-                  rating: player.baseRating,
+                  rating: player.rating,
                   primaryPosition: player.positions.primary,
                   isActive: player.isActive,
                   stats: player.stats,
@@ -88,6 +88,14 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
                 chevron
               />
             )}
+            <ListRow
+              href={routes.groupHistory(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={CalendarCheck} />}
+              title="Historial de partidos"
+              subtitle="Resultados, goleadores y MVP"
+              chevron
+            />
             <ListRow
               href={routes.groupMembers(slug)}
               transitionTypes={FORWARD}

@@ -135,7 +135,16 @@ export function ParticipantList({ participants }: { participants: MatchParticipa
 }
 
 /** Las dos columnas de equipo (azul y rojo) con sus integrantes y nivel. */
-export function TeamColumns({ match, mvpId }: { match: MatchDetail; mvpId?: string | null }) {
+export function TeamColumns({
+  match,
+  mvpId,
+  ratings,
+}: {
+  match: MatchDetail;
+  mvpId?: string | null;
+  /** Valoración visible por jugador (motor); si falta, el nivel inicial. */
+  ratings?: Record<string, number>;
+}) {
   const byId = new Map(match.participants.map((p) => [p.id, p]));
   return (
     <div className="grid grid-cols-2 gap-2 lg:gap-3">
@@ -145,7 +154,7 @@ export function TeamColumns({ match, mvpId }: { match: MatchDetail; mvpId?: stri
           const player = byId.get(id);
           return player ? [player] : [];
         });
-        const strength = teamStrength(members.map((m) => m.baseRating));
+        const strength = teamStrength(members.map((m) => ratings?.[m.id] ?? m.baseRating));
         return (
           <section key={side} aria-label={`Equipo ${team.name}`} className="panel relative overflow-hidden rounded-xl">
             <span aria-hidden="true" className={cn("absolute inset-x-0 top-0 h-1", TEAM_STYLES[side].bar)} />
@@ -188,7 +197,7 @@ function Tally({ title, items }: { title: string; items: ReactNode[] }) {
 }
 
 /** Detalle del resultado: goleadores, asistencias, goles en contra, MVP y notas. */
-export function ResultSummary({ match }: { match: MatchDetail }) {
+export function ResultSummary({ match, ratings }: { match: MatchDetail; ratings?: Record<string, number> }) {
   const names = new Map(match.participants.map((p) => [p.id, p.nickname]));
   const name = (id: string | null) => (id ? (names.get(id) ?? "—") : "sin autor");
   const scoreA = match.teams.a.score ?? 0;
@@ -256,7 +265,7 @@ export function ResultSummary({ match }: { match: MatchDetail }) {
             </span>
             <span className="block truncate text-[15px] font-semibold">{mvp.nickname}</span>
           </span>
-          <RatingPill rating={mvp.baseRating} size="sm" />
+          <RatingPill rating={ratings?.[mvp.id] ?? mvp.baseRating} size="sm" />
         </div>
       )}
 
