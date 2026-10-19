@@ -65,22 +65,28 @@ export const getGroupContext = cache(async (slug: string): Promise<GroupContext>
   const user = await requireUser();
   const supabase = await createClient();
 
-  const { data: group, error } = await supabase.from("groups").select("*").eq("slug", slug).maybeSingle();
+  // Una sola ida y vuelta: el grupo con mi membresía y mi ficha embebidas.
+  const { data, error } = await supabase
+    .from("groups")
+    .select("*, group_members!group_members_group_id_fkey(role), players!players_group_id_fkey(id, nickname)")
+    .eq("slug", slug)
+    .eq("group_members.profile_id", user.id)
+    .eq("players.profile_id", user.id)
+    .maybeSingle();
   if (error) throw error;
-  if (!group) notFound();
+  if (!data) notFound();
 
-  const [membership, myPlayer] = await Promise.all([
-    supabase.from("group_members").select("role").eq("group_id", group.id).eq("profile_id", user.id).maybeSingle(),
-    supabase.from("players").select("id, nickname").eq("group_id", group.id).eq("profile_id", user.id).maybeSingle(),
-  ]);
-  if (!membership.data) notFound();
+  const { group_members: memberships, players: myPlayers, ...group } = data;
+  const membership = memberships[0];
+  if (!membership) notFound();
+  const myPlayer = myPlayers[0];
 
   return {
     group,
-    role: membership.data.role,
-    isAdmin: membership.data.role === "admin",
+    role: membership.role,
+    isAdmin: membership.role === "admin",
     userId: user.id,
-    myPlayer: myPlayer.data ?? null,
+    myPlayer: myPlayer ? { id: myPlayer.id, nickname: myPlayer.nickname } : null,
   };
 });
 
