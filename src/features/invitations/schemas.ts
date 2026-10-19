@@ -13,7 +13,7 @@ export const EXPIRY_OPTIONS = [
 export const createInvitationSchema = z
   .object({
     groupId: z.uuid(),
-    role: z.enum(["admin", "player"]).default("player"),
+    role: z.literal("player").default("player"),
     expiresIn: z.enum(["1", "7", "30", "never"]).default("7"),
     maxUses: optional(z.coerce.number().int().min(1, "Mínimo 1.").max(500, "Máximo 500.")),
     playerId: optional(z.uuid()),

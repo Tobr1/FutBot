@@ -42,17 +42,6 @@ export const playerFormSchema = z
   })
   .refine(differentPositions, differentPositionsIssue);
 
-/** Lo que un jugador puede editar de su propia ficha. */
-export const ownPlayerFormSchema = z
-  .object({
-    groupId: z.uuid(),
-    playerId: z.uuid(),
-    fullName: optional(z.string().trim().max(80, "Usá como máximo 80 caracteres.")),
-    dominantFoot: optional(z.enum(DOMINANT_FEET)),
-    ...positionsShape,
-  })
-  .refine(differentPositions, differentPositionsIssue);
-
 export const createOwnPlayerSchema = z
   .object({
     groupId: z.uuid(),

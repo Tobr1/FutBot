@@ -4,7 +4,7 @@ import { GroupBottomNav, GroupBottomNavSkeleton, GroupTabs, GroupTabsSkeleton } 
 import { GroupSwitcher } from "@/components/layout/group-switcher";
 import { ResumeRefresh } from "@/components/layout/resume-refresh";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getGroupContext, getMyGroups } from "@/features/groups/queries";
+import { getGroupContext, getIsAppAdmin, getMyGroups } from "@/features/groups/queries";
 
 type Params = LayoutProps<"/g/[slug]">["params"];
 
@@ -56,11 +56,12 @@ function SwitcherSkeleton() {
 
 async function SwitcherSlot({ params }: { params: Params }) {
   const { slug } = await params;
-  const [{ group }, groups] = await Promise.all([getGroupContext(slug), getMyGroups()]);
+  const [{ group }, groups, isAppAdmin] = await Promise.all([getGroupContext(slug), getMyGroups(), getIsAppAdmin()]);
   return (
     <GroupSwitcher
       current={{ slug: group.slug, name: group.name }}
       groups={groups.map((g) => ({ slug: g.slug, name: g.name, playerCount: g.playerCount, role: g.role }))}
+      canCreateGroup={isAppAdmin}
     />
   );
 }

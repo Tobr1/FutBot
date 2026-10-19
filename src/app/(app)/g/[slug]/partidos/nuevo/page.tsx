@@ -22,7 +22,7 @@ export default async function NewMatchPage({ params }: PageProps<"/g/[slug]/part
   return (
     <ScreenTransition>
       <div className="space-y-6 lg:space-y-8">
-        <StackHeader backHref={routes.groupMatches(slug)} backLabel="Partidos" title="Nuevo partido" focusFlow />
+        <StackHeader backHref={routes.groupMatches(slug)} backLabel="Partidos" title="Nuevo partido" />
         <PageHeader title="Nuevo partido" description="Fecha, cancha y quiénes juegan." />
         {/* Sin Card: su overflow-hidden rompería la barra de acciones pegajosa en el teléfono. */}
         <div className="lg:panel lg:rounded-xl lg:p-6">

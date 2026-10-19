@@ -2,6 +2,15 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-050 · Un único administrador: el de la app
+FutBot tiene un solo administrador (el dueño); el resto de las cuentas entra como jugador y solo ve y vota. Migración `20261019000700`: tabla `app_admins` (sin escritura desde la app, cada cuenta solo lee su fila) y `is_app_admin()`. En vez de tocar cada política, `is_group_admin()` pasa a exigir además estar en `app_admins`, así todas las políticas y RPC existentes quedan restringidas de una vez. `create_group` exige ser admin de la app. El rol `admin` en un grupo queda reservado (trigger `admin_reserved`, salvo la promoción automática al borrar una cuenta), no hay invitaciones de admin y los jugadores ya no editan su ficha ni sus posiciones (pueden vincularse o crear la propia para votar). En la app, `getGroupContext` calcula el rol efectivo igual que la base. Para sumar otro admin hay que insertarlo en `app_admins` desde el panel de Supabase.
+
+## D-049 · Panel de administración
+Pantalla `/g/[slug]/admin` (solo admin), con acceso destacado al principio de "Más": acciones rápidas (nuevo partido, agregar jugador, invitar), pendientes (partidos abiertos y los que ya se jugaron sin resultado) y la gestión de plantel, miembros, invitaciones, datos del grupo, reglas, temporadas y registro de cambios. "Más" queda para todos con lo que se puede ver. La pestaña sigue llamándose "Más" para no cambiar la barra inferior según el rol.
+
+## D-048 · Chrome a prueba de rutas ocultas y "Volver" sin apilar
+Next 16 deja hasta 3 rutas anteriores montadas y ocultas con `<Activity>` (`display: none`), así que los `html:has(...)` de `globals.css` coincidían con pantallas que ya no se veían: desaparecían la barra inferior y el encabezado, y el contenido quedaba debajo de la barra de estado de iOS. Ahora cada shell define sus variables de chrome sobre sí mismo; el `<html>` solo sabe de la barra inferior por un atributo que pone el componente visible en un efecto (los efectos se desmontan en rutas ocultas). La barra inferior y el AppHeader no se ocultan nunca (salvo la barra inferior con el teclado abierto); la StackHeader queda pegada debajo del AppHeader. "Volver" (`BackButton`) retrocede en el historial si hay una pantalla de la app detrás (Navigation API, con un contador de respaldo) y si no reemplaza la entrada por la pantalla padre. Los `redirect` de las Server Actions usan `RedirectType.replace`: después de guardar, "atrás" no vuelve al formulario.
+
 ## D-047 · Funciones de Vercel en São Paulo (gru1)
 La base de Supabase está en sa-east-1 (São Paulo) y las funciones corrían en la región por defecto de Vercel (iad1, Washington): cada consulta cruzaba el continente y una pantalla hace varias. `vercel.json` fija `regions: ["gru1"]`. Además, `getGroupContext` trae grupo, membresía y ficha propia en una sola consulta (embebidas) y el historial embebe el avatar de la cuenta vinculada, para no sumar idas y vueltas en cada pantalla del grupo.
 

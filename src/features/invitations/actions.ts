@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/session";
 import { toUserMessage } from "@/lib/errors";
@@ -66,5 +66,5 @@ export async function acceptInvitationAction(token: string): Promise<MutationRes
   if (!result?.group_slug) return fail(toUserMessage(null));
 
   revalidatePath(routes.dashboard);
-  redirect(result.needs_player ? routes.claimPlayer(result.group_slug) : `${routes.group(result.group_slug)}?bienvenida=1`);
+  redirect(result.needs_player ? routes.claimPlayer(result.group_slug) : `${routes.group(result.group_slug)}?bienvenida=1`, RedirectType.replace);
 }

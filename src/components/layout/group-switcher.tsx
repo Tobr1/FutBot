@@ -17,7 +17,16 @@ function playersLabel(count: number) {
   return `${count} ${count === 1 ? "jugador" : "jugadores"}`;
 }
 
-export function GroupSwitcher({ current, groups }: { current: { slug: string; name: string }; groups: SwitcherGroup[] }) {
+export function GroupSwitcher({
+  current,
+  groups,
+  canCreateGroup = false,
+}: {
+  current: { slug: string; name: string };
+  groups: SwitcherGroup[];
+  /** Solo el administrador de la app crea grupos. */
+  canCreateGroup?: boolean;
+}) {
   const groupItems: MenuItemDef[] = groups.map((group) => {
     const isCurrent = group.slug === current.slug;
     return {
@@ -55,7 +64,9 @@ export function GroupSwitcher({ current, groups }: { current: { slug: string; na
         { items: groupItems },
         {
           items: [
-            { key: "crear", label: "Crear grupo", icon: Plus, href: routes.newGroup, transitionTypes: ["nav-forward"] },
+            ...(canCreateGroup
+              ? [{ key: "crear", label: "Crear grupo", icon: Plus, href: routes.newGroup, transitionTypes: ["nav-forward"] } satisfies MenuItemDef]
+              : []),
             { key: "todos", label: "Ver todos mis grupos", icon: LayoutGrid, href: routes.dashboard },
           ],
         },

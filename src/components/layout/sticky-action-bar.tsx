@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Barra de acciones pegada abajo (sobre la barra inferior, o al ras en las
- * pantallas focusFlow). Va DENTRO del <form> para que useFormStatus siga
+ * Barra de acciones pegada abajo (sobre la barra inferior del grupo, o al ras
+ * del borde en el resto). Va DENTRO del <form> para que useFormStatus siga
  * funcionando. Con dos acciones: className="grid grid-cols-[1fr_auto] gap-2".
  * En escritorio queda estática al final del formulario.
  */

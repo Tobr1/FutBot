@@ -7,9 +7,15 @@ export interface GroupFixture {
   adminPlayerId: string;
 }
 
-/** Crea un admin y su grupo (con ficha propia). */
+/** Marca una cuenta como administradora de la app (solo se hace desde la base). */
+export async function makeAppAdmin(t: TestDb, profileId: string) {
+  await t.sql("insert into public.app_admins (profile_id) values ($1) on conflict do nothing", [profileId]);
+}
+
+/** Crea el admin de la app y su grupo (con ficha propia). */
 export async function createGroupWithAdmin(t: TestDb, name = "Los del Sábado"): Promise<GroupFixture> {
   const adminId = await t.createUser("Brito");
+  await makeAppAdmin(t, adminId);
   const [group] = await t.rpc<{ id: string; slug: string }>(adminId, "create_group", {
     p_name: name,
     p_player_nickname: "Brito",
@@ -22,12 +28,12 @@ export async function createGroupWithAdmin(t: TestDb, name = "Los del Sábado"):
 }
 
 /** Suma una cuenta al grupo por invitación y devuelve su id. */
-export async function addMember(t: TestDb, g: GroupFixture, name: string, role: "admin" | "player" = "player") {
+export async function addMember(t: TestDb, g: GroupFixture, name: string) {
   const userId = await t.createUser(name);
   const [inv] = await t.queryAs<{ token: string }>(
     g.adminId,
-    "insert into public.invitations (group_id, role) values ($1, $2) returning token",
-    [g.groupId, role],
+    "insert into public.invitations (group_id) values ($1) returning token",
+    [g.groupId],
   );
   await t.rpc(userId, "accept_invitation", { p_token: inv.token });
   return userId;

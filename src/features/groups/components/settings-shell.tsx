@@ -12,22 +12,24 @@ export function SettingsShell({
   slug,
   title,
   description,
-  focusFlow = false,
+  backHref,
+  backLabel = "Más",
   actions,
   children,
 }: {
   slug: string;
   title: string;
   description?: ReactNode;
-  /** Formularios: oculta la barra inferior para que la barra de acciones quede al ras. */
-  focusFlow?: boolean;
+  /** Pantalla padre (por defecto, el hub "Más"). */
+  backHref?: string;
+  backLabel?: string;
   actions?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <ScreenTransition>
       <div className="space-y-6">
-        <StackHeader backHref={routes.groupSettings(slug)} backLabel="Más" title={title} focusFlow={focusFlow} />
+        <StackHeader backHref={backHref ?? routes.groupSettings(slug)} backLabel={backLabel} title={title} />
         <PageHeader title={title} description={description} actions={actions} />
         {children}
       </div>

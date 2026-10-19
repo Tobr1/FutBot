@@ -145,7 +145,7 @@ export default async function MatchVotePage({ params }: PageProps<"/g/[slug]/par
   return (
     <ScreenTransition>
       <div className="space-y-6 lg:space-y-8">
-        <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title="Votar" focusFlow={phase === "open"} />
+        <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title="Votar" />
         <PageHeader
           title="Votar"
           description={`Partido del ${dayLabel}. Calificá de 1 a 10 a cada uno según cómo jugó ese día.`}

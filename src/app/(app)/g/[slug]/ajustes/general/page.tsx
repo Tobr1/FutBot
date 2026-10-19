@@ -11,7 +11,7 @@ export default async function GroupGeneralSettingsPage({ params }: PageProps<"/g
   const { group, isAdmin } = await getGroupContext(slug);
 
   return (
-    <SettingsShell slug={slug} title="Datos del grupo" focusFlow={isAdmin}>
+    <SettingsShell slug={slug} title="Datos del grupo">
       {isAdmin ? (
         // Sin Card: la barra de acciones tiene que quedar pegada abajo en el teléfono.
         <div className="lg:panel lg:rounded-xl lg:p-6">

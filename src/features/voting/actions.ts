@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { toUserMessage } from "@/lib/errors";
 import { fail, type MutationResult } from "@/lib/mutation-result";
 import { routes } from "@/lib/routes";
@@ -30,6 +30,6 @@ export async function submitRatingsAction(input: unknown): Promise<MutationResul
     ? await supabase.from("groups").select("slug").eq("id", match.group_id).maybeSingle()
     : { data: null };
   revalidatePath("/g/[slug]", "layout");
-  if (group) redirect(`${routes.match(group.slug, matchId)}?votos=1`);
+  if (group) redirect(`${routes.match(group.slug, matchId)}?votos=1`, RedirectType.replace);
   return { ok: true, message: "¡Votos enviados!" };
 }

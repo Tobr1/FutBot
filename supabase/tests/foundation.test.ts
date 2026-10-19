@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { addMember, addMemberWithPlayer, addPlayer, createGroupWithAdmin, type GroupFixture } from "./helpers/fixtures";
+import { addMember, addMemberWithPlayer, addPlayer, createGroupWithAdmin, type GroupFixture, makeAppAdmin } from "./helpers/fixtures";
 import { createTestDb, expectDbError, type TestDb } from "./helpers/test-db";
 
 let t: TestDb;
@@ -120,6 +120,7 @@ describe("miembros y roles", () => {
   it("con otro admin, sí puede irse", async () => {
     const g = await createGroupWithAdmin(t);
     const second = await addMember(t, g, "Segundo");
+    await makeAppAdmin(t, second);
     await t.queryAs(g.adminId, "update public.group_members set role = 'admin' where group_id = $1 and profile_id = $2", [
       g.groupId,
       second,
@@ -223,17 +224,16 @@ describe("jugadores", () => {
     );
   });
 
-  it("un jugador edita datos no sensibles de su ficha, pero no su nivel ni su apodo", async () => {
+  it("un jugador no edita su propia ficha ni sus posiciones (solo ve y vota)", async () => {
     const { userId, playerId } = await addMemberWithPlayer(t, g, "Fran");
-    const ok = await t.queryAs(userId, "update public.players set full_name = 'Francisco' where id = $1 returning id", [playerId]);
-    expect(ok).toHaveLength(1);
+    const updated = await t.queryAs(userId, "update public.players set full_name = 'Francisco' where id = $1 returning id", [playerId]);
+    expect(updated).toHaveLength(0);
     await expectDbError(
-      t.queryAs(userId, "update public.players set base_rating = 10 where id = $1", [playerId]),
-      "player_field_forbidden",
-    );
-    await expectDbError(
-      t.queryAs(userId, "update public.players set nickname = 'Messi' where id = $1", [playerId]),
-      "player_field_forbidden",
+      t.queryAs(userId, "insert into public.player_positions (player_id, group_id, position, priority) values ($1, $2, 'forward', 1)", [
+        playerId,
+        g.groupId,
+      ]),
+      "row-level security",
     );
   });
 
@@ -318,9 +318,13 @@ describe("invitaciones", () => {
     expect(rows).toHaveLength(0);
   });
 
-  it("aceptar suma al grupo con el rol de la invitación", async () => {
-    const { token } = await invite({ role: "admin" });
-    const user = await t.createUser("CoAdmin");
+  it("no se pueden crear invitaciones de admin", async () => {
+    await expectDbError(invite({ role: "admin" }), "admin_reserved");
+  });
+
+  it("aceptar suma al grupo como jugador", async () => {
+    const { token } = await invite();
+    const user = await t.createUser("Nuevo");
     const [result] = await t.rpc<{ group_slug: string; needs_player: boolean }>(user, "accept_invitation", { p_token: token });
     expect(result.group_slug).toBe(g.slug);
     expect(result.needs_player).toBe(true);
@@ -328,7 +332,7 @@ describe("invitaciones", () => {
       "select role from public.group_members where group_id = $1 and profile_id = $2",
       [g.groupId, user],
     );
-    expect(member.role).toBe("admin");
+    expect(member.role).toBe("player");
   });
 
   it("respeta max_uses", async () => {
@@ -454,5 +458,44 @@ describe("integridad", () => {
       "select public.normalize_name('  Juán  Cruz. ') as a, public.normalize_name('ÑOÑO_10') as b, public.normalize_name('⚽') as c",
     );
     expect(row).toEqual({ a: "juan cruz", b: "nono 10", c: null });
+  });
+});
+
+describe("administrador único de la app", () => {
+  it("solo el admin de la app crea grupos", async () => {
+    const user = await t.createUser("Cualquiera");
+    await expectDbError(t.rpc(user, "create_group", { p_name: "Mi grupo" }), "forbidden");
+  });
+
+  it("is_app_admin dice quién administra y app_admins no se puede escribir", async () => {
+    const g = await createGroupWithAdmin(t);
+    const member = await addMember(t, g, "Socio");
+    const [admin] = await t.rpc<{ is_app_admin: boolean }>(g.adminId, "is_app_admin", {});
+    const [other] = await t.rpc<{ is_app_admin: boolean }>(member, "is_app_admin", {});
+    expect(admin.is_app_admin).toBe(true);
+    expect(other.is_app_admin).toBe(false);
+    await expectDbError(t.queryAs(member, "insert into public.app_admins (profile_id) values ($1)", [member]), "permission denied");
+    expect(await t.queryAs(member, "select * from public.app_admins")).toHaveLength(0);
+  });
+
+  it("nadie más puede volverse admin de un grupo", async () => {
+    const g = await createGroupWithAdmin(t);
+    const member = await addMember(t, g, "Ascendido");
+    await expectDbError(
+      t.queryAs(g.adminId, "update public.group_members set role = 'admin' where group_id = $1 and profile_id = $2", [g.groupId, member]),
+      "admin_reserved",
+    );
+  });
+
+  it("un rol admin heredado sin ser admin de la app no da permisos", async () => {
+    const g = await createGroupWithAdmin(t);
+    const legacy = await addMember(t, g, "Viejo admin");
+    // Simula un admin de antes de esta regla (escritura directa, sin triggers de la app).
+    await t.sql("alter table public.group_members disable trigger group_members_admin_reserved");
+    await t.sql("update public.group_members set role = 'admin' where group_id = $1 and profile_id = $2", [g.groupId, legacy]);
+    await t.sql("alter table public.group_members enable trigger group_members_admin_reserved");
+    expect(await t.queryAs(legacy, "select * from public.invitations where group_id = $1", [g.groupId])).toHaveLength(0);
+    const renamed = await t.queryAs(legacy, "update public.groups set name = 'Hackeado' where id = $1 returning id", [g.groupId]);
+    expect(renamed).toHaveLength(0);
   });
 });

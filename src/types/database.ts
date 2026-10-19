@@ -15,6 +15,29 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_admins: {
+        Row: {
+          profile_id: string
+          created_at: string
+        }
+        Insert: {
+          profile_id: string
+          created_at?: string
+        }
+        Update: {
+          profile_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_admins_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           id: number
@@ -995,6 +1018,10 @@ export type Database = {
           closes_at: string | null
           is_open: boolean | null
         }[]
+      }
+      is_app_admin: {
+        Args: never
+        Returns: boolean
       }
       is_group_admin: {
         Args: {

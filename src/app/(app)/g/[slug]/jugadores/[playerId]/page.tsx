@@ -88,7 +88,7 @@ export default async function PlayerPage({ params }: PageProps<"/g/[slug]/jugado
           title={player.nickname}
           actions={
             <>
-              {(ctx.isAdmin || isMine) && (
+              {ctx.isAdmin && (
                 <Button asChild variant="ghost" size="icon">
                   <Link href={routes.editPlayer(slug, player.id)} transitionTypes={["nav-forward"]} aria-label="Editar">
                     <Pencil className="size-5" aria-hidden="true" />

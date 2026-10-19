@@ -39,7 +39,8 @@ export const groupSettingsSchema = z.object({
 export const memberRoleSchema = z.object({
   groupId: z.uuid(),
   profileId: z.uuid(),
-  role: z.enum(["admin", "player"]),
+  // El rol admin está reservado al administrador de la app (ver app_admins).
+  role: z.literal("player"),
 });
 
 export const removeMemberSchema = z.object({

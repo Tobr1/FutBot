@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { formatMatchDate } from "@/domain/matches/datetime";
 import { GroupCard } from "@/features/groups/components/group-card";
-import { getMyGroups } from "@/features/groups/queries";
+import { getIsAppAdmin, getMyGroups } from "@/features/groups/queries";
 import { InviteLinkInput } from "@/features/invitations/components/invite-link-input";
 import { PendingVotingBanner } from "@/features/voting/components/voting-section";
 import { listMyPendingVotings } from "@/features/voting/queries";
@@ -24,7 +24,7 @@ export const metadata: Metadata = { title: "Mis grupos" };
 const FLASH = { clave: { actualizada: "Contraseña actualizada." } };
 
 export default async function DashboardPage() {
-  const [profile, groups] = await Promise.all([getCurrentProfile(), getMyGroups()]);
+  const [profile, groups, isAppAdmin] = await Promise.all([getCurrentProfile(), getMyGroups(), getIsAppAdmin()]);
   const firstName = profile.displayName.split(" ")[0];
   // Votaciones abiertas en cualquier grupo: la hora actual solo después de connection().
   await connection();
@@ -42,6 +42,7 @@ export default async function DashboardPage() {
           eyebrow={`Hola, ${firstName}`}
           title="Mis grupos"
           actions={
+            isAppAdmin &&
             groups.length > 0 && (
               <Button asChild className="hidden lg:inline-flex">
                 <Link href={routes.newGroup} transitionTypes={["nav-forward"]}>
@@ -70,19 +71,21 @@ export default async function DashboardPage() {
 
         {groups.length === 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
-            <EmptyState
-              icon={Users}
-              title="Armá tu grupo"
-              description="Creá el grupo de tu fútbol, cargá el plantel e invitá a tus amigos por WhatsApp."
-              action={
-                <Button asChild size="lg">
-                  <Link href={routes.newGroup} transitionTypes={["nav-forward"]}>
-                    <Plus aria-hidden="true" />
-                    Crear mi grupo
-                  </Link>
-                </Button>
-              }
-            />
+            {isAppAdmin && (
+              <EmptyState
+                icon={Users}
+                title="Armá tu grupo"
+                description="Creá el grupo de tu fútbol, cargá el plantel e invitá a tus amigos por WhatsApp."
+                action={
+                  <Button asChild size="lg">
+                    <Link href={routes.newGroup} transitionTypes={["nav-forward"]}>
+                      <Plus aria-hidden="true" />
+                      Crear mi grupo
+                    </Link>
+                  </Button>
+                }
+              />
+            )}
             <EmptyState
               icon={Link2}
               tone="neutral"
@@ -98,17 +101,19 @@ export default async function DashboardPage() {
                 <GroupCard group={group} />
               </li>
             ))}
-            <li>
-              <Link
-                href={routes.newGroup}
-                transitionTypes={["nav-forward"]}
-                className="pressable relative flex min-h-20 items-center justify-center gap-2 rounded-xl border border-dashed border-hairline px-4 text-sm font-medium text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              >
-                <Plus className="size-5" aria-hidden="true" />
-                Crear otro grupo
-                <LinkPending />
-              </Link>
-            </li>
+            {isAppAdmin && (
+              <li>
+                <Link
+                  href={routes.newGroup}
+                  transitionTypes={["nav-forward"]}
+                  className="pressable relative flex min-h-20 items-center justify-center gap-2 rounded-xl border border-dashed border-hairline px-4 text-sm font-medium text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  <Plus className="size-5" aria-hidden="true" />
+                  Crear otro grupo
+                  <LinkPending />
+                </Link>
+              </li>
+            )}
           </ul>
         )}
       </div>

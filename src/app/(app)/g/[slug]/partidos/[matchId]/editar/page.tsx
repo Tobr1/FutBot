@@ -27,7 +27,7 @@ export default async function EditMatchPage({ params }: PageProps<"/g/[slug]/par
   return (
     <ScreenTransition>
       <div className="space-y-6 lg:space-y-8">
-        <StackHeader backHref={routes.match(slug, match.id)} backLabel={`Partido del ${dayLabel}`} title="Editar partido" focusFlow />
+        <StackHeader backHref={routes.match(slug, match.id)} backLabel={`Partido del ${dayLabel}`} title="Editar partido" />
         <PageHeader title="Editar partido" description="La convocatoria y los equipos se editan desde el partido." />
         <div className="lg:panel lg:rounded-xl lg:p-6">
           <EditMatchForm

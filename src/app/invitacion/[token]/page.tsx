@@ -100,7 +100,7 @@ async function InvitationContent({ params }: { params: PageProps<"/invitacion/[t
     <div className="space-y-6">
       <div className="flex flex-col items-center gap-3 text-center">
         <GroupCrest name={preview.groupName} size="lg" />
-        <div className="space-y-1.5">
+        <div className="w-full min-w-0 space-y-1.5">
           <p className="text-sm text-muted-foreground">
             {preview.inviterName ? (
               <>
@@ -110,7 +110,7 @@ async function InvitationContent({ params }: { params: PageProps<"/invitacion/[t
               "Te invitaron a"
             )}
           </p>
-          <h1 className="font-display text-display-lg font-extrabold tracking-wide break-words uppercase">
+          <h1 className="font-display text-display-lg font-extrabold tracking-wide wrap-anywhere uppercase">
             {preview.groupName}
           </h1>
         </div>

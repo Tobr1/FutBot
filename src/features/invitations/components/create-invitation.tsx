@@ -11,22 +11,16 @@ import { createInvitationAction } from "../actions";
 import { createInvitationSchema, EXPIRY_OPTIONS } from "../schemas";
 import { ShareInvite } from "./share-invite";
 
-type Role = "player" | "admin";
 type Expiry = (typeof EXPIRY_OPTIONS)[number]["value"];
-
-const ROLE_OPTIONS: { value: Role; label: string }[] = [
-  { value: "player", label: "Jugador" },
-  { value: "admin", label: "Administrador" },
-];
 
 const EXPIRY_CHOICES = EXPIRY_OPTIONS.map((o) => ({ value: o.value as Expiry, label: o.label }));
 
 /**
- * Genera un link de invitación general (sin ficha puntual). Por defecto:
- * jugador, 7 días, sin límite de usos; lo demás va en "Opciones avanzadas".
+ * Genera un link de invitación general (sin ficha puntual). Siempre entra
+ * como jugador (el único admin es el de la app). Por defecto 7 días y sin
+ * límite de usos; lo demás va en "Opciones avanzadas".
  */
 export function CreateInvitation({ groupId, groupName }: { groupId: string; groupName: string }) {
-  const [role, setRole] = useState<Role>("player");
   const [expiresIn, setExpiresIn] = useState<Expiry>("7");
   const [maxUses, setMaxUses] = useState("");
   const [maxUsesError, setMaxUsesError] = useState<string | null>(null);
@@ -43,7 +37,7 @@ export function CreateInvitation({ groupId, groupName }: { groupId: string; grou
   }
 
   function create() {
-    const input = { groupId, role, expiresIn, maxUses };
+    const input = { groupId, expiresIn, maxUses };
     // Misma validación que el servidor, para marcar el campo antes de enviar.
     const parsed = createInvitationSchema.safeParse(input);
     const maxUsesIssue = parsed.success ? undefined : parsed.error.issues.find((issue) => issue.path[0] === "maxUses");
@@ -90,16 +84,6 @@ export function CreateInvitation({ groupId, groupName }: { groupId: string; grou
           <ChevronDown className="size-4 transition-transform group-open/advanced:rotate-180" aria-hidden="true" />
         </summary>
         <div className="grid gap-5 pt-2 pb-2">
-          <FormField id="invite-role" label="Rol" control="group">
-            <ChoiceCards
-              name="role"
-              value={role}
-              onChange={(next) => next && setRole(next)}
-              options={ROLE_OPTIONS}
-              columns="grid-cols-2"
-              {...groupAria("invite-role")}
-            />
-          </FormField>
           <FormField id="invite-expiry" label="Vence en" control="group">
             <ChoiceCards
               name="expiresIn"

@@ -28,7 +28,7 @@ export default async function NewPlayerPage({ params, searchParams }: PageProps<
         <Suspense fallback={null}>
           <FlashToast messages={flash} />
         </Suspense>
-        <StackHeader backHref={routes.groupPlayers(slug)} backLabel="Plantel" title="Nuevo jugador" focusFlow />
+        <StackHeader backHref={routes.groupPlayers(slug)} backLabel="Plantel" title="Nuevo jugador" />
         <PageHeader title="Nuevo jugador" description="No hace falta que tenga cuenta." />
         {/* Sin Card: su overflow-hidden rompería la barra de acciones pegajosa en el teléfono. */}
         <div className="lg:panel lg:rounded-xl lg:p-6">

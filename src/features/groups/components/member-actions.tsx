@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, Shield, ShieldOff, UserMinus } from "lucide-react";
+import { MoreVertical, ShieldOff, UserMinus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -10,7 +10,8 @@ import { changeMemberRoleAction, removeMemberAction } from "../actions";
 
 /**
  * Acciones de admin sobre un miembro: menú (hoja inferior en el teléfono) con
- * el cambio de rol y, en un grupo aparte, "Quitar del grupo" con confirmación.
+ * "Quitar del grupo" (con confirmación). El rol admin está reservado al
+ * administrador de la app: solo se ofrece quitárselo a un admin heredado.
  */
 export function MemberActions({
   groupId,
@@ -26,7 +27,7 @@ export function MemberActions({
 
   function changeRole() {
     startTransition(async () => {
-      const result = await changeMemberRoleAction({ ...ref, role: isAdmin ? "player" : "admin" });
+      const result = await changeMemberRoleAction({ ...ref, role: "player" });
       if (result.ok) toast.success(result.message);
       else toast.error(result.message);
     });
@@ -42,16 +43,9 @@ export function MemberActions({
           </Button>
         }
         sections={[
-          {
-            items: [
-              {
-                key: "role",
-                label: isAdmin ? "Quitar administrador" : "Hacer administrador",
-                icon: isAdmin ? ShieldOff : Shield,
-                onSelect: changeRole,
-              },
-            ],
-          },
+          ...(isAdmin
+            ? [{ items: [{ key: "role", label: "Quitar administrador", icon: ShieldOff, onSelect: changeRole }] }]
+            : []),
           {
             items: [
               {

@@ -185,8 +185,14 @@
 }
 
 /*
- * Variables de chrome. Viven en <html> para que los portales (sheets, toasts)
- * también las vean.
+ * Variables de chrome. Los valores base viven en <html> para que los portales
+ * (sheets, toasts) también los vean.
+ *
+ * Ojo con :has(): Next deja hasta 3 rutas anteriores montadas y ocultas
+ * (<Activity>, display:none), así que un `html:has([data-algo])` también
+ * coincide con pantallas que ya no se ven. Por eso cada shell define sus
+ * propias variables sobre sí mismo, y el <html> solo se entera de la barra
+ * inferior por un atributo que pone (y saca) el componente visible.
  */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
@@ -194,51 +200,37 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --header-h: 3.5rem;
+  --stack-h: 3rem;
   --tabs-h: 0px;
   --bottom-nav-h: 4rem;
-  --chrome-top: calc(var(--header-h) + var(--safe-top) + var(--tabs-h));
   --chrome-bottom: 0px;
   --action-bar-pb: calc(0.75rem + var(--safe-bottom));
-  --float-bottom: calc(max(var(--chrome-bottom), var(--safe-bottom)) + 1rem);
 }
 
-/* Shell de grupo: la barra inferior ocupa el borde de abajo. */
-html:has([data-shell="group"]) {
+/* Shell de grupo (y el <html> mientras su barra inferior está a la vista). */
+[data-shell="group"],
+:root[data-group-chrome] {
   --chrome-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom));
   --action-bar-pb: 0.75rem;
 }
 
 @media (width >= 64rem) {
-  html:has([data-shell="group"]) {
+  [data-shell="group"],
+  :root[data-group-chrome] {
     --chrome-bottom: 0px;
     --action-bar-pb: 0px;
     --tabs-h: 2.75rem;
   }
 }
 
-@media (width < 64rem) {
-  /* Flujos enfocados (formularios): la barra inferior se va y la de acción baja. */
-  html:has([data-focus-flow]) {
-    --chrome-bottom: 0px;
-    --action-bar-pb: calc(0.75rem + var(--safe-bottom));
-  }
-
-  html:has([data-focus-flow]) [data-bottom-nav] {
-    translate: 0 100%;
-    visibility: hidden;
-  }
-
-  /* El StackHeader reemplaza al AppHeader en el celular. */
-  [data-shell]:has([data-stack-header]) [data-app-header] {
-    display: none;
-  }
-}
-
 @media (width < 64rem) and (pointer: coarse) {
-  /* Con el teclado abierto, la barra inferior no tapa el campo ni la acción. */
-  html:has(
-      [data-shell]
-        :is(
+  /*
+   * Con el teclado abierto (Android achica el viewport), la barra inferior no
+   * tapa el campo ni la acción. Un campo con foco siempre está a la vista, así
+   * que este :has() no coincide con rutas ocultas.
+   */
+  [data-shell="group"]:has(
+      :is(
           input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="file"], [readonly]),
           textarea,
           [contenteditable="true"]
@@ -246,19 +238,21 @@ html:has([data-shell="group"]) {
     ) {
     --chrome-bottom: 0px;
     --action-bar-pb: 0.75rem;
-  }
 
-  html:has(
-      [data-shell]
-        :is(
-          input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="file"], [readonly]),
-          textarea,
-          [contenteditable="true"]
-        ):focus
-    )
-    [data-bottom-nav] {
-    display: none;
+    & [data-bottom-nav] {
+      display: none;
+    }
   }
+}
+
+/*
+ * Derivadas: se recalculan en cada elemento que redefine las de arriba (una
+ * variable con var() se resuelve donde se declara, no donde se usa).
+ */
+:root,
+[data-shell] {
+  --chrome-top: calc(var(--header-h) + var(--safe-top) + var(--tabs-h));
+  --float-bottom: calc(max(var(--chrome-bottom), var(--safe-bottom)) + 1rem);
 }
 
 @layer base {
@@ -272,6 +266,25 @@ html:has([data-shell="group"]) {
   :is(input, textarea, select):focus-visible {
     outline-offset: 0;
   }
+  /*
+   * Fecha y hora en iOS: Safari les da un ancho mínimo propio y centra el
+   * valor, así que desbordan columnas angostas. Se vuelven bloques comunes.
+   */
+  input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"]) {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    line-height: 2.25rem;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input::-webkit-date-and-time-value {
+    min-height: 1.5em;
+    text-align: left;
+  }
+  input::-webkit-datetime-edit {
+    padding: 0;
+  }
   a,
   button,
   [role="button"],
@@ -284,7 +297,8 @@ html:has([data-shell="group"]) {
   html {
     @apply font-sans;
     -webkit-tap-highlight-color: transparent;
-    scroll-padding-top: calc(var(--chrome-top) + 0.5rem);
+    /* Incluye la StackHeader aunque la pantalla no la tenga: sobra poco y no depende de :has(). */
+    scroll-padding-top: calc(var(--chrome-top) + var(--stack-h) + 0.5rem);
     scroll-padding-bottom: calc(var(--chrome-bottom) + 0.5rem);
   }
   body {
