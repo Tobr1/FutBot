@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { type ActionState, errorState, formValues, parseForm, successState } from "@/lib/action-result";
 import { toUserMessage } from "@/lib/errors";
 import { fail, type MutationResult, ok } from "@/lib/mutation-result";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
-import { createOwnPlayerSchema, ownPlayerFormSchema, playerFormSchema, playerRefSchema } from "./schemas";
+import { createOwnPlayerSchema, playerFormSchema, playerRefSchema } from "./schemas";
 
 async function groupSlug(groupId: string): Promise<string | null> {
   const supabase = await createClient();
@@ -43,35 +43,9 @@ export async function savePlayerAction(_prev: ActionState, formData: FormData): 
   revalidatePath(routes.groupPlayers(slug));
 
   if (formData.get("intent") === "save-and-new") {
-    redirect(`${routes.newPlayer(slug)}?creado=${encodeURIComponent(v.nickname)}`);
+    redirect(`${routes.newPlayer(slug)}?creado=${encodeURIComponent(v.nickname)}`, RedirectType.replace);
   }
-  redirect(routes.player(slug, playerId));
-}
-
-/** El jugador edita datos no sensibles de su ficha. */
-export async function updateOwnPlayerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const parsed = parseForm(ownPlayerFormSchema, formData);
-  if (!parsed.ok) return parsed.state;
-  const v = parsed.data;
-
-  const supabase = await createClient();
-  const { data: current } = await supabase.from("players").select("nickname").eq("id", v.playerId).maybeSingle();
-  if (!current) return errorState(toUserMessage({ message: "player_not_found" }));
-
-  const { error } = await supabase.rpc("save_player", {
-    p_group_id: v.groupId,
-    p_player_id: v.playerId,
-    p_nickname: current.nickname,
-    p_full_name: v.fullName,
-    p_dominant_foot: v.dominantFoot,
-    p_primary_position: v.primaryPosition,
-    p_secondary_position: v.secondaryPosition,
-  });
-  if (error) return errorState(toUserMessage(error), { values: formValues(formData) });
-
-  const slug = await groupSlug(v.groupId);
-  if (slug) revalidatePath(routes.player(slug, v.playerId));
-  return successState("Ficha actualizada.");
+  redirect(routes.player(slug, playerId), RedirectType.replace);
 }
 
 export async function setPlayerActiveAction(input: unknown, active: boolean): Promise<MutationResult> {
@@ -110,7 +84,7 @@ export async function deletePlayerAction(input: unknown): Promise<MutationResult
   const slug = await groupSlug(parsed.data.groupId);
   if (slug) {
     revalidatePath(routes.groupPlayers(slug));
-    redirect(routes.groupPlayers(slug));
+    redirect(routes.groupPlayers(slug), RedirectType.replace);
   }
   return ok("Jugador eliminado.");
 }
@@ -126,7 +100,7 @@ export async function claimPlayerAction(input: unknown): Promise<MutationResult>
   const slug = await groupSlug(parsed.data.groupId);
   if (!slug) return ok();
   revalidatePath(routes.group(slug), "layout");
-  redirect(`${routes.group(slug)}?ficha=vinculada`);
+  redirect(`${routes.group(slug)}?ficha=vinculada`, RedirectType.replace);
 }
 
 export async function createOwnPlayerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -153,5 +127,5 @@ export async function createOwnPlayerAction(_prev: ActionState, formData: FormDa
   const slug = await groupSlug(v.groupId);
   if (!slug) return successState();
   revalidatePath(routes.group(slug), "layout");
-  redirect(`${routes.group(slug)}?ficha=creada`);
+  redirect(`${routes.group(slug)}?ficha=creada`, RedirectType.replace);
 }

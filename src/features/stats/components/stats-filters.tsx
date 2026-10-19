@@ -45,7 +45,7 @@ export function StatsFilters({
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)} aria-busy={isPending || undefined}>
       <Select value={season} onValueChange={(v) => update("temporada", v)}>
-        <SelectTrigger aria-label="Temporada" className="min-w-36 rounded-full px-3.5 text-sm font-medium data-[size=default]:h-10">
+        <SelectTrigger aria-label="Temporada" className="max-w-full min-w-36 rounded-full px-3.5 text-sm font-medium data-[size=default]:h-10">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

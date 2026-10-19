@@ -38,7 +38,7 @@ export function MatchFields({
 }) {
   return (
     <div className="grid gap-5">
-      <div className="grid grid-cols-[1fr_7.5rem] gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,8rem)] gap-3 *:min-w-0">
         <FormField id="date" label="Fecha" errors={errors?.date}>
           <Input
             {...fieldAria("date", errors?.date)}

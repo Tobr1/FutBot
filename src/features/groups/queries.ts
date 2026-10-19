@@ -26,17 +26,36 @@ export interface GroupContext {
   myPlayer: { id: string; nickname: string } | null;
 }
 
+/**
+ * ¿La cuenta actual es la administradora de FutBot? Hay un único admin de la
+ * app; el resto ve y vota. RLS solo deja leer la fila propia de app_admins.
+ */
+export const getIsAppAdmin = cache(async (): Promise<boolean> => {
+  const user = await getSessionUser();
+  if (!user) return false;
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("app_admins").select("profile_id").eq("profile_id", user.id).maybeSingle();
+  if (error) throw error;
+  return data !== null;
+});
+
+/** Rol efectivo: "admin" en un grupo solo cuenta para el admin de la app (igual que is_group_admin). */
+function effectiveRole(role: GroupRole, isAppAdmin: boolean): GroupRole {
+  return role === "admin" && isAppAdmin ? "admin" : "player";
+}
+
 /** Grupos de la cuenta actual (RLS ya filtra los ajenos). */
 export const getMyGroups = cache(async (): Promise<GroupSummary[]> => {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [groupsResult, membershipsResult] = await Promise.all([
+  const [groupsResult, membershipsResult, isAppAdmin] = await Promise.all([
     supabase
       .from("groups")
       .select("id, name, slug, description, players!players_group_id_fkey(count), group_members!group_members_group_id_fkey(count)")
       .order("name"),
     supabase.from("group_members").select("group_id, role, joined_at").eq("profile_id", user.id),
+    getIsAppAdmin(),
   ]);
 
   if (groupsResult.error) throw groupsResult.error;
@@ -50,7 +69,7 @@ export const getMyGroups = cache(async (): Promise<GroupSummary[]> => {
       name: g.name,
       slug: g.slug,
       description: g.description,
-      role: roles.get(g.id)!.role,
+      role: effectiveRole(roles.get(g.id)!.role, isAppAdmin),
       memberCount: g.group_members[0]?.count ?? 0,
       playerCount: g.players[0]?.count ?? 0,
     }));
@@ -65,14 +84,18 @@ export const getGroupContext = cache(async (slug: string): Promise<GroupContext>
   const user = await requireUser();
   const supabase = await createClient();
 
-  // Una sola ida y vuelta: el grupo con mi membresía y mi ficha embebidas.
-  const { data, error } = await supabase
-    .from("groups")
-    .select("*, group_members!group_members_group_id_fkey(role), players!players_group_id_fkey(id, nickname)")
-    .eq("slug", slug)
-    .eq("group_members.profile_id", user.id)
-    .eq("players.profile_id", user.id)
-    .maybeSingle();
+  // Una sola ida y vuelta: el grupo con mi membresía y mi ficha embebidas
+  // (en paralelo con el chequeo de admin de la app).
+  const [{ data, error }, isAppAdmin] = await Promise.all([
+    supabase
+      .from("groups")
+      .select("*, group_members!group_members_group_id_fkey(role), players!players_group_id_fkey(id, nickname)")
+      .eq("slug", slug)
+      .eq("group_members.profile_id", user.id)
+      .eq("players.profile_id", user.id)
+      .maybeSingle(),
+    getIsAppAdmin(),
+  ]);
   if (error) throw error;
   if (!data) notFound();
 
@@ -80,11 +103,12 @@ export const getGroupContext = cache(async (slug: string): Promise<GroupContext>
   const membership = memberships[0];
   if (!membership) notFound();
   const myPlayer = myPlayers[0];
+  const role = effectiveRole(membership.role, isAppAdmin);
 
   return {
     group,
-    role: membership.role,
-    isAdmin: membership.role === "admin",
+    role,
+    isAdmin: role === "admin",
     userId: user.id,
     myPlayer: myPlayer ? { id: myPlayer.id, nickname: myPlayer.nickname } : null,
   };
@@ -102,15 +126,17 @@ export async function findGroupContext(slug: string): Promise<GroupContext | nul
   const supabase = await createClient();
   const { data: group, error } = await supabase.from("groups").select("*").eq("slug", slug).maybeSingle();
   if (error || !group) return null;
-  const [membership, myPlayer] = await Promise.all([
+  const [membership, myPlayer, isAppAdmin] = await Promise.all([
     supabase.from("group_members").select("role").eq("group_id", group.id).eq("profile_id", user.id).maybeSingle(),
     supabase.from("players").select("id, nickname").eq("group_id", group.id).eq("profile_id", user.id).maybeSingle(),
+    getIsAppAdmin(),
   ]);
   if (!membership.data) return null;
+  const role = effectiveRole(membership.data.role, isAppAdmin);
   return {
     group,
-    role: membership.data.role,
-    isAdmin: membership.data.role === "admin",
+    role,
+    isAdmin: role === "admin",
     userId: user.id,
     myPlayer: myPlayer.data ?? null,
   };

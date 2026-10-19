@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { NavigationTracker } from "@/components/layout/navigation-tracker";
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
 import { OfflineBanner } from "@/components/layout/offline-banner";
@@ -68,6 +70,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Saltar al contenido
         </a>
         <MotionProvider>{children}</MotionProvider>
+        <Suspense fallback={null}>
+          <NavigationTracker />
+        </Suspense>
         <OfflineBanner />
         <Toaster
           position="bottom-center"

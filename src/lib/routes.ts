@@ -34,6 +34,8 @@ export const routes = {
   groupAwards: (slug: string) => `/g/${slug}/premios`,
   groupAnalytics: (slug: string) => `/g/${slug}/analisis`,
   groupSettings: (slug: string) => `/g/${slug}/ajustes`,
+  /** Panel del administrador de la app (solo admins). */
+  groupAdmin: (slug: string) => `/g/${slug}/admin`,
   groupGeneralSettings: (slug: string) => `/g/${slug}/ajustes/general`,
   groupMembers: (slug: string) => `/g/${slug}/ajustes/miembros`,
   groupInvitations: (slug: string) => `/g/${slug}/ajustes/invitaciones`,

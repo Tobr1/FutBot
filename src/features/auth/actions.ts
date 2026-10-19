@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { type ActionState, errorState, parseForm, successState } from "@/lib/action-result";
 import { toAuthMessage } from "@/lib/errors";
 import { getRequestOrigin } from "@/lib/origin";
@@ -19,7 +19,7 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
     return errorState(toAuthMessage(error), { values: { email, next: next ?? "" } });
   }
 
-  redirect(safeNextPath(next));
+  redirect(safeNextPath(next), RedirectType.replace);
 }
 
 export async function signUpAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -44,7 +44,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   }
 
   // Sin confirmación de email (desarrollo local) ya hay sesión.
-  if (data.session) redirect(next);
+  if (data.session) redirect(next, RedirectType.replace);
 
   return successState(`Te enviamos un email a ${email}. Abrí el link para activar tu cuenta.`);
 }
@@ -73,11 +73,11 @@ export async function resetPasswordAction(_prev: ActionState, formData: FormData
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return errorState(toAuthMessage(error));
 
-  redirect(`${routes.dashboard}?clave=actualizada`);
+  redirect(`${routes.dashboard}?clave=actualizada`, RedirectType.replace);
 }
 
 export async function signOutAction(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect(routes.home);
+  redirect(routes.home, RedirectType.replace);
 }

@@ -47,7 +47,7 @@ export default async function MatchTeamsPage({ params }: PageProps<"/g/[slug]/pa
   return (
     <ScreenTransition>
       <div className="space-y-6 lg:space-y-8">
-        <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title="Armar equipos" focusFlow />
+        <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title="Armar equipos" />
         <PageHeader
           title="Armar equipos"
           description={`${formatLabel(match.playersPerTeam)} · ${confirmed.length} titulares. Generá equipos parejos o armalos a mano.`}

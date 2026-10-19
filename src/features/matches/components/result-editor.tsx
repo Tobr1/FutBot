@@ -123,9 +123,9 @@ export function ResultEditor({
     <div className="space-y-6">
       {/* Marcador */}
       <section aria-label="Marcador" className="panel rounded-2xl px-3 py-4">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2">
           {(["a", "b"] as const).map((side, index) => (
-            <div key={side} className={cn("flex flex-col items-center gap-2", index === 1 && "col-start-3")}>
+            <div key={side} className={cn("flex min-w-0 flex-col items-center gap-2", index === 1 && "col-start-3")}>
               <p className={cn("flex max-w-full items-center gap-1.5 font-display text-lg leading-none font-extrabold tracking-wide uppercase", SIDE_TEXT[side])}>
                 <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-full", SIDE_DOT[side])} />
                 <span className="truncate">{teams[side].name}</span>
@@ -186,7 +186,7 @@ export function ResultEditor({
                     {(["goals", "assists"] as const).map((kind) => (
                       <div
                         key={kind}
-                        className="flex items-center justify-between gap-1 rounded-xl bg-surface-2/60 pl-3 sm:w-[7.5rem] sm:justify-center sm:bg-transparent sm:pl-0"
+                        className="flex min-w-0 flex-col items-center gap-1 rounded-xl bg-surface-2/60 py-1.5 sm:w-[7.5rem] sm:flex-row sm:justify-center sm:bg-transparent sm:py-0"
                       >
                         <span aria-hidden="true" className="text-2xs font-semibold tracking-[0.12em] text-muted-foreground uppercase sm:hidden">
                           {kind === "goals" ? "Goles" : "Asist."}

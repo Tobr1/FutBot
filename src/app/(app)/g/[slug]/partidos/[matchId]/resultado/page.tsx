@@ -49,7 +49,7 @@ export default async function MatchResultPage({ params }: PageProps<"/g/[slug]/p
   return (
     <ScreenTransition>
       <div className="space-y-6 lg:space-y-8">
-        <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title={title} focusFlow />
+        <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title={title} />
         <PageHeader title={title} description={`Partido del ${dayLabel}.`} />
         {canRecordResult(match.status, match.teamsReady) ? (
           <div className="max-w-2xl">

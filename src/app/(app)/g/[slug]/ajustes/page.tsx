@@ -3,19 +3,21 @@ import {
   CalendarCheck,
   CalendarRange,
   ChartLine,
-  History,
+  ChevronRight,
   IdCard,
   LayoutGrid,
   ListChecks,
   LogOut,
   Settings2,
-  UserPlus,
+  ShieldCheck,
   UserRound,
   Users,
 } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { InstallAppRow } from "@/components/pwa/install-app-row";
+import { LinkPending } from "@/components/shared/link-pending";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { PlayerRow } from "@/components/shared/player-row";
@@ -50,6 +52,24 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
     <ScreenTransition>
       <div className="space-y-6">
         <PageHeader title="Más" />
+
+        {isAdmin && (
+          <Link
+            href={routes.groupAdmin(slug)}
+            transitionTypes={FORWARD}
+            className="pressable relative flex min-h-18 items-center gap-3 rounded-xl bg-primary/10 px-4 py-3 ring-1 ring-primary/30 ring-inset focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/16 text-primary">
+              <ShieldCheck className="size-5" aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">Administración</span>
+              <span className="block truncate text-sm text-muted-foreground">Partidos, plantel, invitaciones y ajustes</span>
+            </span>
+            <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <LinkPending />
+          </Link>
+        )}
 
         <section aria-labelledby="mas-ficha" className="space-y-2">
           <h2
@@ -93,16 +113,6 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
         <section aria-labelledby="mas-grupo" className="space-y-1">
           <SectionHeader id="mas-grupo" title="Grupo" />
           <ListGroup>
-            {isAdmin && (
-              <ListRow
-                href={routes.groupInvitations(slug)}
-                transitionTypes={FORWARD}
-                leading={<RowIcon icon={UserPlus} tone="primary" />}
-                title="Invitar amigos"
-                subtitle="Mandá el link por WhatsApp"
-                chevron
-              />
-            )}
             <ListRow
               href={routes.groupHistory(slug)}
               transitionTypes={FORWARD}
@@ -163,16 +173,6 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
               subtitle={isAdmin ? "Nombre, formato y reglas" : "Solo lectura"}
               chevron
             />
-            {isAdmin && (
-              <ListRow
-                href={routes.groupAudit(slug)}
-                transitionTypes={FORWARD}
-                leading={<RowIcon icon={History} />}
-                title="Registro de cambios"
-                subtitle="Resultados, correcciones y altas"
-                chevron
-              />
-            )}
           </ListGroup>
         </section>
 

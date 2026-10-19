@@ -242,7 +242,7 @@ export function TeamBuilder({
   return (
     <div className="space-y-5">
       {/* Equilibrio: queda a la vista mientras se reparte. */}
-      <div className="sticky top-[calc(3.5rem+var(--safe-top))] z-20 -mx-4 border-b border-hairline bg-background/92 px-4 py-3 backdrop-blur-md lg:static lg:mx-0 lg:rounded-xl lg:border-0 lg:panel lg:p-4">
+      <div className="sticky top-[calc(var(--chrome-top)+var(--stack-h))] z-20 -mx-4 border-b border-hairline bg-background/92 px-4 py-3 backdrop-blur-md lg:static lg:mx-0 lg:rounded-xl lg:border-0 lg:panel lg:p-4">
         <div className="grid grid-cols-2 gap-3 text-sm">
           {(["a", "b"] as const).map((side) => (
             <div key={side} className={cn("min-w-0", side === "b" && "text-right")}>

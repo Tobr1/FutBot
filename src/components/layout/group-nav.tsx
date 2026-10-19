@@ -4,7 +4,7 @@ import { CalendarDays, House, type LucideIcon, Menu, Trophy, Users } from "lucid
 import * as m from "motion/react-m";
 import Link, { useLinkStatus } from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import type { MouseEvent } from "react";
+import { type MouseEvent, useLayoutEffect } from "react";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { SPRING } from "@/lib/motion";
 import { routes } from "@/lib/routes";
@@ -47,7 +47,7 @@ export function NAV_ITEMS(slug: string): GroupNavItem[] {
       href: routes.groupSettings(slug),
       label: "Más",
       icon: Menu,
-      matches: [routes.groupSettings(slug), routes.claimPlayer(slug)],
+      matches: [routes.groupSettings(slug), routes.groupAdmin(slug), routes.claimPlayer(slug)],
     },
   ];
 }
@@ -68,7 +68,7 @@ export function activeNavKey(pathname: string, slug: string): GroupNavKey | null
 }
 
 const BOTTOM_NAV_CLASS =
-  "app-chrome fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-[oklch(0.13_0.025_262/92%)] pb-[var(--safe-bottom)] backdrop-blur-md transition-[translate,visibility] duration-200 lg:hidden";
+  "app-chrome fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-[oklch(0.13_0.025_262/92%)] pb-[var(--safe-bottom)] backdrop-blur-md lg:hidden";
 const BOTTOM_NAV_LIST_CLASS = "mx-auto grid h-16 max-w-md grid-cols-5";
 const BOTTOM_NAV_LINK_CLASS = "group relative flex flex-1 flex-col items-center justify-center gap-0.5 outline-none focus-visible:-outline-offset-4";
 const BOTTOM_NAV_PILL_CLASS = "relative grid h-8 w-14 place-items-center rounded-full transition-transform duration-150 ease-out-quint group-active:scale-90";
@@ -142,6 +142,12 @@ export function BottomNavBar({ slug, pathname, className }: { slug: string; path
 export function GroupBottomNav() {
   const { slug } = useParams<{ slug: string }>();
   const pathname = usePathname();
+  // Avisa al <html> (toasts y otros portales) que la barra está a la vista. Los
+  // efectos se desmontan cuando Next oculta la ruta con <Activity>.
+  useLayoutEffect(() => {
+    document.documentElement.setAttribute("data-group-chrome", "");
+    return () => document.documentElement.removeAttribute("data-group-chrome");
+  }, []);
   return <BottomNavBar slug={slug} pathname={pathname} />;
 }
 

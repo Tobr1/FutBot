@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { zonedDateTimeToIso } from "@/domain/matches/datetime";
 import { orderForSave } from "@/domain/matches/participants";
 import { cleanTeamName } from "@/domain/matches/teams";
@@ -116,7 +116,7 @@ export async function createMatchAction(_prev: ActionState, formData: FormData):
   if (error || !matchId) return errorState(toUserMessage(error), { values: formValues(formData) });
 
   revalidateGroup();
-  redirect(`${routes.match(group.slug, matchId)}?creado=1`);
+  redirect(`${routes.match(group.slug, matchId)}?creado=1`, RedirectType.replace);
 }
 
 /** Edición de fecha, hora, cancha, formato y notas (admin). */
@@ -145,7 +145,7 @@ export async function updateMatchAction(_prev: ActionState, formData: FormData):
   if (!data) return errorState(toUserMessage({ message: "forbidden" }));
 
   revalidateGroup();
-  redirect(`${routes.match(group.slug, v.matchId)}?editado=1`);
+  redirect(`${routes.match(group.slug, v.matchId)}?editado=1`, RedirectType.replace);
 }
 
 const STATUS_MESSAGES = {
@@ -189,7 +189,7 @@ export async function deleteMatchAction(input: unknown): Promise<MutationResult>
 
   const group = await groupInfo(groupId);
   revalidateGroup();
-  if (group) redirect(`${routes.groupMatches(group.slug)}?eliminado=1`);
+  if (group) redirect(`${routes.groupMatches(group.slug)}?eliminado=1`, RedirectType.replace);
   return ok("Partido eliminado.");
 }
 
@@ -228,7 +228,7 @@ export async function setTeamsAction(input: unknown): Promise<MutationResult> {
 
   const slug = await matchGroupSlug(matchId);
   revalidateGroup();
-  if (slug) redirect(`${routes.match(slug, matchId)}?equipos=1`);
+  if (slug) redirect(`${routes.match(slug, matchId)}?equipos=1`, RedirectType.replace);
   return ok("Equipos guardados.");
 }
 
@@ -251,6 +251,6 @@ export async function recordResultAction(input: unknown): Promise<MutationResult
 
   const slug = await matchGroupSlug(v.matchId);
   revalidateGroup();
-  if (slug) redirect(`${routes.match(slug, v.matchId)}?resultado=1`);
+  if (slug) redirect(`${routes.match(slug, v.matchId)}?resultado=1`, RedirectType.replace);
   return ok("Resultado guardado.");
 }

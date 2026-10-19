@@ -7,8 +7,8 @@ import { AccountButton, AccountButtonSkeleton } from "./account-button";
 
 /**
  * Encabezado del área privada. Es estático salvo el botón de cuenta
- * (streaming). En mobile se oculta solo con CSS cuando la pantalla trae su
- * propia StackHeader ([data-shell]:has([data-stack-header])).
+ * (streaming) y nunca se oculta: las pantallas apiladas suman su StackHeader
+ * debajo.
  *
  * showLogo="desktop": el shell del grupo muestra en mobile el selector de
  * grupo en lugar del logo.

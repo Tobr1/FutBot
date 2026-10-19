@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { type ActionState, errorState, formValues, parseForm, successState } from "@/lib/action-result";
 import { requireUser } from "@/lib/auth/session";
 import { toUserMessage } from "@/lib/errors";
@@ -25,7 +25,7 @@ export async function createGroupAction(_prev: ActionState, formData: FormData):
   if (error || !data) return errorState(toUserMessage(error), { values: formValues(formData) });
 
   revalidatePath(routes.dashboard);
-  redirect(`${routes.group(data.slug)}?creado=1`);
+  redirect(`${routes.group(data.slug)}?creado=1`, RedirectType.replace);
 }
 
 export async function updateGroupSettingsAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -71,7 +71,7 @@ export async function changeMemberRoleAction(input: unknown): Promise<MutationRe
   if (!data) return fail(toUserMessage({ message: "forbidden" }));
 
   revalidatePath("/g/[slug]", "layout");
-  return ok(role === "admin" ? "Ahora es administrador." : "Ahora es jugador.");
+  return ok("Ahora es jugador.");
 }
 
 export async function removeMemberAction(input: unknown): Promise<MutationResult> {
@@ -100,7 +100,7 @@ export async function leaveGroupAction(groupId: string): Promise<MutationResult>
   if (error) return fail(toUserMessage(error));
 
   revalidatePath(routes.dashboard);
-  redirect(routes.dashboard);
+  redirect(routes.dashboard, RedirectType.replace);
 }
 
 export async function startNewSeasonAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
