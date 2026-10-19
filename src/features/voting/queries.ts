@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { hasPendingVotes } from "@/domain/voting/voting";
+import { requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -101,4 +102,43 @@ export async function finalizeVoting(matchId: string): Promise<string | null> {
   const { data, error } = await supabase.rpc("finalize_match_voting", { p_match_id: matchId });
   if (error) return null;
   return data ?? null;
+}
+
+export interface MyPendingVoting extends PendingVoting {
+  groupSlug: string;
+  groupName: string;
+  timeZone: string;
+}
+
+/**
+ * Votaciones abiertas con calificaciones pendientes en todos mis grupos (para
+ * Mis grupos), de la que cierra antes a la que cierra después. `nowIso`
+ * llega después de connection().
+ */
+export async function listMyPendingVotings(nowIso: string): Promise<MyPendingVoting[]> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const { data: players, error } = await supabase.from("players").select("id, group_id").eq("profile_id", user.id);
+  if (error) throw error;
+  if (players.length === 0) return [];
+
+  const { data: groups, error: groupsError } = await supabase
+    .from("groups")
+    .select("id, slug, name, timezone")
+    .in(
+      "id",
+      players.map((p) => p.group_id),
+    );
+  if (groupsError) throw groupsError;
+  const byId = new Map(groups.map((g) => [g.id, g]));
+
+  const lists = await Promise.all(
+    players.map(async (p) => {
+      const group = byId.get(p.group_id);
+      if (!group) return [];
+      const pending = await listPendingVotings(group.id, p.id, nowIso);
+      return pending.map((v) => ({ ...v, groupSlug: group.slug, groupName: group.name, timeZone: group.timezone }));
+    }),
+  );
+  return lists.flat().sort((x, y) => (x.closesAt < y.closesAt ? -1 : x.closesAt > y.closesAt ? 1 : 0));
 }

@@ -165,9 +165,11 @@ export interface PendingVotingItem {
   closesAt: string;
   rated: number;
   total: number;
+  /** Nombre del grupo (en Mis grupos, donde se mezclan votaciones de varios grupos). */
+  groupName?: string;
 }
 
-/** Aviso del inicio del grupo: votaciones abiertas que me faltan completar. */
+/** Aviso del inicio del grupo (y de Mis grupos): votaciones abiertas que me faltan completar. */
 export function PendingVotingBanner({ items, nowMs }: { items: PendingVotingItem[]; nowMs: number }) {
   if (items.length === 0) return null;
   return (
@@ -183,7 +185,9 @@ export function PendingVotingBanner({ items, nowMs }: { items: PendingVotingItem
             <Vote className="size-6" aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-2xs font-semibold tracking-[0.12em] text-primary uppercase">Votación abierta</span>
+            <span className="block truncate text-2xs font-semibold tracking-[0.12em] text-primary uppercase">
+              Votación abierta{item.groupName ? ` · ${item.groupName}` : ""}
+            </span>
             <span className="block truncate text-[15px] font-semibold">Calificá el partido del {item.dayLabel}</span>
             <span className={cn("block text-xs tabular", closesSoon(item.closesAt, nowMs) ? "font-medium text-warning" : "text-muted-foreground")}>
               {item.rated > 0 ? `${item.rated} de ${item.total} calificados · ` : ""}

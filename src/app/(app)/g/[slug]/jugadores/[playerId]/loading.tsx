@@ -12,7 +12,17 @@ export default function Loading() {
         <div aria-hidden="true" className="space-y-4">
           <StatStripSkeleton />
           <Skeleton className="h-8 rounded-lg" />
-          <Skeleton className="h-11 rounded-lg lg:w-36" />
+          <div className="grid grid-cols-2 gap-2 lg:w-80">
+            <Skeleton className="h-11 rounded-lg" />
+            <Skeleton className="h-11 rounded-lg" />
+          </div>
+        </div>
+        <div aria-hidden="true" className="space-y-3">
+          <Skeleton className="h-5 w-20" />
+          <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-[74px] rounded-xl" />
+            <Skeleton className="h-[74px] rounded-xl" />
+          </div>
         </div>
         <div aria-hidden="true" className="space-y-3">
           <Skeleton className="h-5 w-24" />

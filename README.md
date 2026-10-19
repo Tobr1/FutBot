@@ -10,10 +10,10 @@ Plataforma privada para grupos de amigos que juegan al fútbol: registra partido
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 — Fundación | Diseño base, esquema completo con RLS, autenticación, perfil, grupos, invitaciones, plantel, temporadas | ✅ Implementada |
-| 2 — Partidos | Crear partidos, importar listas de WhatsApp, equipos manuales, resultados | Esquema y RPC listos (con tests); falta la UI |
-| 3 — Estadísticas | Votación anónima, valoración, rankings, historial | Votos, agregados y vistas listos (con tests); falta motor y UI |
-| 4 — Equipos inteligentes | Optimizador de equipos con restricciones | Pendiente |
-| 5 — Mejoras | Premios, rivalidades, predicciones, compartir | Pendiente |
+| 2 — Partidos | Crear partidos, importar listas de WhatsApp, equipos manuales, resultados, registro de cambios | ✅ Implementada (ver D-022 a D-024) |
+| 3 — Estadísticas | Votación anónima, motor de valoración, fichas con evolución, rankings, historial, comparador | ✅ Implementada (ver D-025 a D-030) |
+| 4 — Equipos inteligentes | Optimizador de equipos con restricciones, alternativas explicadas, pronóstico | ✅ Implementada (ver D-031 a D-034) |
+| 5 — Mejoras | Premios y logros, Salón de la fama, duplas y rivales, precisión del pronóstico, imágenes para compartir, análisis del grupo | ✅ Implementada (ver D-035 a D-041); notificaciones pendientes |
 | UI mobile-first | Rediseño pensado para el celular: barra inferior, hojas inferiores, tarjetas de jugador, transiciones y PWA instalable que abre en el último grupo | ✅ Implementado (ver D-016 a D-021) |
 
 ## Stack

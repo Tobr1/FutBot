@@ -9,7 +9,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { FlashToast } from "@/components/shared/flash-toast";
 import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
-import { formatMatchDate } from "@/domain/matches/datetime";
+import { awardsForMatch } from "@/domain/awards";
+import { formatMatchDate, isoToZoned } from "@/domain/matches/datetime";
+import { summarizeEvents } from "@/domain/matches/result";
+import { matchShareMessage, scorerLabel, shareFileName } from "@/domain/share/text";
+import { AwardFeed } from "@/features/awards/components/award-lists";
+import { getGroupAwards } from "@/features/awards/queries";
 import { canEditParticipants, canEditTeams, canRecordResult } from "@/domain/matches/status";
 import { teamForecast } from "@/domain/matches/team-generator";
 import { voteTargets, votingPhase } from "@/domain/voting/voting";
@@ -17,6 +22,7 @@ import { getGroupContext } from "@/features/groups/queries";
 import { MatchAdminMenu } from "@/features/matches/components/match-admin-menu";
 import { MatchHero, ParticipantList, ResultSummary, TeamColumns } from "@/features/matches/components/match-detail";
 import { ParticipantsSheet } from "@/features/matches/components/participants-sheet";
+import { ShareActions } from "@/features/share/components/share-actions";
 import { getMatch, listRosterForMatches } from "@/features/matches/queries";
 import { getGroupRatings, getMatchRatings, syncSkillHistory } from "@/features/stats/queries";
 import { ForecastCard } from "@/features/teams/components/win-probability";
@@ -120,6 +126,33 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
   const finished = match.status === "finished";
   const cancelled = match.status === "cancelled";
 
+  // Destacados (logros ganados en este partido) y textos para compartir el resultado.
+  const highlights = finished
+    ? awardsForMatch(
+        (await getGroupAwards(ctx.group.id, { today: todayIso(timeZone, now), minMatches: ctx.group.ranking_min_matches })).awards,
+        match.id,
+      )
+    : [];
+  const nicknames = Object.fromEntries(match.participants.map((p) => [p.id, { nickname: p.nickname, avatarUrl: p.avatarUrl }]));
+  const share = finished
+    ? (() => {
+        const scoreA = match.teams.a.score ?? 0;
+        const scoreB = match.teams.b.score ?? 0;
+        const summary = summarizeEvents(scoreA, scoreB, match.events, (id) => nicknames[id]?.nickname ?? id);
+        const scorers = [...summary.a.scorers, ...summary.b.scorers].map((t) => scorerLabel(nicknames[t.playerId]?.nickname ?? "—", t.count));
+        return {
+          fileName: shareFileName("partido", isoToZoned(match.scheduledAt, timeZone).date),
+          text: matchShareMessage({
+            groupName: ctx.group.name,
+            dateLabel: dayLabel,
+            teams: { a: { name: match.teams.a.name, score: scoreA }, b: { name: match.teams.b.name, score: scoreB } },
+            scorers,
+            mvp: match.mvp ? (nicknames[match.mvp.playerId]?.nickname ?? null) : null,
+          }),
+        };
+      })()
+    : null;
+
   return (
     <ScreenTransition>
       <Suspense fallback={null}>
@@ -153,6 +186,16 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
           <section aria-labelledby="resultado" className="space-y-1">
             <SectionHeader id="resultado" title="Resultado" />
             <ResultSummary match={match} ratings={ratingById} />
+            {share && (
+              <ShareActions
+                className="mt-3 lg:max-w-sm"
+                imageUrl={routes.matchShareImage(slug, match.id)}
+                fileName={share.fileName}
+                title={`Partido del ${dayLabel}`}
+                text={share.text}
+                path={routes.match(slug, match.id)}
+              />
+            )}
             {ctx.isAdmin && (
               <Button asChild variant="secondary" className="mt-3 w-full lg:w-auto">
                 <Link href={routes.matchResult(slug, match.id)} transitionTypes={["nav-forward"]}>
@@ -161,6 +204,20 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
                 </Link>
               </Button>
             )}
+          </section>
+        )}
+
+        {highlights.length > 0 && (
+          <section aria-labelledby="destacados" className="space-y-1">
+            <SectionHeader id="destacados" title="Destacados del partido" count={highlights.length} />
+            <AwardFeed
+              awards={highlights}
+              players={nicknames}
+              playerHref={(id) => routes.player(slug, id)}
+              timeZone={timeZone}
+              showDate={false}
+              label="Destacados del partido"
+            />
           </section>
         )}
 

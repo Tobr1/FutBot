@@ -35,7 +35,13 @@ export function NAV_ITEMS(slug: string): GroupNavItem[] {
       matches: [routes.groupMatches(slug), routes.groupHistory(slug)],
     },
     { key: "plantel", href: routes.groupPlayers(slug), label: "Plantel", icon: Users, matches: [routes.groupPlayers(slug)] },
-    { key: "rankings", href: routes.groupRankings(slug), label: "Rankings", icon: Trophy, matches: [routes.groupRankings(slug)] },
+    {
+      key: "rankings",
+      href: routes.groupRankings(slug),
+      label: "Rankings",
+      icon: Trophy,
+      matches: [routes.groupRankings(slug), routes.groupAwards(slug), routes.groupAnalytics(slug)],
+    },
     {
       key: "mas",
       href: routes.groupSettings(slug),

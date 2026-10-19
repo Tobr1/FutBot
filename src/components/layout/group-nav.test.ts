@@ -29,6 +29,8 @@ describe("activeNavKey", () => {
     [`/g/${SLUG}/jugadores/123`, "plantel"],
     [`/g/${SLUG}/jugadores/nuevo`, "plantel"],
     [`/g/${SLUG}/rankings`, "rankings"],
+    [`/g/${SLUG}/premios`, "rankings"],
+    [`/g/${SLUG}/analisis`, "rankings"],
     [`/g/${SLUG}/ajustes`, "mas"],
     [`/g/${SLUG}/ajustes/general`, "mas"],
     [`/g/${SLUG}/ajustes/invitaciones`, "mas"],

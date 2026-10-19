@@ -13,7 +13,18 @@ import {
   type RatingAggregate,
   type RatingResult,
 } from "@/domain/rating";
+import { type PredictionAccuracy, predictionAccuracy, preMatchSkills } from "@/domain/predictions/accuracy";
+import {
+  type AttendanceEntry,
+  attendanceTop,
+  type GoalsPoint,
+  goalsTrend,
+  type ResultDistribution,
+  resultDistribution,
+} from "@/domain/stats/analytics";
 import { buildRatingInput, type MatchLineRow } from "@/domain/stats/engine-input";
+import { linesInRange } from "@/domain/stats/match-summaries";
+import { type DuoRecord, duoRanking, findRivalries, RIVALRY_MIN_MATCHES, type Rivalries } from "@/domain/stats/rivalries";
 import { evolutionSeries, type EvolutionPoint } from "@/domain/stats/evolution";
 import { EMPTY_HEAD_TO_HEAD, type HeadToHead } from "@/domain/stats/head-to-head";
 import { averageRating, scorersText, tallyScorers } from "@/domain/stats/history";
@@ -453,4 +464,43 @@ export async function syncSkillHistory(groupId: string): Promise<void> {
   } catch {
     // Caché opcional: la valoración se recalcula igual en cada lectura.
   }
+}
+
+/* ---------- Rivalidades, análisis y pronóstico (D-037, D-038, D-040) ---------- */
+
+/** Socio ideal, rival favorito y némesis de un jugador (histórico completo). */
+export async function getPlayerRivalries(groupId: string, playerId: string, minMatches = RIVALRY_MIN_MATCHES): Promise<Rivalries> {
+  const history = await loadGroupHistory(groupId);
+  return findRivalries(history.lines, playerId, minMatches);
+}
+
+export interface GroupInsights {
+  range: DateRange;
+  trend: GoalsPoint[];
+  distribution: ResultDistribution;
+  attendance: AttendanceEntry[];
+  duos: DuoRecord[];
+  accuracy: PredictionAccuracy;
+  players: Record<string, { nickname: string; avatarUrl: string | null }>;
+}
+
+/**
+ * Análisis del grupo en un rango de fechas locales (temporada). El pronóstico
+ * usa la habilidad previa a cada partido del motor con el histórico completo,
+ * así el primer partido de una temporada no arranca de cero.
+ */
+export async function getGroupInsights(groupId: string, range: DateRange, options: { duoMinMatches: number }): Promise<GroupInsights> {
+  const [history, result] = await Promise.all([loadGroupHistory(groupId), getGroupRatings(groupId)]);
+  const lines = linesInRange(history.lines, range, history.timeZone);
+  const players: GroupInsights["players"] = {};
+  for (const p of history.roster) players[p.id] = { nickname: p.nickname, avatarUrl: p.avatarUrl };
+  return {
+    range,
+    trend: goalsTrend(lines, history.timeZone, { window: 5, limit: 30 }),
+    distribution: resultDistribution(lines),
+    attendance: attendanceTop(lines, 8),
+    duos: duoRanking(lines, { minMatches: Math.max(1, options.duoMinMatches), limit: 8 }),
+    accuracy: predictionAccuracy(lines, preMatchSkills(result, history.players)),
+    players,
+  };
 }

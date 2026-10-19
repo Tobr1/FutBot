@@ -1,4 +1,18 @@
-import { CalendarCheck, CalendarRange, History, IdCard, LayoutGrid, ListChecks, LogOut, Settings2, UserPlus, UserRound, Users } from "lucide-react";
+import {
+  Award,
+  CalendarCheck,
+  CalendarRange,
+  ChartLine,
+  History,
+  IdCard,
+  LayoutGrid,
+  ListChecks,
+  LogOut,
+  Settings2,
+  UserPlus,
+  UserRound,
+  Users,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
@@ -94,6 +108,22 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
               leading={<RowIcon icon={CalendarCheck} />}
               title="Historial de partidos"
               subtitle="Resultados, goleadores y MVP"
+              chevron
+            />
+            <ListRow
+              href={routes.groupAwards(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={Award} />}
+              title="Salón de la fama"
+              subtitle="Premios del mes, récords y logros"
+              chevron
+            />
+            <ListRow
+              href={routes.groupAnalytics(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={ChartLine} />}
+              title="Análisis"
+              subtitle="Goles, duplas y pronósticos"
               chevron
             />
             <ListRow

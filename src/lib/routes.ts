@@ -25,8 +25,14 @@ export const routes = {
   matchTeams: (slug: string, id: string) => `/g/${slug}/partidos/${id}/equipos`,
   matchResult: (slug: string, id: string) => `/g/${slug}/partidos/${id}/resultado`,
   matchVote: (slug: string, id: string) => `/g/${slug}/partidos/${id}/votar`,
+  /** Imagen para compartir del resultado (route handler, requiere sesión y membresía). */
+  matchShareImage: (slug: string, id: string) => `/g/${slug}/partidos/${id}/imagen`,
+  /** Imagen para compartir de la ficha (route handler, requiere sesión y membresía). */
+  playerShareImage: (slug: string, id: string) => `/g/${slug}/jugadores/${id}/imagen`,
   groupHistory: (slug: string) => `/g/${slug}/historial`,
   groupRankings: (slug: string) => `/g/${slug}/rankings`,
+  groupAwards: (slug: string) => `/g/${slug}/premios`,
+  groupAnalytics: (slug: string) => `/g/${slug}/analisis`,
   groupSettings: (slug: string) => `/g/${slug}/ajustes`,
   groupGeneralSettings: (slug: string) => `/g/${slug}/ajustes/general`,
   groupMembers: (slug: string) => `/g/${slug}/ajustes/miembros`,

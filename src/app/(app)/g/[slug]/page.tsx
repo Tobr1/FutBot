@@ -12,8 +12,11 @@ import { PlayerCard } from "@/components/shared/player-card";
 import { PlayerRow } from "@/components/shared/player-row";
 import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
+import { latestAwards } from "@/domain/awards";
 import { formatMatchDate } from "@/domain/matches/datetime";
 import { topByRating } from "@/domain/players/sort";
+import { AwardFeed } from "@/features/awards/components/award-lists";
+import { getGroupAwards } from "@/features/awards/queries";
 import { GroupHero } from "@/features/groups/components/group-hero";
 import { NextMatchCard } from "@/features/groups/components/next-match-card";
 import { type ChecklistStep, OnboardingChecklist } from "@/features/groups/components/onboarding-checklist";
@@ -55,10 +58,12 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
   const now = new Date();
   // Próximo partido con equipos armados: pronóstico con la valoración actual.
   const nextMatch = matches.featured?.kind === "next" ? matches.featured.match : null;
-  const [pendingVotings, forecast] = await Promise.all([
+  const [pendingVotings, forecast, awards] = await Promise.all([
     ctx.myPlayer ? listPendingVotings(ctx.group.id, ctx.myPlayer.id, now.toISOString()) : Promise.resolve([]),
     nextMatch ? getMatchSides(nextMatch.id).then((sides) => getForecast(ctx.group.id, sides)) : Promise.resolve(null),
+    getGroupAwards(ctx.group.id, { today: todayIso(ctx.group.timezone, now), minMatches: ctx.group.ranking_min_matches }),
   ]);
+  const recentAwards = latestAwards(awards.awards, 5);
 
   const activePlayers = players.filter((p) => p.isActive);
   const currentSeason = seasons.find((s) => !s.ends_on) ?? seasons[0];
@@ -141,6 +146,19 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
 
           {forecast && nextMatch && (
             <ForecastCard probability={forecast} names={{ a: nextMatch.teams.a.name, b: nextMatch.teams.b.name }} />
+          )}
+
+          {recentAwards.length > 0 && (
+            <section aria-labelledby="ultimos-logros">
+              <SectionHeader id="ultimos-logros" title="Últimos logros" action={{ label: "Salón de la fama", href: routes.groupAwards(slug) }} />
+              <AwardFeed
+                awards={recentAwards}
+                players={awards.players}
+                playerHref={(id) => routes.player(slug, id)}
+                timeZone={ctx.group.timezone}
+                label="Últimos logros"
+              />
+            </section>
           )}
 
           <section aria-labelledby="top-del-plantel">

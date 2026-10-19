@@ -54,3 +54,15 @@ describe("PROTECTED_PREFIXES", () => {
     expect(isProtected(routes.invitation("token"))).toBe(false);
   });
 });
+
+describe("rutas de premios, análisis e imágenes para compartir", () => {
+  it("cuelgan del grupo, así el proxy exige sesión", () => {
+    expect(routes.groupAwards("x")).toBe("/g/x/premios");
+    expect(routes.groupAnalytics("x")).toBe("/g/x/analisis");
+    expect(routes.matchShareImage("x", "m")).toBe("/g/x/partidos/m/imagen");
+    expect(routes.playerShareImage("x", "p")).toBe("/g/x/jugadores/p/imagen");
+    for (const path of [routes.matchShareImage("x", "m"), routes.playerShareImage("x", "p")]) {
+      expect(PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix))).toBe(true);
+    }
+  });
+});
