@@ -12,7 +12,7 @@ export default function NotFound() {
       tabIndex={-1}
       className="flex min-h-dvh flex-col items-center justify-center gap-8 px-4 pt-[max(2rem,var(--safe-top))] pb-[max(2rem,var(--safe-bottom))] outline-none"
     >
-      <Link href={routes.home} aria-label="FUTBOLEROS, inicio">
+      <Link href={routes.home} aria-label="FutBot, inicio">
         <Logo />
       </Link>
       <EmptyState

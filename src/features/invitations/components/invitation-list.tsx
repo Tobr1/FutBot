@@ -45,7 +45,7 @@ export function InvitationList({
 }) {
   const canShare = useSyncExternalStore(noopSubscribe, () => typeof navigator.share === "function", () => false);
   const [revoking, setRevoking] = useState<InvitationRow | null>(null);
-  const message = groupName ? `Sumate a "${groupName}" en FUTBOLEROS:` : "Sumate a mi grupo en FUTBOLEROS:";
+  const message = groupName ? `Sumate a "${groupName}" en FutBot:` : "Sumate a mi grupo en FutBot:";
 
   const linkFor = (inv: InvitationRow) => `${origin}${routes.invitation(inv.token)}`;
 

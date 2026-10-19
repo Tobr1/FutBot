@@ -129,11 +129,12 @@ function Footer() {
           display: "flex",
           marginLeft: 20,
           fontSize: 40,
-          letterSpacing: 4,
+          fontWeight: 700,
+          letterSpacing: -1,
         }}
       >
-        <span>FUTBOL</span>
-        <span style={{ marginLeft: -2, color: BRAND.blue }}>EROS</span>
+        <span>Fut</span>
+        <span style={{ color: BRAND.blue }}>Bot</span>
       </div>
     </div>
   );

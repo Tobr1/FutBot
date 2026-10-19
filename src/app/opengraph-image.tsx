@@ -3,7 +3,7 @@ import { AppIconArt } from "@/components/brand/app-icon-art";
 import { BRAND, BRAND_TAGLINE } from "@/lib/brand";
 
 /** Imagen para compartir (WhatsApp, redes). Estática: se genera en el build. */
-export const alt = "FUTBOLEROS";
+export const alt = "FutBot";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -49,10 +49,9 @@ export default function OpengraphImage() {
           }}
         />
         <AppIconArt size={148} variant="any" />
-        <div style={{ display: "flex", marginTop: 40, fontSize: 120, lineHeight: 1, letterSpacing: 6 }}>
-          <span>FUTBOL</span>
-          {/* Las dos mitades son ítems flex: se compensa el aire que deja la L. */}
-          <span style={{ marginLeft: -6, color: BRAND.blue }}>EROS</span>
+        <div style={{ display: "flex", marginTop: 40, fontSize: 120, lineHeight: 1, fontWeight: 700, letterSpacing: -2 }}>
+          <span>Fut</span>
+          <span style={{ color: BRAND.blue }}>Bot</span>
         </div>
         <div style={{ display: "flex", marginTop: 28, fontSize: 40, color: "#97a3b6" }}>{BRAND_TAGLINE}</div>
       </div>

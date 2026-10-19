@@ -17,7 +17,7 @@ const FEATURES = [
   {
     icon: ClipboardPaste,
     title: "Pegá la lista de WhatsApp",
-    text: "Copiás la lista del grupo y FUTBOLEROS reconoce a cada jugador. Sin duplicados.",
+    text: "Copiás la lista del grupo y FutBot reconoce a cada jugador. Sin duplicados.",
     soon: true,
   },
   {
@@ -93,7 +93,7 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
-              Registrá resultados, goles y asistencias, votá el rendimiento de cada uno y dejá que FUTBOLEROS arme equipos
+              Registrá resultados, goles y asistencias, votá el rendimiento de cada uno y dejá que FutBot arme equipos
               equilibrados con lo que aprende de cada fecha.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -161,7 +161,7 @@ export default function LandingPage() {
 
       <footer className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-xs text-muted-foreground sm:flex-row sm:pb-[max(2rem,var(--safe-bottom))]">
         <Logo compact />
-        <p>FUTBOLEROS · Hecho para el fútbol de los amigos.</p>
+        <p>FutBot · Hecho para el fútbol de los amigos.</p>
       </footer>
 
       {/* En el teléfono, la acción principal queda siempre a mano del pulgar. */}

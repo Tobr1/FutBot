@@ -328,7 +328,7 @@ export function PrimitivesSection() {
             <Input
               id="kit-readonly"
               readOnly
-              defaultValue="futboleros.app/i/abc123"
+              defaultValue="futbot.app/i/abc123"
             />
           </div>
           <InputGroup>

@@ -49,13 +49,13 @@ export function playerShareMessage(input: PlayerShareInput): string {
   return `${input.nickname} en ${input.groupName}: ${parts.join(" · ")}`;
 }
 
-/** "futboleros-partido-2026-10-25.png", "futboleros-brito.png". */
+/** "futbot-partido-2026-10-25.png", "futbot-brito.png". */
 export function shareFileName(...parts: string[]): string {
   const slug = parts
     .map((p) => slugify(p) ?? "")
     .filter(Boolean)
     .join("-");
-  return `futboleros${slug ? `-${slug}` : ""}.png`;
+  return `futbot${slug ? `-${slug}` : ""}.png`;
 }
 
 /** Link de WhatsApp con el texto y la URL. */

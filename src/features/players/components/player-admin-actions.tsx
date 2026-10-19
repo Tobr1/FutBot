@@ -130,7 +130,7 @@ export function PlayerAdminMenu({
             <div className="pb-2">
               <ShareInvite
                 url={inviteUrl}
-                message={`${player.nickname}, sumate a "${groupName}" en FUTBOLEROS para ver tus estadísticas:`}
+                message={`${player.nickname}, sumate a "${groupName}" en FutBot para ver tus estadísticas:`}
               />
             </div>
           )}
