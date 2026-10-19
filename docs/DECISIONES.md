@@ -2,6 +2,18 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-034 · Alternativas de a una, aplicar no es guardar
+"Generar parejos" muestra las 5 mejores alternativas distintas (difieren en 2 jugadores o más) de a una: "Opción 1 de 5", flechas, "Otra alternativa" y deslizar (drag de `m.div`). Cada una trae las listas, el promedio por equipo, la diferencia de nivel en % con la barra de equilibrio, el pronóstico Azul/Empate/Rojo (`winProbability`) y la explicación de `explainSplit` con los nombres actuales de los equipos; en voz baja dice si la búsqueda fue exhaustiva o heurística. "Usar estos equipos" solo reparte en el armado: hay que tocar "Guardar equipos" (RPC `set_match_teams`) para persistir, y se puede seguir editando a mano. El armado manual muestra las mismas métricas con `evaluateSplit`. Si las restricciones son imposibles no se muestra nada a medias: un aviso dice qué choca y cómo arreglarlo (soltar fijados o revisar reglas). Con equipos armados y sin jugar, el detalle del partido y el inicio del grupo muestran la tarjeta "Pronóstico".
+
+## D-033 · Variedad con los equipos del último partido jugado
+El término de repetición del optimizador recibe los equipos del último partido jugado anterior al que se arma (sin contarlo, por si es una corrección), sacados de `player_match_lines` que ya carga el motor: no suma consultas. Con el peso por defecto (1) solo desempata entre armados casi igual de parejos; nunca empeora el nivel por cambiar caras.
+
+## D-032 · Reglas persistentes del grupo y fijados de la sesión
+Dos tipos de restricción con vidas distintas. Las reglas "juntos / separados" son del grupo (`team_constraints`, una por pareja), las ven todos los miembros y solo las cargan o borran admins, en `/g/[slug]/ajustes/reglas` o desde la hoja "Reglas" del armado. Los fijados (un jugador clavado en Azul o Rojo) son de la sesión de armado y no se guardan: se activan con "Fijar" y tocando al jugador en su equipo; si se lo mueve a mano, el fijado lo sigue. Antes de optimizar se juntan (solo jugadores convocados, sin parejas repetidas) y se detectan las contradicciones directas con fijados; las indirectas las informa el optimizador.
+
+## D-031 · El optimizador corre en el navegador
+`balanceTeams` es puro y rápido (búsqueda exhaustiva hasta 22 jugadores en ~20 ms; heurística determinista arriba), así que corre en el cliente con los datos que la página ya trae (habilidad S y σ del motor con respaldo en el nivel inicial, forma reciente, posiciones). Se lanza en una transición que primero cede un cuadro para pintar "Buscando el mejor armado…". Sin ida y vuelta al servidor, "Generar de nuevo" después de fijar a alguien es instantáneo y funciona con mala señal; la única escritura sigue siendo "Guardar equipos". Se necesitan 6 titulares o más (`MIN_PLAYERS`); con menos, el armado es manual.
+
 ## D-030 · Comparador como subruta con `?con=`
 Comparar dos jugadores vive en `/g/[slug]/jugadores/[id]/comparar?con=<otro>` (no en una hoja con datos cargados en el cliente): el link se comparte, el botón atrás funciona y el cara a cara (`get_head_to_head`) se pide en el servidor. Desde la ficha, "Comparar" abre una hoja para elegir al otro jugador; sin `?con=` la página muestra la misma lista.
 

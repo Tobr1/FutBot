@@ -11,6 +11,7 @@ import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
 import { formatMatchDate } from "@/domain/matches/datetime";
 import { canEditParticipants, canEditTeams, canRecordResult } from "@/domain/matches/status";
+import { teamForecast } from "@/domain/matches/team-generator";
 import { voteTargets, votingPhase } from "@/domain/voting/voting";
 import { getGroupContext } from "@/features/groups/queries";
 import { MatchAdminMenu } from "@/features/matches/components/match-admin-menu";
@@ -18,6 +19,7 @@ import { MatchHero, ParticipantList, ResultSummary, TeamColumns } from "@/featur
 import { ParticipantsSheet } from "@/features/matches/components/participants-sheet";
 import { getMatch, listRosterForMatches } from "@/features/matches/queries";
 import { getGroupRatings, getMatchRatings, syncSkillHistory } from "@/features/stats/queries";
+import { ForecastCard } from "@/features/teams/components/win-probability";
 import {
   MatchRatingsList,
   type MyVoteStatus,
@@ -110,6 +112,11 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
   for (const p of loaded.participants) ratingById[p.id] = engine.byPlayer[p.id]?.skill ?? p.baseRating;
 
   const confirmedCount = match.participants.filter((p) => p.status === "confirmed").length;
+  // Pronóstico con la valoración actual: solo con equipos armados y antes de jugarse.
+  const forecast =
+    match.teamsReady && (match.status === "scheduled" || match.status === "in_progress")
+      ? teamForecast({ a: match.teams.a.memberIds, b: match.teams.b.memberIds }, (id) => ratingById[id])
+      : null;
   const finished = match.status === "finished";
   const cancelled = match.status === "cancelled";
 
@@ -170,7 +177,17 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
             )}
           </div>
           {match.teamsReady ? (
-            <TeamColumns match={match} mvpId={match.mvp?.playerId} ratings={ratingById} />
+            <>
+              <TeamColumns match={match} mvpId={match.mvp?.playerId} ratings={ratingById} />
+              {forecast && (
+                <ForecastCard
+                  className="mt-3"
+                  headingLevel="h3"
+                  probability={forecast}
+                  names={{ a: match.teams.a.name, b: match.teams.b.name }}
+                />
+              )}
+            </>
           ) : (
             <EmptyState
               size="sm"

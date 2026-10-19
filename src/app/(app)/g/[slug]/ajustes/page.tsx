@@ -1,4 +1,4 @@
-import { CalendarCheck, CalendarRange, History, IdCard, LayoutGrid, LogOut, Settings2, UserPlus, UserRound, Users } from "lucide-react";
+import { CalendarCheck, CalendarRange, History, IdCard, LayoutGrid, ListChecks, LogOut, Settings2, UserPlus, UserRound, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
@@ -114,6 +114,14 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
                   <span className="max-w-32 truncate text-sm text-muted-foreground">{currentSeason.name}</span>
                 ) : undefined
               }
+              chevron
+            />
+            <ListRow
+              href={routes.groupTeamRules(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={ListChecks} />}
+              title="Reglas de armado"
+              subtitle={isAdmin ? "Parejas juntas o separadas al generar" : "Solo lectura"}
               chevron
             />
             <ListRow

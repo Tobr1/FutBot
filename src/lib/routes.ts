@@ -33,6 +33,7 @@ export const routes = {
   groupInvitations: (slug: string) => `/g/${slug}/ajustes/invitaciones`,
   groupSeasons: (slug: string) => `/g/${slug}/ajustes/temporadas`,
   groupAudit: (slug: string) => `/g/${slug}/ajustes/auditoria`,
+  groupTeamRules: (slug: string) => `/g/${slug}/ajustes/reglas`,
   claimPlayer: (slug: string) => `/g/${slug}/mi-ficha`,
 } as const;
 

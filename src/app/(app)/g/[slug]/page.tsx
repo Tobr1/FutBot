@@ -21,6 +21,8 @@ import { getGroupContext, listMembers, listSeasons } from "@/features/groups/que
 import { getNextMatch } from "@/features/matches/queries";
 import { MyPlayerStrip } from "@/features/players/components/my-player-strip";
 import { listPlayers } from "@/features/players/queries";
+import { ForecastCard } from "@/features/teams/components/win-probability";
+import { getForecast, getMatchSides } from "@/features/teams/queries";
 import { PendingVotingBanner } from "@/features/voting/components/voting-section";
 import { listPendingVotings } from "@/features/voting/queries";
 import { todayIso } from "@/lib/format";
@@ -51,7 +53,12 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
   // La hora actual solo después de connection(): la página es dinámica.
   await connection();
   const now = new Date();
-  const pendingVotings = ctx.myPlayer ? await listPendingVotings(ctx.group.id, ctx.myPlayer.id, now.toISOString()) : [];
+  // Próximo partido con equipos armados: pronóstico con la valoración actual.
+  const nextMatch = matches.featured?.kind === "next" ? matches.featured.match : null;
+  const [pendingVotings, forecast] = await Promise.all([
+    ctx.myPlayer ? listPendingVotings(ctx.group.id, ctx.myPlayer.id, now.toISOString()) : Promise.resolve([]),
+    nextMatch ? getMatchSides(nextMatch.id).then((sides) => getForecast(ctx.group.id, sides)) : Promise.resolve(null),
+  ]);
 
   const activePlayers = players.filter((p) => p.isActive);
   const currentSeason = seasons.find((s) => !s.ends_on) ?? seasons[0];
@@ -131,6 +138,10 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
             nowMs={now.getTime()}
             isAdmin={ctx.isAdmin}
           />
+
+          {forecast && nextMatch && (
+            <ForecastCard probability={forecast} names={{ a: nextMatch.teams.a.name, b: nextMatch.teams.b.name }} />
+          )}
 
           <section aria-labelledby="top-del-plantel">
             <SectionHeader

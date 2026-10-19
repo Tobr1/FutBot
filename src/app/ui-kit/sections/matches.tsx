@@ -3,6 +3,7 @@
 import type { MouseEvent, ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { NextMatchCard } from "@/features/groups/components/next-match-card";
 import { LineupImport } from "@/features/matches/components/lineup-import";
 import { MatchCard } from "@/features/matches/components/match-card";
@@ -10,7 +11,13 @@ import { ResultSummary, TeamColumns } from "@/features/matches/components/match-
 import { MatchCardSkeleton } from "@/features/matches/components/match-skeletons";
 import { MatchStatusBadge } from "@/features/matches/components/match-status-badge";
 import { Stepper } from "@/features/matches/components/stepper";
+import { TeamBuilder } from "@/features/matches/components/team-builder";
 import type { MatchDetail, MatchListItem, MatchParticipant } from "@/features/matches/queries";
+import { GeneratorIssues, GeneratorPanel } from "@/features/teams/components/generator-panel";
+import { TeamRuleList } from "@/features/teams/components/team-rules";
+import { ForecastCard } from "@/features/teams/components/win-probability";
+import { type BalancerPlayer, balanceTeams } from "@/domain/balancer";
+import { matchesSplit, mergeConstraints, type TeamRule, teamForecast } from "@/domain/matches/team-generator";
 
 /*
  * Datos fijos (sin Date.now): "hoy" es el lunes 19/10/2026 en Buenos Aires.
@@ -187,6 +194,63 @@ const ROSTER = [
   { id: "r5", nickname: "Tota" },
 ];
 
+/* Generador de equipos con datos fijos: el optimizador es determinista. */
+const GEN_PLAYERS: BalancerPlayer[] = [
+  { id: "p1", name: "Juan Cruz", skill: 8.4, sigma: 0.5, form: 0.3, primary: "forward", secondary: "midfielder" },
+  { id: "p2", name: "Tano", skill: 7.1, sigma: 0.6, form: -0.2, primary: "goalkeeper", secondary: null },
+  { id: "p3", name: "Ruso", skill: 6, sigma: 0.7, form: 0, primary: "defender", secondary: null },
+  { id: "p4", name: "Pato", skill: 5.5, sigma: 1.5, form: 0, primary: "midfielder", secondary: null },
+  { id: "p5", name: "Vece", skill: 5, sigma: 0.8, form: 0.4, primary: "defender", secondary: "midfielder" },
+  { id: "p6", name: "Manu", skill: 7.8, sigma: 0.5, form: 0.1, primary: "midfielder", secondary: "forward" },
+  { id: "p7", name: "Toto", skill: 6.6, sigma: 0.6, form: -0.4, primary: "goalkeeper", secondary: null },
+  { id: "p8", name: "Maximiliano Gutiérrez", skill: 6.2, sigma: 1.5, form: 0, primary: "forward", secondary: null },
+  { id: "p9", name: "Fede", skill: 5.1, sigma: 0.9, form: 0.2, primary: "defender", secondary: null },
+  { id: "p10", name: "Lucho", skill: 4.9, sigma: 0.7, form: -0.1, primary: "midfielder", secondary: "defender" },
+];
+const GEN_NAMES = { a: "Azul", b: "Rojo" };
+const GEN_RULES: TeamRule[] = [
+  { id: "r1", playerA: "p1", playerB: "p6", kind: "apart", note: "Los dos cracks, uno por lado" },
+  { id: "r2", playerA: "p4", playerB: "p9", kind: "together", note: null },
+];
+const GEN_PINS = { p3: "a" } as const;
+const GEN_MERGED = mergeConstraints({
+  rules: GEN_RULES,
+  pins: GEN_PINS,
+  playerIds: GEN_PLAYERS.map((p) => p.id),
+  names: Object.fromEntries(GEN_PLAYERS.map((p) => [p.id, p.name])),
+  teamNames: GEN_NAMES,
+});
+const GEN_RESULT = balanceTeams(GEN_PLAYERS, GEN_MERGED.constraints, {
+  previousTeams: { a: ["p1", "p2", "p3", "p4", "p5"], b: ["p6", "p7", "p8", "p9", "p10"] },
+});
+const GEN_VIEW = Object.fromEntries(GEN_PLAYERS.map((p) => [p.id, { id: p.id, nickname: p.name, avatarUrl: null }]));
+const GEN_SKILL = new Map(GEN_PLAYERS.map((p) => [p.id, p.skill]));
+const GEN_FORECAST = teamForecast(GEN_RESULT.alternatives[0], (id) => GEN_SKILL.get(id))!;
+
+function GeneratorDemo() {
+  const [index, setIndex] = useState(0);
+  const [applied, setApplied] = useState<Record<string, "a" | "b">>({});
+  const appliedIndex = GEN_RESULT.alternatives.findIndex((alt) => matchesSplit(applied, alt));
+  return (
+    <GeneratorPanel
+      result={GEN_RESULT}
+      index={index}
+      onIndexChange={setIndex}
+      onApply={(split) => {
+        setApplied(Object.fromEntries([...split.a.map((id) => [id, "a" as const]), ...split.b.map((id) => [id, "b" as const])]));
+        toast.success("Demo: equipos aplicados al armado.");
+      }}
+      players={GEN_VIEW}
+      balancerPlayers={GEN_PLAYERS}
+      constraints={GEN_MERGED.constraints}
+      teamNames={GEN_NAMES}
+      pins={GEN_PINS}
+      appliedIndex={appliedIndex >= 0 ? appliedIndex : null}
+      onClose={() => toast("Demo: cerrar alternativas.")}
+    />
+  );
+}
+
 export function MatchesSection() {
   const [scoreA, setScoreA] = useState(3);
   const [scoreB, setScoreB] = useState(2);
@@ -212,7 +276,7 @@ export function MatchesSection() {
       </Demo>
 
       <Demo title="MatchCard" note="Chip de fecha (Hoy/Mañana resaltado), cancha, formato, convocados; jugado con marcador y MVP.">
-        <ul className="grid gap-2 lg:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-2 lg:grid-cols-2">
           {CARDS.map(({ note, match }) => (
             <li key={match.id} className="space-y-1">
               <p className="text-2xs text-muted-foreground">{note}</p>
@@ -227,7 +291,7 @@ export function MatchesSection() {
       </Demo>
 
       <Demo title="NextMatchCard" note="Inicio del grupo: próximo, último resultado y fantasma (admin / jugador).">
-        <div className="grid gap-2 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
           <NextMatchCard slug="demo" featured={{ kind: "next", match: CARDS[0].match }} timeZone={TZ} today={TODAY} nowMs={NOW_MS} isAdmin />
           <NextMatchCard slug="demo" featured={{ kind: "last", match: CARDS[4].match }} timeZone={TZ} today={TODAY} nowMs={NOW_MS} isAdmin />
           <NextMatchCard slug="demo" featured={null} timeZone={TZ} today={TODAY} nowMs={NOW_MS} isAdmin />
@@ -250,6 +314,57 @@ export function MatchesSection() {
       <Demo title="Equipos y resultado" note="TeamColumns (con MVP) y ResultSummary (goles, en contra, sin autor, asistencias, MVP, notas).">
         <TeamColumns match={DETAIL} mvpId="p1" />
         <ResultSummary match={DETAIL} />
+      </Demo>
+
+      <Demo
+        title="Generar parejos"
+        note="GeneratorPanel: 10 jugadores, Juan Cruz y Manu separados, Pato y Fede juntos, Ruso fijado en Azul. Flechas, Otra alternativa o deslizar."
+      >
+        <GeneratorDemo />
+      </Demo>
+
+      <Demo
+        title="Armado completo"
+        note="TeamBuilder con los mismos 10 jugadores: generar, fijar, reglas y edición manual. Guardar equipos o reglas falla a propósito (sin Supabase)."
+      >
+        <TeamBuilder
+          groupId="00000000-0000-4000-8000-000000000000"
+          matchId="00000000-0000-4000-8000-000000000001"
+          players={GEN_PLAYERS.map((p) => ({ id: p.id, nickname: p.name, avatarUrl: null, rating: p.skill, position: p.primary }))}
+          balancer={GEN_PLAYERS}
+          rules={GEN_RULES}
+          previousTeams={{ a: ["p1", "p2", "p3", "p4", "p5"], b: ["p6", "p7", "p8", "p9", "p10"] }}
+          rulesHref="#"
+          canEditRules
+          initial={{}}
+          initialNames={{ a: "Azul", b: "Rojo" }}
+          finished={false}
+        />
+      </Demo>
+
+      <Demo title="Restricciones imposibles" note="GeneratorIssues: qué pasa y cómo arreglarlo.">
+        <GeneratorIssues
+          messages={["Juan Cruz y Manu tienen que jugar separados, pero los dos están fijados en Azul."]}
+          hint="Soltá algún jugador fijado o revisá las reglas de armado del grupo."
+          actions={
+            <Button type="button" variant="secondary" size="sm">
+              Soltar fijados
+            </Button>
+          }
+        />
+      </Demo>
+
+      <Demo title="Pronóstico" note="ForecastCard: partido con equipos armados y sin jugar (inicio del grupo y detalle).">
+        <ForecastCard probability={GEN_FORECAST} names={GEN_NAMES} headingLevel="h3" />
+      </Demo>
+
+      <Demo title="Reglas de armado" note="TeamRuleList en solo lectura (los admins ven el botón de borrar).">
+        <TeamRuleList
+          groupId="demo"
+          rules={GEN_RULES}
+          players={Object.fromEntries(GEN_PLAYERS.map((p) => [p.id, { nickname: p.name, avatarUrl: null }]))}
+          canEdit={false}
+        />
       </Demo>
 
       <Demo title="Importar lista de WhatsApp" note="Pegá una lista: reconocidos, dudosos (elegir) y nuevos (crear ficha o ignorar). Plantel: Juanchi, Manu, Vece, Toto, Tota.">

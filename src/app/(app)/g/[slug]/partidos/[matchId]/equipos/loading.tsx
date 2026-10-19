@@ -11,6 +11,7 @@ export default function Loading() {
         <StackHeaderSkeleton />
         <PageHeaderSkeleton />
         <Skeleton aria-hidden="true" className="h-20 rounded-xl" />
+        <Skeleton aria-hidden="true" className="h-12 rounded-xl lg:w-48" />
         <TeamColumnsSkeleton />
         <ListGroupSkeleton rows={4} />
       </ScreenSkeleton>
