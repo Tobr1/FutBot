@@ -525,6 +525,54 @@ export type Database = {
           },
         ]
       }
+      player_skill_history: {
+        Row: {
+          group_id: string
+          player_id: string
+          match_id: string
+          skill: number
+          confidence: number
+          performance: number | null
+          engine_version: string
+          computed_at: string
+        }
+        Insert: {
+          group_id: string
+          player_id: string
+          match_id: string
+          skill: number
+          confidence: number
+          performance?: number | null
+          engine_version: string
+          computed_at?: string
+        }
+        Update: {
+          group_id?: string
+          player_id?: string
+          match_id?: string
+          skill?: number
+          confidence?: number
+          performance?: number | null
+          engine_version?: string
+          computed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_skill_history_match_fkey"
+            columns: ["match_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id", "group_id"]
+          },
+          {
+            foreignKeyName: "player_skill_history_player_fkey"
+            columns: ["player_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id", "group_id"]
+          },
+        ]
+      }
       players: {
         Row: {
           id: string
@@ -651,6 +699,68 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "groups"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_constraints: {
+        Row: {
+          id: string
+          group_id: string
+          player_a: string
+          player_b: string
+          kind: Database["public"]["Enums"]["team_constraint_kind"]
+          note: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          group_id: string
+          player_a: string
+          player_b: string
+          kind: Database["public"]["Enums"]["team_constraint_kind"]
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          group_id?: string
+          player_a?: string
+          player_b?: string
+          kind?: Database["public"]["Enums"]["team_constraint_kind"]
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_constraints_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_constraints_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_constraints_player_a_fkey"
+            columns: ["player_a", "group_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id", "group_id"]
+          },
+          {
+            foreignKeyName: "team_constraints_player_b_fkey"
+            columns: ["player_b", "group_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id", "group_id"]
           },
         ]
       }
@@ -813,6 +923,23 @@ export type Database = {
         }
         Returns: string
       }
+      get_head_to_head: {
+        Args: {
+          p_group_id: string
+          p_player_a: string
+          p_player_b: string
+        }
+        Returns: {
+          together_matches: number | null
+          together_wins: number | null
+          together_draws: number | null
+          together_losses: number | null
+          against_matches: number | null
+          a_wins: number | null
+          b_wins: number | null
+          draws: number | null
+        }[]
+      }
       get_invitation_preview: {
         Args: {
           p_token: string
@@ -904,6 +1031,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      replace_skill_history: {
+        Args: {
+          p_group_id: string
+          p_engine_version: string
+          p_rows: Json
+        }
+        Returns: number
+      }
       save_player: {
         Args: {
           p_group_id: string
@@ -969,6 +1104,7 @@ export type Database = {
       match_status: "scheduled" | "in_progress" | "finished" | "cancelled"
       participant_status: "confirmed" | "reserve" | "dropped"
       player_position: "goalkeeper" | "defender" | "midfielder" | "forward"
+      team_constraint_kind: "together" | "apart"
       team_side: "a" | "b"
     }
     CompositeTypes: {
@@ -996,6 +1132,7 @@ export const Constants = {
       match_status: ["scheduled", "in_progress", "finished", "cancelled"],
       participant_status: ["confirmed", "reserve", "dropped"],
       player_position: ["goalkeeper", "defender", "midfielder", "forward"],
+      team_constraint_kind: ["together", "apart"],
       team_side: ["a", "b"],
     },
   },
