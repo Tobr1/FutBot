@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { InstallAppCard } from "@/components/pwa/install-app-card";
 import { AwardsSection } from "./sections/awards";
 import { ChromeSection } from "./sections/chrome";
+import { InstallGuidesDemo } from "./sections/install";
 import { MatchesSection } from "./sections/matches";
 import { PrimitivesSection } from "./sections/primitives";
 import { SharedSection } from "./sections/shared";
@@ -90,6 +91,7 @@ export default function UiKitPage() {
             (localStorage fb:install-dismissed). El aviso sin conexión se prueba con DevTools › Network › Offline.
           </p>
           <InstallAppCard />
+          <InstallGuidesDemo />
         </section>
       </div>
     </main>
