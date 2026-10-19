@@ -2,6 +2,7 @@ import { KeyRound, LogOut } from "lucide-react";
 import type { Metadata } from "next";
 import { StackHeader } from "@/components/layout/stack-header";
 import { ScreenTransition } from "@/components/motion/screen-transition";
+import { InstallAppRow } from "@/components/pwa/install-app-row";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
 import { SectionHeader } from "@/components/shared/section-header";
 import { signOutAction } from "@/features/auth/actions";
@@ -49,6 +50,7 @@ export default async function ProfilePage() {
               title="Cambiar contraseña"
               chevron
             />
+            <InstallAppRow />
             <ListRow
               asChild
               destructive

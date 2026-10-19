@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getInstallMode, isInAppBrowser, isIOS, isStandaloneDisplay } from "./platform";
+import { detectInstallGuide, getInstallMode, isInAppBrowser, isIOS, isStandaloneDisplay } from "./platform";
 
 const UA = {
   iphoneSafari:
@@ -94,5 +94,58 @@ describe("getInstallMode", () => {
     expect(getInstallMode(UA.androidChrome, true)).toBe("prompt");
     expect(getInstallMode(UA.androidChrome, false)).toBeNull();
     expect(getInstallMode(UA.windowsChrome, false)).toBeNull();
+  });
+});
+
+describe("detectInstallGuide", () => {
+  const ua = {
+    ...UA,
+    iphoneFirefox:
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/140.0 Mobile/15E148 Safari/605.1.15",
+    iphoneGoogleApp:
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/380.0.0 Mobile/15E148 Safari/604.1",
+    androidFirefox: "Mozilla/5.0 (Android 15; Mobile; rv:140.0) Gecko/140.0 Firefox/140.0",
+    androidWebView:
+      "Mozilla/5.0 (Linux; Android 14; SM-A146M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/137.0.0.0 Mobile Safari/537.36",
+  };
+
+  it("iPhone con Safari: guía de Compartir abajo", () => {
+    expect(detectInstallGuide(ua.iphoneSafari, false)).toBe("ios-safari");
+  });
+
+  it("iPad (también iPadOS como Mac táctil): Compartir arriba", () => {
+    expect(detectInstallGuide(ua.ipadOld, false)).toBe("ipad-safari");
+    expect(detectInstallGuide({ userAgent: ua.ipadOsDesktopMode, maxTouchPoints: 5 }, false)).toBe("ipad-safari");
+  });
+
+  it("Chrome de iPhone tiene su propia guía; Firefox y otros, abrir en Safari", () => {
+    expect(detectInstallGuide(ua.iphoneChrome, false)).toBe("ios-chrome");
+    expect(detectInstallGuide(ua.iphoneFirefox, false)).toBe("ios-other");
+  });
+
+  it("navegadores internos de apps en iOS (Instagram, Facebook, app de Google)", () => {
+    expect(detectInstallGuide(ua.iphoneInstagram, false)).toBe("in-app-ios");
+    expect(detectInstallGuide(ua.iphoneFacebook, false)).toBe("in-app-ios");
+    expect(detectInstallGuide(ua.iphoneGoogleApp, false)).toBe("in-app-ios");
+  });
+
+  it("en iOS nunca usa el diálogo nativo aunque exista el evento", () => {
+    expect(detectInstallGuide(ua.iphoneSafari, true)).toBe("ios-safari");
+  });
+
+  it("Android: diálogo nativo si está disponible, si no, guía del menú", () => {
+    expect(detectInstallGuide(ua.androidChrome, true)).toBe("prompt");
+    expect(detectInstallGuide(ua.androidChrome, false)).toBe("android-manual");
+    expect(detectInstallGuide(ua.androidFirefox, false)).toBe("android-manual");
+  });
+
+  it("Android dentro de WhatsApp u otra app: abrir en Chrome", () => {
+    expect(detectInstallGuide(ua.androidWhatsApp, true)).toBe("in-app-android");
+    expect(detectInstallGuide(ua.androidWebView, false)).toBe("in-app-android");
+  });
+
+  it("escritorio: solo con diálogo nativo", () => {
+    expect(detectInstallGuide(ua.windowsChrome, true)).toBe("prompt");
+    expect(detectInstallGuide(ua.windowsChrome, false)).toBeNull();
   });
 });

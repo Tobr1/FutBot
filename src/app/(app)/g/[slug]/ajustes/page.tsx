@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import { ScreenTransition } from "@/components/motion/screen-transition";
+import { InstallAppRow } from "@/components/pwa/install-app-row";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { PlayerRow } from "@/components/shared/player-row";
@@ -193,6 +194,7 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
               title="Mis grupos"
               chevron
             />
+            <InstallAppRow />
             <ListRow asChild leading={<RowIcon icon={LogOut} />} title="Cerrar sesión">
               <button type="submit" form={SIGN_OUT_FORM_ID} />
             </ListRow>

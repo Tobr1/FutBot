@@ -63,6 +63,51 @@ export function isStandaloneDisplay(env: DisplayEnvironment): boolean {
   }
 }
 
+/** iPad (incluido iPadOS, que se presenta como Mac táctil). */
+export function isIPad(source: UserAgentSource): boolean {
+  const userAgent = userAgentOf(source);
+  if (/iPad/.test(userAgent)) return true;
+  const touchPoints = typeof source === "string" ? 0 : (source.maxTouchPoints ?? 0);
+  return touchPoints > 1 && /Macintosh/.test(userAgent);
+}
+
+/**
+ * Qué guía de instalación mostrar:
+ * - prompt: el navegador ofrece su diálogo de instalación (Chrome/Edge/Samsung en Android o escritorio).
+ * - ios-safari / ipad-safari: Compartir → "Agregar a inicio" (abajo en iPhone, arriba en iPad).
+ * - ios-chrome: Chrome de iPhone/iPad, Compartir en la barra de direcciones.
+ * - ios-other: Firefox, Edge u otros en iOS: conviene abrirlo en Safari.
+ * - in-app-ios / in-app-android: navegador interno de Instagram, Facebook, WhatsApp, Google…
+ * - android-manual: Android sin diálogo (Firefox, o el diálogo ya se usó): menú → "Instalar".
+ * null: no hay forma de instalar (escritorio sin soporte).
+ */
+export type InstallGuide =
+  | "prompt"
+  | "ios-safari"
+  | "ipad-safari"
+  | "ios-chrome"
+  | "ios-other"
+  | "in-app-ios"
+  | "in-app-android"
+  | "android-manual";
+
+const IN_APP_IOS = /FBAN|FBAV|Instagram|WhatsApp|Line\/|GSA\/|Snapchat|TikTok|musical_ly|Twitter/;
+
+export function detectInstallGuide(source: UserAgentSource, canPrompt: boolean): InstallGuide | null {
+  const userAgent = userAgentOf(source);
+  if (isIOS(source)) {
+    if (IN_APP_IOS.test(userAgent)) return "in-app-ios";
+    if (/CriOS/.test(userAgent)) return "ios-chrome";
+    if (/FxiOS|EdgiOS|OPiOS|YaBrowser|DuckDuckGo/.test(userAgent)) return "ios-other";
+    return isIPad(source) ? "ipad-safari" : "ios-safari";
+  }
+  if (/Android/.test(userAgent)) {
+    if (isInAppBrowser(source) || /; wv\)/.test(userAgent)) return "in-app-android";
+    return canPrompt ? "prompt" : "android-manual";
+  }
+  return canPrompt ? "prompt" : null;
+}
+
 export type InstallMode = "in-app" | "ios" | "prompt";
 
 /**
