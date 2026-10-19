@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-047 · Funciones de Vercel en São Paulo (gru1)
+La base de Supabase está en sa-east-1 (São Paulo) y las funciones corrían en la región por defecto de Vercel (iad1, Washington): cada consulta cruzaba el continente y una pantalla hace varias. `vercel.json` fija `regions: ["gru1"]`. Además, `getGroupContext` trae grupo, membresía y ficha propia en una sola consulta (embebidas) y el historial embebe el avatar de la cuenta vinculada, para no sumar idas y vueltas en cada pantalla del grupo.
+
 ## D-046 · El producto se llama FutBot
 El nombre visible pasa de FUTBOLEROS a **FutBot** (igual que el repositorio y el proyecto de Vercel). El logo se escribe Fut**Bot** con "Bot" en azul eléctrico, sin mayúsculas forzadas; el resto de la app toma el nombre de `BRAND` en `src/lib/brand.ts`. Las migraciones ya aplicadas conservan el nombre viejo en sus comentarios: no se reescriben migraciones que ya corrieron.
 

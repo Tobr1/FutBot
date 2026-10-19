@@ -90,7 +90,9 @@ export const loadGroupHistory = cache(async (groupId: string): Promise<GroupHist
     supabase.from("groups").select("timezone").eq("id", groupId).maybeSingle(),
     supabase
       .from("players")
-      .select("id, nickname, avatar_url, base_rating, is_active, profile_id, player_positions(position, priority)")
+      .select(
+        "id, nickname, avatar_url, base_rating, is_active, profile_id, player_positions(position, priority), group_members!players_member_fkey(profiles!group_members_profile_id_fkey(avatar_url))",
+      )
       .eq("group_id", groupId)
       .order("nickname"),
     fetchAll((from, to) =>
@@ -110,17 +112,11 @@ export const loadGroupHistory = cache(async (groupId: string): Promise<GroupHist
   if (group.error) throw group.error;
   if (players.error) throw players.error;
 
-  const profileIds = players.data.map((p) => p.profile_id).filter((id): id is string => Boolean(id));
-  const avatars = new Map<string, string | null>();
-  if (profileIds.length > 0) {
-    const { data } = await supabase.from("profiles").select("id, avatar_url").in("id", profileIds);
-    for (const p of data ?? []) avatars.set(p.id, p.avatar_url);
-  }
-
   const roster: RosterEntry[] = players.data.map((p) => ({
     id: p.id,
     nickname: p.nickname,
-    avatarUrl: p.avatar_url ?? (p.profile_id ? (avatars.get(p.profile_id) ?? null) : null),
+    // Avatar propio de la ficha o, si no tiene, el de la cuenta vinculada (embebido: sin consulta extra).
+    avatarUrl: p.avatar_url ?? p.group_members?.profiles?.avatar_url ?? null,
     baseRating: Number(p.base_rating),
     isActive: p.is_active,
     primaryPosition: toPlayerPositions(p.player_positions).primary,
