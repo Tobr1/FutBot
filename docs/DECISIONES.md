@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-046 · El producto se llama FutBot
+El nombre visible pasa de FUTBOLEROS a **FutBot** (igual que el repositorio y el proyecto de Vercel). El logo se escribe Fut**Bot** con "Bot" en azul eléctrico, sin mayúsculas forzadas; el resto de la app toma el nombre de `BRAND` en `src/lib/brand.ts`. Las migraciones ya aplicadas conservan el nombre viejo en sus comentarios: no se reescriben migraciones que ya corrieron.
+
 ## D-045 · Correcciones coherentes y cambios de hora "compatibles"
 - **MVP:** si una corrección de equipos saca al MVP de los dos equipos, `set_match_teams` lo borra, venga del admin o de los votos (migración `20261019000600`). Si era por votos, `finalize_match_voting` lo vuelve a elegir con los votos que quedan. "Corregir resultado" no precarga un MVP que ya no está en un equipo.
 - **Notas:** en `record_match_result`, `p_notes` null deja las notas como están y `''` las borra, igual que al editar el partido.

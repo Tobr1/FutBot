@@ -33,7 +33,7 @@ export default async function InvitationsPage({ params }: PageProps<"/g/[slug]/a
   const groupLink = invitations.find((inv) => inv.status === "valid" && inv.role === "player" && !inv.playerNickname);
   const active = invitations.filter((inv) => inv.status === "valid");
   const inactive = invitations.filter((inv) => inv.status !== "valid");
-  const shareMessage = `Sumate a "${ctx.group.name}" en FUTBOLEROS:`;
+  const shareMessage = `Sumate a "${ctx.group.name}" en FutBot:`;
 
   return (
     <SettingsShell slug={slug} title="Invitaciones" description="Mandá el link por WhatsApp para sumar gente.">

@@ -134,7 +134,7 @@ export function AwardsSection() {
         <ShareActions
           className="max-w-sm"
           imageUrl="/ui-kit/no-existe.png"
-          fileName="futboleros-partido.png"
+          fileName="futbot-partido.png"
           title="Partido del Sáb 17/10"
           text={"Los del Sábado · Sáb 17/10\nAzul 3–0 Rojo\nMVP: Manu"}
           path="/ui-kit"

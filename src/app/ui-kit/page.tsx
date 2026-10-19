@@ -45,7 +45,7 @@ export default function UiKitPage() {
           UI kit
         </h1>
         <p className="text-sm text-muted-foreground">
-          Tokens, primitivas, componentes y chrome de FUTBOLEROS. Revisalo a 375px y con movimiento reducido.
+          Tokens, primitivas, componentes y chrome de FutBot. Revisalo a 375px y con movimiento reducido.
         </p>
         <nav aria-label="Secciones del UI kit" className="no-scrollbar scroll-fade-x -mx-4 flex gap-2 overflow-x-auto px-4 pt-1">
           {SECTIONS.map((section) => (

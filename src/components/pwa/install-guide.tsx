@@ -44,7 +44,7 @@ interface GuideContent {
 
 /** Dominio real de la app (la guía solo se renderiza en el cliente). */
 function appHost(): string {
-  return typeof window === "undefined" ? "futboleros" : window.location.host;
+  return typeof window === "undefined" ? "futbot" : window.location.host;
 }
 
 function Highlight({ children, className }: { children: ReactNode; className?: string }) {
@@ -142,7 +142,7 @@ function ConfirmMock({ action }: { action: string }) {
       <div className="mt-3 flex items-center gap-3">
         <LogoMark className="size-11 rounded-xl" />
         <div className="min-w-0">
-          <p className="text-sm font-semibold">FUTBOLEROS</p>
+          <p className="text-sm font-semibold">FutBot</p>
           <p className="truncate text-xs text-muted-foreground">{appHost()}</p>
         </div>
       </div>
@@ -166,7 +166,7 @@ function guideContent(guide: ManualGuide): GuideContent {
   switch (guide) {
     case "ios-safari":
       return {
-        title: "Instalá FUTBOLEROS",
+        title: "Instalá FutBot",
         description: "Queda en tu pantalla de inicio y abre a pantalla completa, como cualquier app.",
         hint: "¿Lo abriste desde WhatsApp? Primero tocá la brújula de Safari, abajo a la derecha.",
         steps: [
@@ -180,14 +180,14 @@ function guideContent(guide: ManualGuide): GuideContent {
             text: "Si no aparece, deslizá el menú hacia arriba para ver más opciones.",
             art: <MenuMock rows={SHARE_ROWS} highlight={2} />,
           },
-          { title: "Tocá “Agregar”", text: "Listo: el escudo de FUTBOLEROS queda en tu pantalla de inicio.", art: <ConfirmMock action="Agregar" /> },
+          { title: "Tocá “Agregar”", text: "Listo: el escudo de FutBot queda en tu pantalla de inicio.", art: <ConfirmMock action="Agregar" /> },
         ],
         pointer: "bottom-center",
         pointerLabel: "Compartir está acá abajo",
       };
     case "ipad-safari":
       return {
-        title: "Instalá FUTBOLEROS",
+        title: "Instalá FutBot",
         description: "Queda en tu pantalla de inicio y abre a pantalla completa.",
         steps: [
           {
@@ -203,7 +203,7 @@ function guideContent(guide: ManualGuide): GuideContent {
       };
     case "ios-chrome":
       return {
-        title: "Instalá FUTBOLEROS",
+        title: "Instalá FutBot",
         description: "Chrome también la agrega a tu pantalla de inicio.",
         steps: [
           {
@@ -284,7 +284,7 @@ function guideContent(guide: ManualGuide): GuideContent {
               />
             ),
           },
-          { title: "Tocá “Instalar app”", text: "En Chrome te aparece la tarjeta de FUTBOLEROS con el botón.", art: <ConfirmMock action="Instalar" /> },
+          { title: "Tocá “Instalar app”", text: "En Chrome te aparece la tarjeta de FutBot con el botón.", art: <ConfirmMock action="Instalar" /> },
         ],
         copyLink: true,
         pointer: "top-right",
@@ -292,7 +292,7 @@ function guideContent(guide: ManualGuide): GuideContent {
       };
     case "android-manual":
       return {
-        title: "Instalá FUTBOLEROS",
+        title: "Instalá FutBot",
         description: "Queda en tu pantalla de inicio y abre a pantalla completa.",
         steps: [
           { title: "Tocá ⋮ arriba a la derecha", text: "Es el menú del navegador.", art: <TopAddressBar icon={<EllipsisVertical className="size-[18px]" />} /> },

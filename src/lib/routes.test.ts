@@ -27,7 +27,7 @@ describe("safeNextPath", () => {
   );
 
   it("lo que acepta nunca sale del origen al resolverlo como URL", () => {
-    const base = "https://futboleros.app";
+    const base = "https://futbot.app";
     for (const value of ["/inicio", "/g/x?next=//y", "/a/%2F%2Fevil", "/\t/evil", "/ /evil", "/%09/evil"]) {
       expect(new URL(safeNextPath(value), base).origin).toBe(base);
     }

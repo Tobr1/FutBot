@@ -1,8 +1,8 @@
-# FUTBOLEROS — Análisis técnico y funcional
+# FutBot — Análisis técnico y funcional
 
 > Versión 1 · 16/10/2026 · Documento vivo: cada decisión que cambie se registra en [`DECISIONES.md`](./DECISIONES.md).
 
-FUTBOLEROS es una plataforma privada para grupos de amigos que juegan al fútbol. Convierte cada partido en datos (resultado, goles, asistencias, calificaciones) y usa esos datos para armar equipos cada vez más parejos.
+FutBot es una plataforma privada para grupos de amigos que juegan al fútbol. Convierte cada partido en datos (resultado, goles, asistencias, calificaciones) y usa esos datos para armar equipos cada vez más parejos.
 
 El diferencial del producto no es la carga de datos sino lo que pasa después: **una valoración por jugador que aprende partido a partido y un algoritmo de armado que la aprovecha**. Todo el diseño apunta a que esa información sea confiable (permisos sólidos, transacciones, anonimato real) y a que cargarla sea rápido (mobile-first, importación desde WhatsApp).
 
@@ -73,7 +73,7 @@ Next.js 16 con `cacheComponents` obliga a que toda lectura de cookies (sesión) 
 ## 2. Estructura de carpetas
 
 ```
-futboleros/
+futbot/
 ├── docs/                         Análisis, decisiones, guías de setup
 ├── supabase/
 │   ├── config.toml               Config del CLI de Supabase
