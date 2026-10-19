@@ -1,5 +1,6 @@
 import { ChevronRight, IdCard, Plus, Users } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { InstallAppCard } from "@/components/pwa/install-app-card";
@@ -11,13 +12,23 @@ import { PlayerCard } from "@/components/shared/player-card";
 import { PlayerRow } from "@/components/shared/player-row";
 import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
+import { latestAwards } from "@/domain/awards";
+import { formatMatchDate } from "@/domain/matches/datetime";
 import { topByRating } from "@/domain/players/sort";
+import { AwardFeed } from "@/features/awards/components/award-lists";
+import { getGroupAwards } from "@/features/awards/queries";
 import { GroupHero } from "@/features/groups/components/group-hero";
 import { NextMatchCard } from "@/features/groups/components/next-match-card";
 import { type ChecklistStep, OnboardingChecklist } from "@/features/groups/components/onboarding-checklist";
 import { getGroupContext, listMembers, listSeasons } from "@/features/groups/queries";
+import { getNextMatch } from "@/features/matches/queries";
 import { MyPlayerStrip } from "@/features/players/components/my-player-strip";
 import { listPlayers } from "@/features/players/queries";
+import { ForecastCard } from "@/features/teams/components/win-probability";
+import { getForecast, getMatchSides } from "@/features/teams/queries";
+import { PendingVotingBanner } from "@/features/voting/components/voting-section";
+import { listPendingVotings } from "@/features/voting/queries";
+import { todayIso } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +47,23 @@ export async function generateMetadata({ params }: PageProps<"/g/[slug]">) {
 export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) {
   const { slug } = await params;
   const ctx = await getGroupContext(slug);
-  const [players, members, seasons] = await Promise.all([
+  const [players, members, seasons, matches] = await Promise.all([
     listPlayers(ctx.group.id),
     listMembers(ctx.group.id),
     listSeasons(ctx.group.id),
+    getNextMatch(ctx.group.id),
   ]);
+  // La hora actual solo después de connection(): la página es dinámica.
+  await connection();
+  const now = new Date();
+  // Próximo partido con equipos armados: pronóstico con la valoración actual.
+  const nextMatch = matches.featured?.kind === "next" ? matches.featured.match : null;
+  const [pendingVotings, forecast, awards] = await Promise.all([
+    ctx.myPlayer ? listPendingVotings(ctx.group.id, ctx.myPlayer.id, now.toISOString()) : Promise.resolve([]),
+    nextMatch ? getMatchSides(nextMatch.id).then((sides) => getForecast(ctx.group.id, sides)) : Promise.resolve(null),
+    getGroupAwards(ctx.group.id, { today: todayIso(ctx.group.timezone, now), minMatches: ctx.group.ranking_min_matches }),
+  ]);
+  const recentAwards = latestAwards(awards.awards, 5);
 
   const activePlayers = players.filter((p) => p.isActive);
   const currentSeason = seasons.find((s) => !s.ends_on) ?? seasons[0];
@@ -66,8 +89,9 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
     {
       title: "Armá el primer partido",
       description: "Creá el partido, importá la lista y armá los equipos.",
-      done: false,
-      disabledReason: "Muy pronto",
+      done: matches.total > 0,
+      href: routes.newMatch(slug),
+      cta: "Crear",
     },
   ];
   const showOnboarding = ctx.isAdmin && steps.some((s) => !s.done && s.href);
@@ -95,11 +119,47 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
             !ctx.myPlayer && <ClaimBanner slug={slug} />
           )}
 
+          <PendingVotingBanner
+            nowMs={now.getTime()}
+            items={pendingVotings.map((v) => ({
+              matchId: v.matchId,
+              href: routes.matchVote(slug, v.matchId),
+              dayLabel: formatMatchDate(v.scheduledAt, ctx.group.timezone),
+              closesAt: v.closesAt,
+              rated: v.rated,
+              total: v.total,
+            }))}
+          />
+
           <InstallAppCard />
 
           {showOnboarding && <OnboardingChecklist steps={steps} />}
 
-          <NextMatchCard />
+          <NextMatchCard
+            slug={slug}
+            featured={matches.featured}
+            timeZone={ctx.group.timezone}
+            today={todayIso(ctx.group.timezone, now)}
+            nowMs={now.getTime()}
+            isAdmin={ctx.isAdmin}
+          />
+
+          {forecast && nextMatch && (
+            <ForecastCard probability={forecast} names={{ a: nextMatch.teams.a.name, b: nextMatch.teams.b.name }} />
+          )}
+
+          {recentAwards.length > 0 && (
+            <section aria-labelledby="ultimos-logros">
+              <SectionHeader id="ultimos-logros" title="Últimos logros" action={{ label: "Salón de la fama", href: routes.groupAwards(slug) }} />
+              <AwardFeed
+                awards={recentAwards}
+                players={awards.players}
+                playerHref={(id) => routes.player(slug, id)}
+                timeZone={ctx.group.timezone}
+                label="Últimos logros"
+              />
+            </section>
+          )}
 
           <section aria-labelledby="top-del-plantel">
             <SectionHeader
@@ -136,14 +196,16 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
                         nickname: player.nickname,
                         fullName: player.fullName,
                         avatarUrl: player.avatarUrl,
-                        rating: player.baseRating,
+                        rating: player.rating,
                         primaryPosition: player.positions.primary,
                         stats: player.stats,
                       }}
                     />
                   ))}
                 </ListGroup>
-                <p className="mt-2 text-xs text-muted-foreground">Ordenado por nivel inicial hasta que haya partidos.</p>
+                {!players.some((p) => p.stats.matches > 0) && (
+                  <p className="mt-2 text-xs text-muted-foreground">Ordenado por nivel inicial hasta que haya partidos.</p>
+                )}
               </>
             )}
           </section>
@@ -163,9 +225,9 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
                   nickname: myPlayer.nickname,
                   fullName: myPlayer.fullName,
                   avatarUrl: myPlayer.avatarUrl,
-                  rating: myPlayer.baseRating,
+                  rating: myPlayer.rating,
                   primaryPosition: myPlayer.positions.primary,
-                  isProvisional: myPlayer.stats.matches < 3,
+                  isProvisional: myPlayer.isProvisional,
                   stats: myPlayer.stats,
                 }}
               />

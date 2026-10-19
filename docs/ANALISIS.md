@@ -384,7 +384,7 @@ Para partidos de amigos (10–22 jugadores) siempre se usa la búsqueda exhausti
 | **2 — Partidos** | Crear partido, convocatoria, importador de listas de WhatsApp con matching y confirmación, armado manual, carga y corrección de resultado (goles, asistencias, destacado), auditoría visible. | Un partido completo desde la lista de WhatsApp hasta el resultado. |
 | **3 — Estadísticas** | Votación anónima con cierre, motor de valoración v1, fichas con estadísticas y evolución, rankings con filtros y mínimos, historial. | Después de votar, se publican calificaciones y se actualizan fichas y rankings. |
 | **4 — Equipos inteligentes** | Optimizador (exhaustivo + heurística), restricciones persistentes, alternativas, explicación, caché de valoraciones. | "Generar parejos" produce equipos explicados y reproducibles. |
-| **5 — Mejoras** | Premios y logros, rivalidades/duelos, predicción de resultado, tarjetas para compartir (imagen OG), análisis avanzados, notificaciones. | — |
+| **5 — Mejoras** | Premios y logros, rivalidades/duelos, predicción de resultado, tarjetas para compartir (imagen OG), análisis avanzados, notificaciones. | Logros en la ficha y en el partido, Salón de la fama, duplas y rivales, "Precisión del pronóstico", imágenes 1080×1350 para compartir y página de análisis, todo calculado al leer sin tablas nuevas (D-035 a D-041). Pronósticos de los miembros y notificaciones quedan para más adelante: necesitan almacenamiento propio. |
 
 Calidad transversal en todas las fases: tests de reglas de negocio (dominio + RLS), estados de carga/vacío/error en cada pantalla, confirmación de acciones destructivas, auditoría de cambios relevantes.
 

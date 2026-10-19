@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { type DominantFoot, type PlayerPositions, toPlayerPositions } from "@/domain/players/positions";
+import { getDisplayRatings } from "@/features/stats/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export interface PlayerStatsSummary {
@@ -20,7 +21,12 @@ export interface PlayerListItem {
   nickname: string;
   fullName: string | null;
   avatarUrl: string | null;
+  /** Nivel inicial que fija un admin (editable). */
   baseRating: number;
+  /** Valoración visible: la del motor o, sin datos, el nivel inicial. */
+  rating: number;
+  /** Pocos partidos: la valoración todavía es provisional. */
+  isProvisional: boolean;
   isActive: boolean;
   isLinked: boolean;
   profileId: string | null;
@@ -35,9 +41,10 @@ const PLAYER_COLUMNS =
 /** Plantel del grupo con posiciones, avatar efectivo y totales. */
 export async function listPlayers(groupId: string): Promise<PlayerListItem[]> {
   const supabase = await createClient();
-  const [playersResult, statsResult] = await Promise.all([
+  const [playersResult, statsResult, ratingOf] = await Promise.all([
     supabase.from("players").select(PLAYER_COLUMNS).eq("group_id", groupId).order("nickname"),
     supabase.rpc("get_player_stats", { p_group_id: groupId }),
+    getDisplayRatings(groupId),
   ]);
   if (playersResult.error) throw playersResult.error;
   if (statsResult.error) throw statsResult.error;
@@ -51,6 +58,7 @@ export async function listPlayers(groupId: string): Promise<PlayerListItem[]> {
     fullName: p.full_name,
     avatarUrl: p.avatar_url ?? (p.profile_id ? (avatars.get(p.profile_id) ?? null) : null),
     baseRating: Number(p.base_rating),
+    ...ratingOf(p.id, Number(p.base_rating)),
     isActive: p.is_active,
     isLinked: p.profile_id !== null,
     profileId: p.profile_id,
@@ -70,11 +78,12 @@ export interface PlayerDetail extends PlayerListItem {
  * página y generateMetadata comparten una sola consulta.
  */
 export const getPlayer = cache(async (groupId: string, playerId: string): Promise<PlayerDetail | null> => {
-  if (!/^[0-9a-f-]{36}$/i.test(playerId)) return null;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(playerId)) return null;
   const supabase = await createClient();
-  const [playerResult, statsResult] = await Promise.all([
+  const [playerResult, statsResult, ratingOf] = await Promise.all([
     supabase.from("players").select(PLAYER_COLUMNS).eq("group_id", groupId).eq("id", playerId).maybeSingle(),
     supabase.rpc("get_player_stats", { p_group_id: groupId }),
+    getDisplayRatings(groupId),
   ]);
   if (playerResult.error) throw playerResult.error;
   const p = playerResult.data;
@@ -94,6 +103,7 @@ export const getPlayer = cache(async (groupId: string, playerId: string): Promis
     fullName: p.full_name,
     avatarUrl: p.avatar_url ?? linkedAvatar,
     baseRating: Number(p.base_rating),
+    ...ratingOf(p.id, Number(p.base_rating)),
     isActive: p.is_active,
     isLinked: p.profile_id !== null,
     profileId: p.profile_id,

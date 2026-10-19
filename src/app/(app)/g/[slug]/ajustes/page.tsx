@@ -1,4 +1,18 @@
-import { CalendarRange, IdCard, LayoutGrid, LogOut, Settings2, UserPlus, UserRound, Users } from "lucide-react";
+import {
+  Award,
+  CalendarCheck,
+  CalendarRange,
+  ChartLine,
+  History,
+  IdCard,
+  LayoutGrid,
+  ListChecks,
+  LogOut,
+  Settings2,
+  UserPlus,
+  UserRound,
+  Users,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
@@ -52,7 +66,7 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
                   nickname: player.nickname,
                   fullName: player.fullName,
                   avatarUrl: player.avatarUrl,
-                  rating: player.baseRating,
+                  rating: player.rating,
                   primaryPosition: player.positions.primary,
                   isActive: player.isActive,
                   stats: player.stats,
@@ -89,6 +103,30 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
               />
             )}
             <ListRow
+              href={routes.groupHistory(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={CalendarCheck} />}
+              title="Historial de partidos"
+              subtitle="Resultados, goleadores y MVP"
+              chevron
+            />
+            <ListRow
+              href={routes.groupAwards(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={Award} />}
+              title="Salón de la fama"
+              subtitle="Premios del mes, récords y logros"
+              chevron
+            />
+            <ListRow
+              href={routes.groupAnalytics(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={ChartLine} />}
+              title="Análisis"
+              subtitle="Goles, duplas y pronósticos"
+              chevron
+            />
+            <ListRow
               href={routes.groupMembers(slug)}
               transitionTypes={FORWARD}
               leading={<RowIcon icon={Users} />}
@@ -109,6 +147,14 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
               chevron
             />
             <ListRow
+              href={routes.groupTeamRules(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={ListChecks} />}
+              title="Reglas de armado"
+              subtitle={isAdmin ? "Parejas juntas o separadas al generar" : "Solo lectura"}
+              chevron
+            />
+            <ListRow
               href={routes.groupGeneralSettings(slug)}
               transitionTypes={FORWARD}
               leading={<RowIcon icon={Settings2} />}
@@ -116,6 +162,16 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
               subtitle={isAdmin ? "Nombre, formato y reglas" : "Solo lectura"}
               chevron
             />
+            {isAdmin && (
+              <ListRow
+                href={routes.groupAudit(slug)}
+                transitionTypes={FORWARD}
+                leading={<RowIcon icon={History} />}
+                title="Registro de cambios"
+                subtitle="Resultados, correcciones y altas"
+                chevron
+              />
+            )}
           </ListGroup>
         </section>
 

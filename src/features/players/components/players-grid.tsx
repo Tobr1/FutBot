@@ -226,9 +226,9 @@ export function PlayersGrid({ slug, players }: { slug: string; players: PlayerLi
                     nickname: player.nickname,
                     fullName: player.fullName,
                     avatarUrl: player.avatarUrl,
-                    rating: player.baseRating,
+                    rating: player.rating,
                     primaryPosition: player.positions.primary,
-                    isProvisional: player.stats.matches < 3,
+                    isProvisional: player.isProvisional,
                     isLinked: player.isLinked,
                     isActive: player.isActive,
                     stats: player.stats,
@@ -249,7 +249,7 @@ export function PlayersGrid({ slug, players }: { slug: string; players: PlayerLi
                 nickname: player.nickname,
                 fullName: player.fullName,
                 avatarUrl: player.avatarUrl,
-                rating: player.baseRating,
+                rating: player.rating,
                 primaryPosition: player.positions.primary,
                 isActive: player.isActive,
                 stats: player.stats,
@@ -268,5 +268,5 @@ function playsAt(player: PlayerListItem, position: Position): boolean {
 
 function cardLabel(player: PlayerListItem): string {
   const position = player.positions.primary ? POSITION_LABELS[player.positions.primary].long : "sin posición";
-  return `${player.nickname}, valoración ${overall(player.baseRating)}, ${position}${player.isActive ? "" : ", inactivo"}`;
+  return `${player.nickname}, valoración ${overall(player.rating)}, ${position}${player.isActive ? "" : ", inactivo"}`;
 }

@@ -1,6 +1,7 @@
 import { Link2, Plus, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { InstallAppCard } from "@/components/pwa/install-app-card";
@@ -9,9 +10,12 @@ import { FlashToast } from "@/components/shared/flash-toast";
 import { LinkPending } from "@/components/shared/link-pending";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
+import { formatMatchDate } from "@/domain/matches/datetime";
 import { GroupCard } from "@/features/groups/components/group-card";
 import { getMyGroups } from "@/features/groups/queries";
 import { InviteLinkInput } from "@/features/invitations/components/invite-link-input";
+import { PendingVotingBanner } from "@/features/voting/components/voting-section";
+import { listMyPendingVotings } from "@/features/voting/queries";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 
@@ -22,6 +26,10 @@ const FLASH = { clave: { actualizada: "Contraseña actualizada." } };
 export default async function DashboardPage() {
   const [profile, groups] = await Promise.all([getCurrentProfile(), getMyGroups()]);
   const firstName = profile.displayName.split(" ")[0];
+  // Votaciones abiertas en cualquier grupo: la hora actual solo después de connection().
+  await connection();
+  const now = new Date();
+  const pending = groups.length > 0 ? await listMyPendingVotings(now.toISOString()) : [];
 
   return (
     <ScreenTransition>
@@ -43,6 +51,19 @@ export default async function DashboardPage() {
               </Button>
             )
           }
+        />
+
+        <PendingVotingBanner
+          nowMs={now.getTime()}
+          items={pending.map((v) => ({
+            matchId: v.matchId,
+            href: routes.matchVote(v.groupSlug, v.matchId),
+            dayLabel: formatMatchDate(v.scheduledAt, v.timeZone),
+            closesAt: v.closesAt,
+            rated: v.rated,
+            total: v.total,
+            groupName: groups.length > 1 ? v.groupName : undefined,
+          }))}
         />
 
         <InstallAppCard />

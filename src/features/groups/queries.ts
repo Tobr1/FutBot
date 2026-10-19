@@ -1,7 +1,7 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { requireUser } from "@/lib/auth/session";
+import { getSessionUser, requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums, Tables } from "@/types/database";
 import { SLUG_PATTERN } from "./schemas";
@@ -83,6 +83,32 @@ export const getGroupContext = cache(async (slug: string): Promise<GroupContext>
     myPlayer: myPlayer.data ?? null,
   };
 });
+
+/**
+ * Como getGroupContext pero sin redirigir ni lanzar 404: null si no hay
+ * sesión, si el grupo no existe o si no sos miembro. Para route handlers,
+ * que responden con su propio status (no se revela si el grupo existe).
+ */
+export async function findGroupContext(slug: string): Promise<GroupContext | null> {
+  if (!SLUG_PATTERN.test(slug)) return null;
+  const user = await getSessionUser();
+  if (!user) return null;
+  const supabase = await createClient();
+  const { data: group, error } = await supabase.from("groups").select("*").eq("slug", slug).maybeSingle();
+  if (error || !group) return null;
+  const [membership, myPlayer] = await Promise.all([
+    supabase.from("group_members").select("role").eq("group_id", group.id).eq("profile_id", user.id).maybeSingle(),
+    supabase.from("players").select("id, nickname").eq("group_id", group.id).eq("profile_id", user.id).maybeSingle(),
+  ]);
+  if (!membership.data) return null;
+  return {
+    group,
+    role: membership.data.role,
+    isAdmin: membership.data.role === "admin",
+    userId: user.id,
+    myPlayer: myPlayer.data ?? null,
+  };
+}
 
 export interface MemberRow {
   profileId: string;
