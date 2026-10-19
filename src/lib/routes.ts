@@ -17,12 +17,18 @@ export const routes = {
   player: (slug: string, id: string) => `/g/${slug}/jugadores/${id}`,
   editPlayer: (slug: string, id: string) => `/g/${slug}/jugadores/${id}/editar`,
   groupMatches: (slug: string) => `/g/${slug}/partidos`,
+  newMatch: (slug: string) => `/g/${slug}/partidos/nuevo`,
+  match: (slug: string, id: string) => `/g/${slug}/partidos/${id}`,
+  editMatch: (slug: string, id: string) => `/g/${slug}/partidos/${id}/editar`,
+  matchTeams: (slug: string, id: string) => `/g/${slug}/partidos/${id}/equipos`,
+  matchResult: (slug: string, id: string) => `/g/${slug}/partidos/${id}/resultado`,
   groupRankings: (slug: string) => `/g/${slug}/rankings`,
   groupSettings: (slug: string) => `/g/${slug}/ajustes`,
   groupGeneralSettings: (slug: string) => `/g/${slug}/ajustes/general`,
   groupMembers: (slug: string) => `/g/${slug}/ajustes/miembros`,
   groupInvitations: (slug: string) => `/g/${slug}/ajustes/invitaciones`,
   groupSeasons: (slug: string) => `/g/${slug}/ajustes/temporadas`,
+  groupAudit: (slug: string) => `/g/${slug}/ajustes/auditoria`,
   claimPlayer: (slug: string) => `/g/${slug}/mi-ficha`,
 } as const;
 

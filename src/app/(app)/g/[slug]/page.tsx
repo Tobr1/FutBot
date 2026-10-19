@@ -1,5 +1,6 @@
 import { ChevronRight, IdCard, Plus, Users } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { InstallAppCard } from "@/components/pwa/install-app-card";
@@ -16,8 +17,10 @@ import { GroupHero } from "@/features/groups/components/group-hero";
 import { NextMatchCard } from "@/features/groups/components/next-match-card";
 import { type ChecklistStep, OnboardingChecklist } from "@/features/groups/components/onboarding-checklist";
 import { getGroupContext, listMembers, listSeasons } from "@/features/groups/queries";
+import { getNextMatch } from "@/features/matches/queries";
 import { MyPlayerStrip } from "@/features/players/components/my-player-strip";
 import { listPlayers } from "@/features/players/queries";
+import { todayIso } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +39,15 @@ export async function generateMetadata({ params }: PageProps<"/g/[slug]">) {
 export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) {
   const { slug } = await params;
   const ctx = await getGroupContext(slug);
-  const [players, members, seasons] = await Promise.all([
+  const [players, members, seasons, matches] = await Promise.all([
     listPlayers(ctx.group.id),
     listMembers(ctx.group.id),
     listSeasons(ctx.group.id),
+    getNextMatch(ctx.group.id),
   ]);
+  // La hora actual solo después de connection(): la página es dinámica.
+  await connection();
+  const now = new Date();
 
   const activePlayers = players.filter((p) => p.isActive);
   const currentSeason = seasons.find((s) => !s.ends_on) ?? seasons[0];
@@ -66,8 +73,9 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
     {
       title: "Armá el primer partido",
       description: "Creá el partido, importá la lista y armá los equipos.",
-      done: false,
-      disabledReason: "Muy pronto",
+      done: matches.total > 0,
+      href: routes.newMatch(slug),
+      cta: "Crear",
     },
   ];
   const showOnboarding = ctx.isAdmin && steps.some((s) => !s.done && s.href);
@@ -99,7 +107,14 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
 
           {showOnboarding && <OnboardingChecklist steps={steps} />}
 
-          <NextMatchCard />
+          <NextMatchCard
+            slug={slug}
+            featured={matches.featured}
+            timeZone={ctx.group.timezone}
+            today={todayIso(ctx.group.timezone, now)}
+            nowMs={now.getTime()}
+            isAdmin={ctx.isAdmin}
+          />
 
           <section aria-labelledby="top-del-plantel">
             <SectionHeader

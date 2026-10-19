@@ -1,4 +1,4 @@
-import { CalendarRange, IdCard, LayoutGrid, LogOut, Settings2, UserPlus, UserRound, Users } from "lucide-react";
+import { CalendarRange, History, IdCard, LayoutGrid, LogOut, Settings2, UserPlus, UserRound, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { ScreenTransition } from "@/components/motion/screen-transition";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
@@ -116,6 +116,16 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
               subtitle={isAdmin ? "Nombre, formato y reglas" : "Solo lectura"}
               chevron
             />
+            {isAdmin && (
+              <ListRow
+                href={routes.groupAudit(slug)}
+                transitionTypes={FORWARD}
+                leading={<RowIcon icon={History} />}
+                title="Registro de cambios"
+                subtitle="Resultados, correcciones y altas"
+                chevron
+              />
+            )}
           </ListGroup>
         </section>
 

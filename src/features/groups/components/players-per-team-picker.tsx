@@ -22,12 +22,15 @@ const OPTIONS: ChoiceOption<string>[] = COMMON_FORMATS.map((n) => ({
 export function PlayersPerTeamPicker({
   name,
   defaultValue = 5,
+  onValueChange,
   "aria-labelledby": labelledBy,
   "aria-describedby": describedBy,
   "aria-invalid": invalid,
 }: {
   name: string;
   defaultValue?: number;
+  /** Aviso opcional al cambiar (el valor igual viaja con el formulario). */
+  onValueChange?: (value: number) => void;
   "aria-labelledby"?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
@@ -46,7 +49,11 @@ export function PlayersPerTeamPicker({
         name={name}
         value={value}
         // Siempre hay un formato elegido: no se permite quedar vacío.
-        onChange={(next) => next && setValue(next)}
+        onChange={(next) => {
+          if (!next) return;
+          setValue(next);
+          onValueChange?.(Number(next));
+        }}
         options={OPTIONS}
         columns="grid-cols-3 sm:grid-cols-6"
         size="lg"

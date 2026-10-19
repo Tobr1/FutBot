@@ -40,6 +40,8 @@ const BUSINESS_ERRORS: Record<string, string> = {
   cannot_rate_self: "No podés votarte a vos mismo.",
   rated_not_in_match: "Solo podés calificar a quienes jugaron.",
   invalid_ratings: "Las calificaciones no son válidas.",
+  invalid_skill_history: "Los datos de valoración no son válidos.",
+  too_many_rows: "Son demasiados datos para procesar de una vez.",
 };
 
 const CONSTRAINT_ERRORS: Record<string, string> = {
@@ -50,6 +52,10 @@ const CONSTRAINT_ERRORS: Record<string, string> = {
   match_participants_player_fkey: "El jugador tiene partidos registrados: desactivalo en lugar de borrarlo.",
   invitations_player_single_use: "Una invitación para una ficha puntual se usa una sola vez.",
   seasons_dates_check: "La fecha de fin no puede ser anterior a la de inicio.",
+  team_constraints_pair_key: "Ya hay una restricción para esos dos jugadores.",
+  team_constraints_distinct_players: "Elegí dos jugadores distintos.",
+  team_constraints_player_a_fkey: "Los jugadores tienen que ser del grupo.",
+  team_constraints_player_b_fkey: "Los jugadores tienen que ser del grupo.",
 };
 
 export interface DbErrorLike {

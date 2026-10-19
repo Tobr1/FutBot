@@ -2,6 +2,15 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-024 · Registro de cambios legible y sin duplicados
+`/g/[slug]/ajustes/auditoria` (solo admins, como la política de `audit_logs`) traduce cada fila a una frase en tercera persona con `src/domain/audit/describe.ts` ("Brito" + "cargó el resultado 3–2 del partido del Sáb 24/10"). El UPDATE de `matches` que acompaña a `result_recorded`/`result_corrected` se omite porque la fila de la RPC ya lo cuenta con más detalle. Muestra los últimos 100 cambios; si hace falta más historia se pagina después.
+
+## D-023 · Importar la lista de WhatsApp sin crear nada hasta confirmar
+El parser y el matching corren en el navegador contra el plantel (con alias). Lo seguro queda elegido; lo dudoso exige elegir un candidato, "Es nuevo" o "Ignorar"; lo nuevo, "Crear ficha" o "Ignorar". Las fichas nuevas y los alias se guardan recién al tocar "Crear partido" (`addPlayersFromImportAction`, idempotente: si el apodo ya existe reutiliza la ficha) y después se llama a `create_match`. Solo se recuerdan como alias las elecciones hechas a mano cuyo nombre no coincide ya con un apodo, nombre completo o alias.
+
+## D-022 · Fechas de partido en la zona horaria del grupo
+La base guarda `scheduled_at` como `timestamptz`; la UI pide fecha y hora locales y el servidor las convierte con `groups.timezone` (`zonedDateTimeToIso`, que respeta el horario de verano). Las pantallas formatean siempre con esa zona, nunca con la del navegador ni la del servidor. La hora actual ("Hoy", "Falta resultado") se lee después de `connection()`. Armado manual de equipos: el nivel es `base_rating` hasta que el motor de valoración lo reemplace, y "Mezclar por nivel" es un reparto en serpiente determinista; "Generar parejos" queda reservado al optimizador.
+
 ## D-021 · Galería `/ui-kit` solo en desarrollo
 Los componentes del rediseño móvil (tokens, botones, hojas inferiores, tarjetas, skeletons) se revisan juntos en `/ui-kit`, con datos de ejemplo y sin Supabase. En producción la ruta responde 404 (`notFound()` cuando `NODE_ENV === "production"`), así no queda expuesta ni indexada. No reemplaza a los tests: sirve para revisar contraste, tamaños táctiles y estados en el celular.
 
