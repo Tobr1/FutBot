@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { NextMatchCard } from "@/features/groups/components/next-match-card";
+import { AttendanceCard } from "@/features/matches/components/attendance-card";
 import { LineupImport } from "@/features/matches/components/lineup-import";
 import { MatchCard } from "@/features/matches/components/match-card";
 import { ResultSummary, TeamColumns } from "@/features/matches/components/match-detail";
@@ -12,6 +13,7 @@ import { MatchCardSkeleton } from "@/features/matches/components/match-skeletons
 import { MatchStatusBadge } from "@/features/matches/components/match-status-badge";
 import { Stepper } from "@/features/matches/components/stepper";
 import { TeamBuilder } from "@/features/matches/components/team-builder";
+import { WhatsAppCallButton } from "@/features/matches/components/whatsapp-call-button";
 import type { MatchDetail, MatchListItem, MatchParticipant } from "@/features/matches/queries";
 import { GeneratorIssues, GeneratorPanel } from "@/features/teams/components/generator-panel";
 import { TeamRuleList } from "@/features/teams/components/team-rules";
@@ -299,6 +301,25 @@ export function MatchesSection() {
         </div>
       </Demo>
 
+      <Demo title="Voy / No voy" note="AttendanceCard: sin responder, confirmado, suplente y sin ficha. El botón de WhatsApp (solo admin) arma la convocatoria para el grupo.">
+        <div className="grid gap-3 lg:grid-cols-2">
+          <AttendanceCard matchId="00000000-0000-4000-8000-000000000001" attendance={{ kind: "none" }} free={3} />
+          <AttendanceCard matchId="00000000-0000-4000-8000-000000000001" attendance={{ kind: "confirmed" }} free={2} />
+          <AttendanceCard matchId="00000000-0000-4000-8000-000000000001" attendance={{ kind: "reserve", position: 2 }} free={0} />
+          <AttendanceCard matchId="00000000-0000-4000-8000-000000000001" attendance={{ kind: "none" }} free={3} claimHref="#" />
+          <WhatsAppCallButton
+            path="/g/demo/partidos/1"
+            message={{
+              groupName: "Los del Sábado",
+              whenLabel: "Sáb 25/10 · 22:00",
+              venue: "La Canchita",
+              confirmed: ["Brito", "Manu", "Vece"],
+              reserves: [],
+              capacity: 10,
+            }}
+          />
+        </div>
+      </Demo>
       <Demo title="Stepper" note="Marcador (xl, vertical) y goles por jugador (sm). Botones de 44px o más.">
         <div className="panel flex items-start justify-center gap-6 rounded-2xl p-4">
           <Stepper size="xl" tone="team-a" label="goles de Azul" value={scoreA} onChange={setScoreA} />
