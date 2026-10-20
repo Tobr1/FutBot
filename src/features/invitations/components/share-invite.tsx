@@ -52,12 +52,13 @@ export function ShareInvite({ url, message }: { url: string; message: string }) 
   );
 
   return (
-    <div className="grid gap-3">
+    // grid-cols-1 = minmax(0, 1fr): el link largo se recorta en vez de ensanchar la pantalla.
+    <div className="grid grid-cols-1 gap-3">
       <button
         type="button"
         onClick={copy}
         aria-label="Copiar link de invitación"
-        className="pressable flex min-h-11 w-full items-center gap-2 rounded-lg bg-secondary/60 px-3 font-mono text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        className="pressable flex min-h-11 w-full min-w-0 items-center gap-2 rounded-lg bg-secondary/60 px-3 font-mono text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
       >
         <span className="min-w-0 flex-1 truncate text-left">{url}</span>
         {copied ? (
@@ -67,7 +68,7 @@ export function ShareInvite({ url, message }: { url: string; message: string }) 
         )}
       </button>
 
-      <div className="grid gap-2">
+      <div className="grid grid-cols-1 gap-2">
         {shareFirst ? (
           <>
             <Button type="button" size="lg" onClick={share} className="w-full">

@@ -34,6 +34,7 @@ import { StatStrip } from "@/components/shared/stat-strip";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { POSITION_LABELS, POSITIONS, type Position } from "@/domain/players/positions";
+import { ShareInvite } from "@/features/invitations/components/share-invite";
 import { effectiveness } from "@/domain/players/stats";
 import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { type ActionState, errorState, idleState, successState } from "@/lib/action-result";
@@ -176,6 +177,14 @@ export function SharedSection() {
         </p>
       </header>
 
+      <Demo title="ShareInvite" note="Link de invitación largo dentro de un panel: se recorta con … y no ensancha la pantalla.">
+        <div className="panel max-w-md rounded-xl p-4">
+          <ShareInvite
+            url="https://fut-bot-seven.vercel.app/invitacion/e6eca6ea8efa46b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5"
+            message="Sumate a &quot;Fútbol de los changos&quot; en FulBot:"
+          />
+        </div>
+      </Demo>
       <Demo title="PageHeader" note="Una sola fila; en mobile la acción secundaria es un ícono.">
         <div className="panel rounded-xl p-4">
           <PageHeader

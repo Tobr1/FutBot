@@ -303,6 +303,12 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    /*
+     * Red de seguridad: si algo se pasa de ancho, se recorta en vez de dejar
+     * correr toda la pantalla de costado. "clip" (y no "hidden") no crea un
+     * contenedor de scroll, así que los sticky siguen funcionando.
+     */
+    overflow-x: clip;
   }
   /* Resplandor de fondo en una capa fija: no repinta al scrollear (iOS ignora background-attachment: fixed). */
   body::before {
