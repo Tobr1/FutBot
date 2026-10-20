@@ -34,6 +34,7 @@ import { StatStrip } from "@/components/shared/stat-strip";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { POSITION_LABELS, POSITIONS, type Position } from "@/domain/players/positions";
+import { ResendConfirmationButton } from "@/features/auth/components/resend-confirmation-button";
 import { ShareInvite } from "@/features/invitations/components/share-invite";
 import { InvitePlayerCard } from "@/features/players/components/invite-player-card";
 import { effectiveness } from "@/domain/players/stats";
@@ -184,6 +185,12 @@ export function SharedSection() {
             url="https://fut-bot-seven.vercel.app/invitacion/e6eca6ea8efa46b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5"
             message="Sumate a &quot;Fútbol de los changos&quot; en FulBot:"
           />
+        </div>
+      </Demo>
+      <Demo title="ResendConfirmationButton" note="Reenviar el mail de confirmación: recién enviado arranca con la cuenta regresiva de 60 s (límite de Supabase).">
+        <div className="grid max-w-sm gap-2">
+          <ResendConfirmationButton email="demo@ejemplo.com" startCoolingDown />
+          <ResendConfirmationButton email="demo@ejemplo.com" variant="default" />
         </div>
       </Demo>
       <Demo title="InvitePlayerCard" note="Ficha sin cuenta (admin): recién creada, la pregunta va resaltada.">

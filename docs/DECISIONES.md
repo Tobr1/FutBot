@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-055 · "Reenviar mail" de confirmación
+Con Gmail como SMTP, algunos mails de confirmación caen en spam o no llegan aunque Supabase los registre como enviados. Después de registrarse, la pantalla "Revisá tu email" ofrece "Reenviar mail" (con cuenta regresiva de 60 s, el intervalo mínimo de Supabase por cuenta) y un acceso para corregir el email; al ingresar sin haber confirmado, el error `email_not_confirmed` muestra el mismo botón. La acción (`auth.resend`, tipo signup) responde igual exista o no la cuenta, para no revelar cuentas; solo informa el límite de envíos.
+
 ## D-054 · Que nadie quede afuera por mandar el link equivocado
 Amigos que se registraron desde el link de una pantalla del grupo (no el de invitación) terminaban en "Fuera de la cancha". Tres cambios: (1) una ficha sin cuenta muestra al admin "Generar su invitación" (recién creada, "¿Le mandás la invitación a …?"), con el link que vincula la ficha al aceptar; (2) quien abre un grupo sin ser miembro, o uno que no existe, va a `/grupo-no-disponible`, que pide el link de invitación y deja pegarlo (mismo destino para ambos casos: no revela grupos ajenos); (3) "Avisar por WhatsApp" suma el link del grupo para los que todavía no entraron, si hay uno activo.
 

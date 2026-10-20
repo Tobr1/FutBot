@@ -36,6 +36,11 @@ export const signUpSchema = z.object({
   next: nextSchema,
 });
 
+export const resendConfirmationSchema = z.object({
+  email: emailSchema,
+  next: nextSchema,
+});
+
 export const forgotPasswordSchema = z.object({
   email: emailSchema,
 });
