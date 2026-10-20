@@ -68,3 +68,12 @@ export async function getInvitationPreview(token: string): Promise<InvitationPre
     isMember: Boolean(row.is_member),
   };
 }
+
+/**
+ * El "link del grupo": la invitación general de jugador más reciente que
+ * sigue activa (la misma que muestra Ajustes → Invitaciones), o null.
+ */
+export async function getGroupInvitationToken(groupId: string, now: Date): Promise<string | null> {
+  const invitations = await listInvitations(groupId, now);
+  return invitations.find((inv) => inv.status === "valid" && inv.role === "player" && !inv.playerNickname)?.token ?? null;
+}

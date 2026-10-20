@@ -1,7 +1,8 @@
 import "server-only";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getSessionUser, requireUser } from "@/lib/auth/session";
+import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums, Tables } from "@/types/database";
 import { SLUG_PATTERN } from "./schemas";
@@ -76,11 +77,13 @@ export const getMyGroups = cache(async (): Promise<GroupSummary[]> => {
 });
 
 /**
- * Grupo por slug + rol de la cuenta actual. 404 si no existe o si no sos
- * miembro (RLS no lo devuelve): no se revela la existencia de grupos ajenos.
+ * Grupo por slug + rol de la cuenta actual. Si no existe o no sos miembro
+ * (RLS no lo devuelve), lleva a "Todavía no estás en este grupo", que pide la
+ * invitación: el mismo destino para los dos casos, así no se revela la
+ * existencia de grupos ajenos.
  */
 export const getGroupContext = cache(async (slug: string): Promise<GroupContext> => {
-  if (!SLUG_PATTERN.test(slug)) notFound();
+  if (!SLUG_PATTERN.test(slug)) redirect(routes.groupUnavailable);
   const user = await requireUser();
   const supabase = await createClient();
 
@@ -97,11 +100,11 @@ export const getGroupContext = cache(async (slug: string): Promise<GroupContext>
     getIsAppAdmin(),
   ]);
   if (error) throw error;
-  if (!data) notFound();
+  if (!data) redirect(routes.groupUnavailable);
 
   const { group_members: memberships, players: myPlayers, ...group } = data;
   const membership = memberships[0];
-  if (!membership) notFound();
+  if (!membership) redirect(routes.groupUnavailable);
   const myPlayer = myPlayers[0];
   const role = effectiveRole(membership.role, isAppAdmin);
 

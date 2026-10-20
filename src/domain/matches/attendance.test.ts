@@ -71,6 +71,12 @@ describe("matchCallMessage", () => {
     expect(text).not.toContain("📍");
   });
 
+  it("suma el link de invitación para quien todavía no está en el grupo", () => {
+    const text = matchCallMessage({ ...base, confirmed: [], reserves: [], inviteUrl: "https://futbot.app/invitacion/abc" });
+    expect(text.endsWith("¿Todavía no estás en el grupo? Sumate primero acá 👉 https://futbot.app/invitacion/abc")).toBe(true);
+    expect(matchCallMessage({ ...base, confirmed: [], reserves: [] })).not.toContain("Sumate primero");
+  });
+
   it("falta uno, en singular", () => {
     expect(matchCallMessage({ ...base, capacity: 3, confirmed: ["A", "B"], reserves: [] })).toContain("falta 1.");
   });

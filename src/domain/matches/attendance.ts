@@ -53,6 +53,8 @@ export interface MatchCallInput {
   capacity: number;
   /** Link al partido para confirmar. */
   url: string;
+  /** Link de invitación del grupo, para quien todavía no entró. */
+  inviteUrl?: string | null;
 }
 
 /**
@@ -75,6 +77,7 @@ export function matchCallMessage(input: MatchCallInput): string {
     lines.push("", "Suplentes:", ...input.reserves.map((name, i) => `${i + 1}. ${name}`));
   }
   lines.push("", `Confirmá si vas o no acá 👉 ${input.url}`);
+  if (input.inviteUrl) lines.push(`¿Todavía no estás en el grupo? Sumate primero acá 👉 ${input.inviteUrl}`);
   return lines.join("\n");
 }
 

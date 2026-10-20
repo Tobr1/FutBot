@@ -19,6 +19,7 @@ import { AwardProgressList, EarnedAwardsGrid } from "@/features/awards/component
 import { getPlayerAwards } from "@/features/awards/queries";
 import { getGroupContext } from "@/features/groups/queries";
 import { PlayerAdminMenu } from "@/features/players/components/player-admin-actions";
+import { InvitePlayerCard } from "@/features/players/components/invite-player-card";
 import { PlayerHero } from "@/features/players/components/player-hero";
 import { getPlayer, listPlayers } from "@/features/players/queries";
 import { ComparePicker } from "@/features/stats/components/compare-picker";
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: PageProps<"/g/[slug]/jugadore
   return { title: player?.nickname ?? "Jugador" };
 }
 
-export default async function PlayerPage({ params }: PageProps<"/g/[slug]/jugadores/[playerId]">) {
+export default async function PlayerPage({ params, searchParams }: PageProps<"/g/[slug]/jugadores/[playerId]">) {
   const { slug, playerId } = await params;
   const ctx = await getGroupContext(slug);
   const player = await getPlayer(ctx.group.id, playerId);
@@ -113,7 +114,17 @@ export default async function PlayerPage({ params }: PageProps<"/g/[slug]/jugado
           }
         />
 
-        <PlayerHero player={player} isMine={isMine} isAdmin={ctx.isAdmin} />
+        <PlayerHero player={player} isMine={isMine} />
+
+        {ctx.isAdmin && !player.isLinked && player.isActive && (
+          <InvitePlayerCard
+            groupId={ctx.group.id}
+            groupName={ctx.group.name}
+            playerId={player.id}
+            nickname={player.nickname}
+            fresh={(await searchParams).nueva === "1"}
+          />
+        )}
 
         <section aria-label="Estadísticas" className="space-y-4">
           <StatStrip

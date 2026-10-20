@@ -20,6 +20,7 @@ import { canEditParticipants, canEditTeams, canRecordResult } from "@/domain/mat
 import { teamForecast } from "@/domain/matches/team-generator";
 import { voteTargets, votingPhase } from "@/domain/voting/voting";
 import { getGroupContext } from "@/features/groups/queries";
+import { getGroupInvitationToken } from "@/features/invitations/queries";
 import { AttendanceCard } from "@/features/matches/components/attendance-card";
 import { MatchAdminMenu } from "@/features/matches/components/match-admin-menu";
 import { MatchHero, ParticipantList, ResultSummary, TeamColumns } from "@/features/matches/components/match-detail";
@@ -127,6 +128,8 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
   const capacity = match.playersPerTeam * 2;
   // "Voy / No voy": partido programado que todavía no empezó.
   const attendanceOpen = canChangeAttendance(match.status, match.scheduledAt, nowMs);
+  // Link del grupo para el mensaje de WhatsApp (los que todavía no entraron).
+  const inviteToken = attendanceOpen && ctx.isAdmin ? await getGroupInvitationToken(ctx.group.id, now) : null;
   // Pronóstico con la valoración actual: solo con equipos armados y antes de jugarse.
   const forecast =
     match.teamsReady && (match.status === "scheduled" || match.status === "in_progress")
@@ -198,6 +201,7 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
             {ctx.isAdmin && (
               <WhatsAppCallButton
                 path={routes.match(slug, match.id)}
+                invitePath={inviteToken ? routes.invitation(inviteToken) : null}
                 message={{
                   groupName: ctx.group.name,
                   whenLabel: formatMatchDay(match.scheduledAt, timeZone),
@@ -207,6 +211,15 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
                   capacity,
                 }}
               />
+            )}
+            {ctx.isAdmin && !inviteToken && (
+              <p className="text-xs text-muted-foreground">
+                Para que el mensaje también sume a los que todavía no están en el grupo, generá el link en{" "}
+                <Link href={routes.groupInvitations(slug)} className="font-medium text-primary underline-offset-4 hover:underline">
+                  Invitaciones
+                </Link>
+                .
+              </p>
             )}
           </div>
         )}

@@ -13,17 +13,21 @@ import { cn } from "@/lib/utils";
 export function WhatsAppCallButton({
   message,
   path,
+  invitePath,
   label = "Avisar por WhatsApp",
   className,
 }: {
   message: Omit<MatchCallInput, "url">;
   /** Ruta del partido (relativa). */
   path: string;
+  /** Ruta de la invitación del grupo (relativa), para sumar a los que faltan. */
+  invitePath?: string | null;
   label?: string;
   className?: string;
 }) {
   function open() {
-    const text = matchCallMessage({ ...message, url: new URL(path, window.location.origin).toString() });
+    const absolute = (p: string) => new URL(p, window.location.origin).toString();
+    const text = matchCallMessage({ ...message, url: absolute(path), inviteUrl: invitePath ? absolute(invitePath) : null });
     window.open(whatsappShareUrl(text), "_blank", "noopener,noreferrer");
   }
 
