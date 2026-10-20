@@ -304,6 +304,65 @@ export type Database = {
           },
         ]
       }
+      match_mvp_votes: {
+        Row: {
+          match_id: string
+          group_id: string
+          voter_player_id: string
+          voter_profile_id: string
+          candidate_player_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          match_id: string
+          group_id: string
+          voter_player_id: string
+          voter_profile_id: string
+          candidate_player_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          match_id?: string
+          group_id?: string
+          voter_player_id?: string
+          voter_profile_id?: string
+          candidate_player_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_mvp_votes_candidate_fkey"
+            columns: ["match_id", "candidate_player_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["match_id", "player_id"]
+          },
+          {
+            foreignKeyName: "match_mvp_votes_match_fkey"
+            columns: ["match_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id", "group_id"]
+          },
+          {
+            foreignKeyName: "match_mvp_votes_voter_fkey"
+            columns: ["match_id", "voter_player_id"]
+            isOneToOne: true
+            referencedRelation: "team_members"
+            referencedColumns: ["match_id", "player_id"]
+          },
+          {
+            foreignKeyName: "match_mvp_votes_voter_profile_id_fkey"
+            columns: ["voter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_participants: {
         Row: {
           match_id: string
@@ -1122,6 +1181,14 @@ export type Database = {
           p_ratings: Json
         }
         Returns: number
+      }
+      submit_match_votes: {
+        Args: {
+          p_match_id: string
+          p_ratings?: Json
+          p_mvp_player_id?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

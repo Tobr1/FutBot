@@ -14,7 +14,7 @@ import { closesInLabel, closesSoon, voteTargets, votingPhase } from "@/domain/vo
 import { getGroupContext } from "@/features/groups/queries";
 import { getMatch } from "@/features/matches/queries";
 import { type VoteGroup, VotingForm } from "@/features/voting/components/voting-form";
-import { getMyVotes } from "@/features/voting/queries";
+import { getMyMvpVote, getMyVotes } from "@/features/voting/queries";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +30,10 @@ export default async function MatchVotePage({ params }: PageProps<"/g/[slug]/par
   const dayLabel = formatMatchDate(match.scheduledAt, ctx.group.timezone);
   const me = ctx.myPlayer?.id ?? null;
   const targets = voteTargets({ a: match.teams.a.memberIds, b: match.teams.b.memberIds }, me);
-  const saved = me && targets.mySide ? await getMyVotes(match.id, me) : {};
+  const [saved, savedMvp] =
+    me && targets.mySide
+      ? await Promise.all([getMyVotes(match.id, me), getMyMvpVote(match.id, me)])
+      : [{} as Record<string, number>, null];
 
   // La hora actual solo después de connection(): la página es dinámica.
   await connection();
@@ -135,7 +138,7 @@ export default async function MatchVotePage({ params }: PageProps<"/g/[slug]/par
           <EmptyState icon={Vote} headingLevel="h2" title="No hay a quién calificar" action={back} />
         ) : (
           <div className="max-w-2xl">
-            <VotingForm groupId={ctx.group.id} matchId={match.id} groups={groups} saved={saved} />
+            <VotingForm groupId={ctx.group.id} matchId={match.id} groups={groups} saved={saved} savedMvp={savedMvp} />
           </div>
         )}
       </>
@@ -148,7 +151,7 @@ export default async function MatchVotePage({ params }: PageProps<"/g/[slug]/par
         <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title="Votar" />
         <PageHeader
           title="Votar"
-          description={`Partido del ${dayLabel}. Calificá de 1 a 10 a cada uno según cómo jugó ese día.`}
+          description={`Partido del ${dayLabel}. Calificá de 1 a 10 a cada uno según cómo jugó ese día y elegí al jugador del partido.`}
         />
         {body}
       </div>

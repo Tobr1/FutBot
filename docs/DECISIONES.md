@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-052 · El MVP se elige votando
+Además de calificar de 1 a 10, cada jugador del partido elige un único "jugador del partido" (tabla `match_mvp_votes`, migración `20261020000900`): uno por persona y partido, nunca uno mismo, anónimo (solo lo lee quien votó, sin auditoría) y editable hasta el cierre. Calificaciones y MVP se envían juntos en una sola transacción (`submit_match_votes`). Al cerrar, `finalize_match_voting` elige al más votado; si empatan, desempata el mejor promedio corregido (luego cantidad de calificaciones y promedio crudo); con empate total decide el admin. Sin votos de MVP se mantiene el criterio anterior (mejor promedio con 3 votos o más). El progreso cuenta como votante a quien calificó o eligió MVP.
+
 ## D-050 · Un único administrador: el de la app
 FutBot tiene un solo administrador (el dueño); el resto de las cuentas entra como jugador y solo ve y vota. Migración `20261019000700`: tabla `app_admins` (sin escritura desde la app, cada cuenta solo lee su fila) y `is_app_admin()`. En vez de tocar cada política, `is_group_admin()` pasa a exigir además estar en `app_admins`, así todas las políticas y RPC existentes quedan restringidas de una vez. `create_group` exige ser admin de la app. El rol `admin` en un grupo queda reservado (trigger `admin_reserved`, salvo la promoción automática al borrar una cuenta), no hay invitaciones de admin y los jugadores ya no editan su ficha ni sus posiciones (pueden vincularse o crear la propia para votar). En la app, `getGroupContext` calcula el rol efectivo igual que la base. Para sumar otro admin hay que insertarlo en `app_admins` desde el panel de Supabase.
 

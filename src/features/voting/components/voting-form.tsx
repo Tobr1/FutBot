@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { StickyActionBar } from "@/components/layout/sticky-action-bar";
@@ -41,14 +41,16 @@ const SIDE_DOT: Record<VoteSide, string> = { a: "bg-team-a", b: "bg-team-b" };
 const SIDE_TEXT: Record<VoteSide, string> = { a: "text-team-a", b: "text-team-b" };
 
 /**
- * Calificación de compañeros y rivales: una escala 1-10 por jugador, progreso
- * y envío parcial. Los votos se pueden cambiar hasta el cierre.
+ * Calificación de compañeros y rivales: una escala 1-10 por jugador, el
+ * jugador del partido (un solo MVP, nunca uno mismo), progreso y envío
+ * parcial. Los votos se pueden cambiar hasta el cierre.
  */
 export function VotingForm({
   groupId,
   matchId,
   groups,
   saved,
+  savedMvp = null,
   disabled = false,
 }: {
   groupId: string;
@@ -56,21 +58,31 @@ export function VotingForm({
   groups: VoteGroup[];
   /** Votos ya enviados por esta cuenta (precarga). */
   saved: Record<string, number>;
+  /** MVP ya elegido por esta cuenta (precarga). */
+  savedMvp?: string | null;
   disabled?: boolean;
 }) {
   const [draft, setDraft] = useState<RatingDraft>(() => ({ ...saved }));
+  const [mvp, setMvp] = useState<string | null>(savedMvp);
   const [isPending, startTransition] = useTransition();
 
   const allIds = useMemo(() => groups.flatMap((g) => g.players.map((p) => p.id)), [groups]);
   const rated = allIds.filter((id) => isValidScore(draft[id])).length;
-  const changes = changedCount(draft, saved, allIds);
-  const hasSaved = Object.keys(saved).length > 0;
+  const mvpChanged = mvp !== null && mvp !== savedMvp;
+  const changes = changedCount(draft, saved, allIds) + (mvpChanged ? 1 : 0);
+  const hasSaved = Object.keys(saved).length > 0 || savedMvp !== null;
+  const candidates = groups.flatMap((g) => g.players.map((p) => ({ ...p, side: g.side })));
   const percent = progressPercent(rated, allIds.length);
 
   function submit() {
     if (changes === 0 || isPending || disabled) return;
     startTransition(async () => {
-      const result = await submitRatingsAction({ groupId, matchId, ratings: ratingsPayload(draft, allIds) });
+      const result = await submitRatingsAction({
+        groupId,
+        matchId,
+        ratings: ratingsPayload(draft, allIds),
+        mvpPlayerId: mvp,
+      });
       if (!result.ok) toast.error(result.message);
     });
   }
@@ -114,6 +126,42 @@ export function VotingForm({
             </ul>
           </section>
         ),
+      )}
+
+      {candidates.length > 0 && (
+        <section aria-labelledby="votar-mvp" className="space-y-2">
+          <div className="space-y-0.5">
+            <h2 id="votar-mvp" className="flex items-center gap-2 text-base font-semibold tracking-tight">
+              <Star className="size-4 fill-current text-gold" aria-hidden="true" />
+              Jugador del partido
+            </h2>
+            <p className="text-sm text-muted-foreground">Elegí uno solo. Gana el más votado.</p>
+          </div>
+          <div role="radiogroup" aria-labelledby="votar-mvp" className="grid grid-cols-2 gap-2">
+            {candidates.map((player) => {
+              const selected = mvp === player.id;
+              return (
+                <button
+                  key={player.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={disabled || isPending}
+                  onClick={() => setMvp(player.id)}
+                  className={cn(
+                    "pressable flex min-h-12 min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-left ring-1 ring-inset transition-colors disabled:opacity-50",
+                    selected ? "bg-gold/12 ring-gold/60" : "bg-surface-1 ring-hairline",
+                  )}
+                >
+                  <UserAvatar name={player.nickname} src={player.avatarUrl} size="xs" />
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{player.nickname}</span>
+                  <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-full", SIDE_DOT[player.side])} />
+                  {selected && <Star className="size-4 shrink-0 fill-current text-gold" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       <StickyActionBar className="space-y-2.5">
