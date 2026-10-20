@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-053 · El producto pasa a llamarse FulBot
+El nombre visible cambia de FutBot a **FulBot** (de "fulbo"): logo Ful**Bot** con "Bot" en azul, `BRAND`, textos, mensajes para compartir, nombres de archivo de las imágenes (`fulbot-…png`) y plantillas de mail. El repositorio (`Tobr1/FutBot`), el proyecto de Vercel y la URL de producción no cambian. Las decisiones y migraciones anteriores conservan el nombre que tenían.
+
 ## D-052 · El MVP se elige votando
 Además de calificar de 1 a 10, cada jugador del partido elige un único "jugador del partido" (tabla `match_mvp_votes`, migración `20261020000900`): uno por persona y partido, nunca uno mismo, anónimo (solo lo lee quien votó, sin auditoría) y editable hasta el cierre. Calificaciones y MVP se envían juntos en una sola transacción (`submit_match_votes`). Al cerrar, `finalize_match_voting` elige al más votado; si empatan, desempata el mejor promedio corregido (luego cantidad de calificaciones y promedio crudo); con empate total decide el admin. Sin votos de MVP se mantiene el criterio anterior (mejor promedio con 3 votos o más). El progreso cuenta como votante a quien calificó o eligió MVP.
 

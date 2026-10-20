@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# FutBot — notas para agentes
+# FulBot — notas para agentes
 
 - Producto, arquitectura y roadmap: `docs/ANALISIS.md`. Decisiones: `docs/DECISIONES.md` (registrar las nuevas ahí).
 - UI y textos en español rioplatense (voseo). Código e identificadores de base en inglés.

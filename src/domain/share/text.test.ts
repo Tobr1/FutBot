@@ -28,9 +28,9 @@ describe("textos para compartir", () => {
   });
 
   it("nombres de archivo sin acentos ni espacios", () => {
-    expect(shareFileName("partido", "2026-10-25")).toBe("futbot-partido-2026-10-25.png");
-    expect(shareFileName("Chino Rodríguez")).toBe("futbot-chino-rodriguez.png");
-    expect(shareFileName("¡!")).toBe("futbot.png");
+    expect(shareFileName("partido", "2026-10-25")).toBe("fulbot-partido-2026-10-25.png");
+    expect(shareFileName("Chino Rodríguez")).toBe("fulbot-chino-rodriguez.png");
+    expect(shareFileName("¡!")).toBe("fulbot.png");
   });
 
   it("link de WhatsApp y goleadores", () => {

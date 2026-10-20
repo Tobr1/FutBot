@@ -39,7 +39,7 @@ describe("matchCallMessage", () => {
     whenLabel: "Sáb 25/10 · 22:00",
     venue: "La Canchita",
     capacity: 10,
-    url: "https://futbot.app/g/x/partidos/1",
+    url: "https://fulbot.app/g/x/partidos/1",
   };
 
   it("con lugares libres lista a los titulares y cuántos faltan", () => {
@@ -53,7 +53,7 @@ describe("matchCallMessage", () => {
         "1. Brito",
         "2. Manu",
         "",
-        "Confirmá si vas o no acá 👉 https://futbot.app/g/x/partidos/1",
+        "Confirmá si vas o no acá 👉 https://fulbot.app/g/x/partidos/1",
       ].join("\n"),
     );
   });

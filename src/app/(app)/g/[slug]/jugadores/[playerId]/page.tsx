@@ -137,7 +137,7 @@ export default async function PlayerPage({ params }: PageProps<"/g/[slug]/jugado
               className="lg:w-80"
               imageUrl={routes.playerShareImage(slug, player.id)}
               fileName={shareFileName(player.nickname)}
-              title={`${player.nickname} · FutBot`}
+              title={`${player.nickname} · FulBot`}
               text={shareText}
               path={routes.player(slug, player.id)}
             />

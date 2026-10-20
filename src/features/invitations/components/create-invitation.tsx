@@ -61,7 +61,7 @@ export function CreateInvitation({ groupId, groupName }: { groupId: string; grou
   if (url) {
     return (
       <div className="grid gap-3">
-        <ShareInvite url={url} message={`Sumate a "${groupName}" en FutBot:`} />
+        <ShareInvite url={url} message={`Sumate a "${groupName}" en FulBot:`} />
         <Button type="button" variant="ghost" onClick={() => setUrl(null)} className="justify-self-center">
           Crear otro link
         </Button>

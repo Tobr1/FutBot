@@ -5,12 +5,12 @@ const TOKEN = "0123456789abcdef".repeat(4);
 
 describe("extractInvitationToken", () => {
   it("toma el token de un link completo", () => {
-    expect(extractInvitationToken(`https://futbot.app/invitacion/${TOKEN}`)).toBe(TOKEN);
+    expect(extractInvitationToken(`https://fulbot.app/invitacion/${TOKEN}`)).toBe(TOKEN);
   });
 
   it("tolera espacios y texto alrededor del link", () => {
-    expect(extractInvitationToken(`  Sumate al grupo! https://futbot.app/invitacion/${TOKEN} \n`)).toBe(TOKEN);
-    expect(extractInvitationToken(`Link: https://futbot.app/invitacion/${TOKEN}?ref=wa. Nos vemos`)).toBe(TOKEN);
+    expect(extractInvitationToken(`  Sumate al grupo! https://fulbot.app/invitacion/${TOKEN} \n`)).toBe(TOKEN);
+    expect(extractInvitationToken(`Link: https://fulbot.app/invitacion/${TOKEN}?ref=wa. Nos vemos`)).toBe(TOKEN);
   });
 
   it("acepta el token solo", () => {
@@ -19,7 +19,7 @@ describe("extractInvitationToken", () => {
   });
 
   it("normaliza mayúsculas", () => {
-    expect(extractInvitationToken(`https://futbot.app/invitacion/${TOKEN.toUpperCase()}`)).toBe(TOKEN);
+    expect(extractInvitationToken(`https://fulbot.app/invitacion/${TOKEN.toUpperCase()}`)).toBe(TOKEN);
   });
 
   it("el resultado cumple TOKEN_PATTERN", () => {
@@ -33,7 +33,7 @@ describe("extractInvitationToken", () => {
     ["token corto", TOKEN.slice(0, 63)],
     ["tira hex demasiado larga", `${TOKEN}a`],
     ["caracteres no hex", `${TOKEN.slice(0, 63)}g`],
-    ["link sin token", "https://futbot.app/invitacion/"],
+    ["link sin token", "https://fulbot.app/invitacion/"],
   ])("devuelve null: %s", (_label, value) => {
     expect(extractInvitationToken(value)).toBeNull();
   });

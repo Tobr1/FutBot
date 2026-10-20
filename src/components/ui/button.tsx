@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
 /*
- * Botón base de FutBot.
+ * Botón base de FulBot.
  * - Feedback táctil inmediato: scale 0.97 al presionar (no depende de hover).
  * - Foco visible con el token ring (8.8:1) y offset sobre el fondo.
  * - En punteros gruesos (pointer-coarse) los tamaños de uso común llegan a 44px.

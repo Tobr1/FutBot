@@ -1,4 +1,4 @@
-# FutBot
+# FulBot
 
 Plataforma privada para grupos de amigos que juegan al fútbol: registra partidos, goles, asistencias y calificaciones, y usa esos datos para armar equipos cada vez más parejos.
 

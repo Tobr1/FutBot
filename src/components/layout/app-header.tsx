@@ -34,7 +34,7 @@ export function AppHeader({
       <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 pr-2.5 pl-4 lg:pr-4">
         <Link
           href={routes.dashboard}
-          aria-label="FutBot, mis grupos"
+          aria-label="FulBot, mis grupos"
           className={cn("shrink-0 items-center rounded-lg", showLogo === "desktop" ? "hidden lg:inline-flex" : "inline-flex")}
         >
           <Logo className="hidden sm:inline-flex" />

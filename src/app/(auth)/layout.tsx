@@ -24,7 +24,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       <aside className="pitch-lines relative hidden overflow-hidden border-r border-hairline bg-surface-1/40 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <Link href={routes.home} aria-label="FutBot, inicio" className="self-start">
+        <Link href={routes.home} aria-label="FulBot, inicio" className="self-start">
           <Logo />
         </Link>
         <div className="relative flex items-center gap-8 xl:gap-10">
@@ -57,7 +57,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         tabIndex={-1}
         className="flex flex-col px-4 pt-[max(2rem,var(--safe-top))] pb-[max(2rem,var(--safe-bottom))] outline-none sm:px-8"
       >
-        <Link href={routes.home} className="mb-4 self-start lg:hidden" aria-label="FutBot, inicio">
+        <Link href={routes.home} className="mb-4 self-start lg:hidden" aria-label="FulBot, inicio">
           <Logo />
         </Link>
 
