@@ -55,7 +55,7 @@ function QuickAction({ href, icon: Icon, label }: { href: string; icon: LucideIc
 }
 
 /**
- * Panel del administrador de FutBot: lo pendiente del grupo y todo lo que se
+ * Panel del administrador de FulBot: lo pendiente del grupo y todo lo que se
  * gestiona (partidos, plantel, invitaciones, ajustes). El resto de las
  * cuentas solo ve y vota, así que para ellas esta pantalla no existe.
  */
@@ -63,7 +63,7 @@ export default async function GroupAdminPage({ params }: PageProps<"/g/[slug]/ad
   const { slug } = await params;
   const ctx = await getGroupContext(slug);
   if (!ctx.isAdmin) {
-    return <AccessDenied backHref={routes.groupSettings(slug)} message="Esta sección es solo para el administrador de FutBot." />;
+    return <AccessDenied backHref={routes.groupSettings(slug)} message="Esta sección es solo para el administrador de FulBot." />;
   }
 
   const [{ upcoming }, members, isAppAdmin] = await Promise.all([
@@ -193,7 +193,7 @@ export default async function GroupAdminPage({ params }: PageProps<"/g/[slug]/ad
 
         {isAppAdmin && (
           <section aria-labelledby="admin-app" className="space-y-1">
-            <SectionHeader id="admin-app" title="FutBot" />
+            <SectionHeader id="admin-app" title="FulBot" />
             <ListGroup>
               <ListRow
                 href={routes.newGroup}

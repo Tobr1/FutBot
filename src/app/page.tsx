@@ -17,7 +17,7 @@ const FEATURES = [
   {
     icon: ClipboardPaste,
     title: "Pegá la lista de WhatsApp",
-    text: "Copiás la lista del grupo y FutBot reconoce a cada jugador. Sin duplicados.",
+    text: "Copiás la lista del grupo y FulBot reconoce a cada jugador. Sin duplicados.",
     soon: true,
   },
   {
@@ -93,14 +93,14 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
-              Registrá resultados, goles y asistencias, votá el rendimiento de cada uno y dejá que FutBot arme equipos
+              Registrá resultados, goles y asistencias, votá el rendimiento de cada uno y dejá que FulBot arme equipos
               equilibrados con lo que aprende de cada fecha.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               {/* En el teléfono esta acción vive en la barra fija de abajo; acá no se repite. */}
               <Button size="lg" className="hidden w-full sm:inline-flex sm:w-auto" asChild>
                 <Link href={routes.signup}>
-                  Crear mi grupo gratis
+                  Crear mi cuenta
                   <ArrowRight aria-hidden="true" />
                 </Link>
               </Button>
@@ -161,14 +161,14 @@ export default function LandingPage() {
 
       <footer className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-xs text-muted-foreground sm:flex-row sm:pb-[max(2rem,var(--safe-bottom))]">
         <Logo compact />
-        <p>FutBot · Hecho para el fútbol de los amigos.</p>
+        <p>FulBot · Hecho para el fútbol de los amigos.</p>
       </footer>
 
       {/* En el teléfono, la acción principal queda siempre a mano del pulgar. */}
       <div className="fixed inset-x-4 bottom-[max(1rem,var(--safe-bottom))] z-30 sm:hidden">
         <Button size="lg" className="w-full" asChild>
           <Link href={routes.signup}>
-            Crear mi grupo gratis
+            Crear mi cuenta
             <ArrowRight aria-hidden="true" />
           </Link>
         </Button>

@@ -6,7 +6,7 @@
 const BUSINESS_ERRORS: Record<string, string> = {
   not_authenticated: "Tu sesión expiró. Volvé a ingresar.",
   forbidden: "No tenés permisos para hacer esto.",
-  admin_reserved: "Solo el administrador de FutBot puede tener ese rol.",
+  admin_reserved: "Solo el administrador de FulBot puede tener ese rol.",
   attendance_closed: "Este partido ya no acepta confirmaciones.",
   player_not_linked: "Primero vinculá tu ficha del plantel.",
   invalid_attendance: "Datos inválidos.",

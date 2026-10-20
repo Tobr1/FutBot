@@ -29,7 +29,7 @@ export function InstallAppCard({ className }: { className?: string }) {
             <LogoMark className="size-11 rounded-xl" />
             <div className="min-w-0 flex-1 space-y-1 pt-0.5">
               <p className="text-[15px] leading-snug font-semibold">
-                {inApp ? "Abrila en el navegador para instalarla" : "Instalá FutBot en tu celu"}
+                {inApp ? "Abrila en el navegador para instalarla" : "Instalá FulBot en tu celu"}
               </p>
               <p className="text-sm text-muted-foreground">
                 {inApp ? "Desde esta app no se puede: te mostramos cómo en dos toques." : "Entrás en un toque, a pantalla completa, como cualquier app."}

@@ -27,7 +27,7 @@ export interface GroupContext {
 }
 
 /**
- * ¿La cuenta actual es la administradora de FutBot? Hay un único admin de la
+ * ¿La cuenta actual es la administradora de FulBot? Hay un único admin de la
  * app; el resto ve y vota. RLS solo deja leer la fila propia de app_admins.
  */
 export const getIsAppAdmin = cache(async (): Promise<boolean> => {

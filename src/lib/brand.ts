@@ -7,8 +7,8 @@ export const BRAND = {
   bg: "#050a15",
   blue: "#3491ff",
   blueDeep: "#186bec",
-  name: "FutBot",
-  shortName: "FutBot",
+  name: "FulBot",
+  shortName: "FulBot",
 } as const;
 
 export const BRAND_TAGLINE = "Estadísticas, rankings y equipos parejos";

@@ -3,7 +3,7 @@ import { AppIconArt } from "@/components/brand/app-icon-art";
 import { BRAND, BRAND_TAGLINE } from "@/lib/brand";
 
 /** Imagen para compartir (WhatsApp, redes). Estática: se genera en el build. */
-export const alt = "FutBot";
+export const alt = "FulBot";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

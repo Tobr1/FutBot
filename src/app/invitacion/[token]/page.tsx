@@ -15,14 +15,14 @@ import { INVITATION_STATUS_LABELS } from "@/features/invitations/status";
 import { getSessionUser, type SessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 
-const SHARE_DESCRIPTION = "Sumate en FutBot: estadísticas, rankings y equipos parejos.";
+const SHARE_DESCRIPTION = "Sumate en FulBot: estadísticas, rankings y equipos parejos.";
 
 // Metadata estática a propósito: no consultamos el token para armar la vista previa del link.
 export const metadata: Metadata = {
   title: "Te invitaron a un grupo",
   description: SHARE_DESCRIPTION,
   robots: { index: false },
-  openGraph: { title: "Te invitaron a un grupo de FutBot", description: SHARE_DESCRIPTION },
+  openGraph: { title: "Te invitaron a un grupo de FulBot", description: SHARE_DESCRIPTION },
 };
 
 const WHAT_IS = [
@@ -38,7 +38,7 @@ export default function InvitationPage({ params }: PageProps<"/invitacion/[token
       tabIndex={-1}
       className="flex min-h-dvh flex-col items-center px-4 pt-[max(2rem,var(--safe-top))] pb-[max(2rem,var(--safe-bottom))] outline-none"
     >
-      <Link href={routes.home} aria-label="FutBot, inicio" className="mb-6">
+      <Link href={routes.home} aria-label="FulBot, inicio" className="mb-6">
         <Logo />
       </Link>
       <div className="w-full max-w-md space-y-4">
@@ -153,7 +153,7 @@ async function InvitationContent({ params }: { params: PageProps<"/invitacion/[t
           id="what-is-title"
           className="text-center text-2xs font-semibold tracking-[0.12em] text-muted-foreground uppercase"
         >
-          Qué es FutBot
+          Qué es FulBot
         </h2>
         <ul className="mt-3 grid grid-cols-3 gap-2">
           {WHAT_IS.map(({ icon: Icon, label }) => (
@@ -188,7 +188,7 @@ function ExitActions({ user }: { user: SessionUser | null }) {
   if (!user) {
     return (
       <Button size="lg" className="w-full" asChild>
-        <Link href={routes.home}>Ir a FutBot</Link>
+        <Link href={routes.home}>Ir a FulBot</Link>
       </Button>
     );
   }
@@ -198,7 +198,7 @@ function ExitActions({ user }: { user: SessionUser | null }) {
         <Link href={routes.dashboard}>Ir a mis grupos</Link>
       </Button>
       <Button size="lg" variant="secondary" className="w-full" asChild>
-        <Link href={routes.home}>Ir a FutBot</Link>
+        <Link href={routes.home}>Ir a FulBot</Link>
       </Button>
     </div>
   );

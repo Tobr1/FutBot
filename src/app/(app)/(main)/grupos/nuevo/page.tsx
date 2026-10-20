@@ -32,7 +32,7 @@ export default function NewGroupPage() {
 async function CreateGroupFormWithDefaults() {
   const [profile, isAppAdmin] = await Promise.all([getCurrentProfile(), getIsAppAdmin()]);
   if (!isAppAdmin) {
-    return <AccessDenied backHref={routes.dashboard} message="Por ahora solo el administrador de FutBot crea grupos. Pedile un link de invitación." />;
+    return <AccessDenied backHref={routes.dashboard} message="Por ahora solo el administrador de FulBot crea grupos. Pedile un link de invitación." />;
   }
   return <CreateGroupForm defaultNickname={profile.displayName.split(" ")[0]} />;
 }

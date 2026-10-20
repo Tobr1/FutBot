@@ -31,7 +31,7 @@ export function Logo({ className, compact = false }: { className?: string; compa
       <LogoMark />
       {!compact && (
         <span className="font-display text-[1.375rem] leading-none font-extrabold tracking-wide">
-          Fut<span className="text-primary">Bot</span>
+          Ful<span className="text-primary">Bot</span>
         </span>
       )}
     </span>
