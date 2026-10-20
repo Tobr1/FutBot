@@ -15,9 +15,10 @@ export const submitRatingsSchema = z.object({
           .max(SCORE_MAX, "La calificación va de 1 a 10."),
       }),
     )
-    .min(1, "Calificá al menos a un jugador.")
     .max(40, "Demasiadas calificaciones.")
     .refine((list) => new Set(list.map((r) => r.playerId)).size === list.length, "Hay jugadores repetidos."),
-});
+  /** Jugador del partido elegido (uno solo, nunca uno mismo: lo valida la RPC). */
+  mvpPlayerId: z.uuid().nullable().default(null),
+}).refine((v) => v.ratings.length > 0 || v.mvpPlayerId !== null, "Calificá al menos a un jugador o elegí al MVP.");
 
 export type SubmitRatingsInput = z.infer<typeof submitRatingsSchema>;

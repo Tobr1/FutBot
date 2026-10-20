@@ -47,6 +47,20 @@ export const getMyVotes = cache(async (matchId: string, myPlayerId: string): Pro
   return Object.fromEntries(data.map((r) => [r.rated_player_id, r.score]));
 });
 
+/** Mi voto al MVP en un partido (RLS: solo el propio), o null. */
+export const getMyMvpVote = cache(async (matchId: string, myPlayerId: string): Promise<string | null> => {
+  if (!UUID.test(matchId)) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("match_mvp_votes")
+    .select("candidate_player_id")
+    .eq("match_id", matchId)
+    .eq("voter_player_id", myPlayerId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.candidate_player_id ?? null;
+});
+
 export interface PendingVoting {
   matchId: string;
   scheduledAt: string;

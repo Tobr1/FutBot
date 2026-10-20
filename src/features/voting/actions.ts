@@ -9,18 +9,20 @@ import { createClient } from "@/lib/supabase/server";
 import { submitRatingsSchema } from "./schemas";
 
 /**
- * Emite o actualiza (hasta el cierre) los votos de la cuenta actual. La RPC
- * verifica que jugó, que no se vota a sí mismo y que la votación está abierta.
+ * Emite o actualiza (hasta el cierre) las calificaciones y el voto al MVP de
+ * la cuenta actual, en una sola transacción. La RPC verifica que jugó, que no
+ * se vota a sí mismo y que la votación está abierta.
  */
 export async function submitRatingsAction(input: unknown): Promise<MutationResult> {
   const parsed = submitRatingsSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Datos inválidos.");
-  const { matchId, ratings } = parsed.data;
+  const { matchId, ratings, mvpPlayerId } = parsed.data;
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("submit_match_ratings", {
+  const { error } = await supabase.rpc("submit_match_votes", {
     p_match_id: matchId,
     p_ratings: ratings.map((r) => ({ player_id: r.playerId, score: r.score })),
+    p_mvp_player_id: mvpPlayerId ?? undefined,
   });
   if (error) return fail(toUserMessage(error));
 

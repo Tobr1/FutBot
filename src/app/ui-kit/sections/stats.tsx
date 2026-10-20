@@ -12,6 +12,7 @@ import { Podium } from "@/features/stats/components/podium";
 import { RecentMatches } from "@/features/stats/components/recent-matches";
 import type { HistoryMatch, RecentMatch } from "@/features/stats/queries";
 import { VoteScale } from "@/features/voting/components/vote-scale";
+import { VotingForm } from "@/features/voting/components/voting-form";
 import { MatchRatingsList, OpenVotingCard, PendingVotingBanner, type PublishedRating } from "@/features/voting/components/voting-section";
 
 /*
@@ -103,6 +104,35 @@ export function StatsSection() {
         <p className="text-sm text-muted-foreground">Votación, calificaciones, rankings, evolución, historial y comparador con datos de ejemplo.</p>
       </header>
 
+      <Demo title="Jugador del partido" note="VotingForm: calificaciones y un único MVP (radiogroup, sin uno mismo). Se envían juntos.">
+        <div className="max-w-2xl">
+          <VotingForm
+            groupId="00000000-0000-4000-8000-000000000001"
+            matchId="00000000-0000-4000-8000-000000000002"
+            saved={{}}
+            savedMvp="00000000-0000-4000-8000-0000000000b2"
+            groups={[
+              {
+                key: "teammates",
+                title: "Tu equipo",
+                side: "a",
+                teamName: "Azul",
+                players: [{ id: "00000000-0000-4000-8000-0000000000a1", nickname: "Manu", avatarUrl: null, position: "midfielder" }],
+              },
+              {
+                key: "rivals",
+                title: "Rivales",
+                side: "b",
+                teamName: "Rojo",
+                players: [
+                  { id: "00000000-0000-4000-8000-0000000000b1", nickname: "Vece", avatarUrl: null, position: "forward" },
+                  { id: "00000000-0000-4000-8000-0000000000b2", nickname: "Juan Cruz Paramo", avatarUrl: null, position: "defender" },
+                ],
+              },
+            ]}
+          />
+        </div>
+      </Demo>
       <Demo title="VoteScale" note="Radiogroup 1-10 con foco itinerante: 5 por fila en el teléfono, 10 desde sm. Botones de 44 px.">
         <div className="list-group">
           <div className="space-y-2.5 px-4 py-3">

@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-052 · El MVP se elige votando
+Además de calificar de 1 a 10, cada jugador del partido elige un único "jugador del partido" (tabla `match_mvp_votes`, migración `20261020000900`): uno por persona y partido, nunca uno mismo, anónimo (solo lo lee quien votó, sin auditoría) y editable hasta el cierre. Calificaciones y MVP se envían juntos en una sola transacción (`submit_match_votes`). Al cerrar, `finalize_match_voting` elige al más votado; si empatan, desempata el mejor promedio corregido (luego cantidad de calificaciones y promedio crudo); con empate total decide el admin. Sin votos de MVP se mantiene el criterio anterior (mejor promedio con 3 votos o más). El progreso cuenta como votante a quien calificó o eligió MVP.
+
 ## D-051 · "Voy / No voy" y convocatoria por WhatsApp
 Cada jugador con ficha vinculada confirma o se baja desde el partido mientras siga programado y no haya empezado (RPC `set_my_attendance`, migración `20261020000800`, que bloquea el partido para no pasarse del cupo). Con lugar queda titular; con el cupo lleno (jugadores por equipo × 2), suplente por orden de llegada; si un titular se baja, sube el primer suplente y el que se bajó sale de los equipos. "No voy" queda guardado como `dropped` y se muestra en "No van"; la convocatoria del admin ya no borra esas filas. Los avisos van por el grupo de WhatsApp de siempre y no por mensajes automáticos (la API de WhatsApp Business exige cuenta de Meta, plantillas aprobadas, el celular de cada uno y tiene costo): el admin toca "Avisar por WhatsApp" y se abre WhatsApp con la convocatoria armada (fecha, cancha, cupos, lista y link para confirmar) para mandarla al grupo. El link se arma con el origen actual del navegador.
 

@@ -355,3 +355,95 @@ describe("estadísticas", () => {
     expect(await t.queryAs(stranger, "select * from public.player_match_lines where group_id = $1", [s.g.groupId])).toHaveLength(0);
   });
 });
+
+describe("voto al MVP", () => {
+  function voteMvp(s: VotingSetup, voter: Voter, candidate: Voter | null, ratings: Array<[Voter, number]> = []) {
+    return t.rpc(voter.userId, "submit_match_votes", {
+      p_match_id: s.matchId,
+      p_ratings: ratings.map(([rated, score]) => ({ player_id: rated.playerId, score })),
+      p_mvp_player_id: candidate?.playerId ?? null,
+    });
+  }
+
+  async function finalize(s: VotingSetup, by: Voter) {
+    await closeVoting(s);
+    const [row] = await t.rpc<{ finalize_match_voting: string | null }>(by.userId, "finalize_match_voting", { p_match_id: s.matchId });
+    return row.finalize_match_voting;
+  }
+
+  it("un voto por persona: cambiar el MVP reemplaza el voto anterior", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, paramo] = s.voters;
+    await voteMvp(s, manu, vece);
+    await voteMvp(s, manu, paramo);
+    const rows = await t.sql<{ candidate_player_id: string }>(
+      "select candidate_player_id from public.match_mvp_votes where match_id = $1",
+      [s.matchId],
+    );
+    expect(rows).toEqual([{ candidate_player_id: paramo.playerId }]);
+  });
+
+  it("nadie se vota a sí mismo ni a alguien que no jugó", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu] = s.voters;
+    await expectDbError(voteMvp(s, manu, manu), "cannot_rate_self");
+    const outsider = await addMemberWithPlayer(t, s.g, "NoJugó");
+    await expectDbError(voteMvp(s, manu, outsider), "rated_not_in_match");
+    await expectDbError(voteMvp(s, outsider, manu), "not_a_participant");
+  });
+
+  it("es anónimo: cada uno ve solo su voto", async () => {
+    const s = await setupFinishedMatch();
+    const [admin, manu, vece] = s.voters;
+    await voteMvp(s, manu, vece);
+    expect(await t.queryAs(vece.userId, "select * from public.match_mvp_votes where match_id = $1", [s.matchId])).toHaveLength(0);
+    expect(await t.queryAs(admin.userId, "select * from public.match_mvp_votes where match_id = $1", [s.matchId])).toHaveLength(0);
+    expect(await t.queryAs(manu.userId, "select * from public.match_mvp_votes where match_id = $1", [s.matchId])).toHaveLength(1);
+  });
+
+  it("se envía junto con las calificaciones y cuenta en el progreso", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, paramo] = s.voters;
+    await voteMvp(s, manu, vece, [[vece, 8]]);
+    await voteMvp(s, paramo, vece);
+    const [progress] = await t.rpc<{ voters: number }>(manu.userId, "get_voting_progress", { p_match_id: s.matchId });
+    expect(progress.voters).toBe(2);
+    const ratings = await t.queryAs(manu.userId, "select * from public.match_ratings where match_id = $1", [s.matchId]);
+    expect(ratings).toHaveLength(1);
+  });
+
+  it("no se vota con la votación cerrada", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece] = s.voters;
+    await closeVoting(s);
+    await expectDbError(voteMvp(s, manu, vece), "voting_closed");
+  });
+
+  it("gana el más votado aunque otro tenga mejor promedio", async () => {
+    const s = await setupFinishedMatch();
+    const [admin, manu, vece, paramo, tadeo, fran] = s.voters;
+    // Fran tiene mejor promedio, pero Vece junta más votos de MVP.
+    for (const voter of [manu, paramo, tadeo]) await vote(s, voter, [[fran, 10]]);
+    await voteMvp(s, manu, vece);
+    await voteMvp(s, paramo, vece);
+    await voteMvp(s, tadeo, fran);
+    expect(await finalize(s, admin)).toBe(vece.playerId);
+  });
+
+  it("empate en votos de MVP: desempata el mejor promedio", async () => {
+    const s = await setupFinishedMatch();
+    const [admin, manu, vece, paramo, tadeo] = s.voters;
+    await voteMvp(s, manu, vece);
+    await voteMvp(s, paramo, tadeo);
+    for (const voter of [manu, paramo, admin]) await vote(s, voter, [[vece, 6], [tadeo, 9]]);
+    expect(await finalize(s, admin)).toBe(tadeo.playerId);
+  });
+
+  it("empate total: queda para el admin", async () => {
+    const s = await setupFinishedMatch();
+    const [admin, manu, vece, paramo, tadeo] = s.voters;
+    await voteMvp(s, manu, vece);
+    await voteMvp(s, paramo, tadeo);
+    expect(await finalize(s, admin)).toBeNull();
+  });
+});
