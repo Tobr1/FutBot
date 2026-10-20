@@ -43,6 +43,8 @@ export const routes = {
   groupAudit: (slug: string) => `/g/${slug}/ajustes/auditoria`,
   groupTeamRules: (slug: string) => `/g/${slug}/ajustes/reglas`,
   claimPlayer: (slug: string) => `/g/${slug}/mi-ficha`,
+  /** Quien abre un grupo sin ser miembro (o uno que no existe). */
+  groupUnavailable: "/grupo-no-disponible",
 } as const;
 
 /** Prefijos que requieren sesión (chequeo optimista en el proxy). */

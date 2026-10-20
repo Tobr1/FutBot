@@ -45,7 +45,8 @@ export async function savePlayerAction(_prev: ActionState, formData: FormData): 
   if (formData.get("intent") === "save-and-new") {
     redirect(`${routes.newPlayer(slug)}?creado=${encodeURIComponent(v.nickname)}`, RedirectType.replace);
   }
-  redirect(routes.player(slug, playerId), RedirectType.replace);
+  // ?nueva=1: la ficha ofrece mandarle la invitación a quien se acaba de cargar.
+  redirect(`${routes.player(slug, playerId)}?nueva=1`, RedirectType.replace);
 }
 
 export async function setPlayerActiveAction(input: unknown, active: boolean): Promise<MutationResult> {

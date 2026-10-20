@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-054 · Que nadie quede afuera por mandar el link equivocado
+Amigos que se registraron desde el link de una pantalla del grupo (no el de invitación) terminaban en "Fuera de la cancha". Tres cambios: (1) una ficha sin cuenta muestra al admin "Generar su invitación" (recién creada, "¿Le mandás la invitación a …?"), con el link que vincula la ficha al aceptar; (2) quien abre un grupo sin ser miembro, o uno que no existe, va a `/grupo-no-disponible`, que pide el link de invitación y deja pegarlo (mismo destino para ambos casos: no revela grupos ajenos); (3) "Avisar por WhatsApp" suma el link del grupo para los que todavía no entraron, si hay uno activo.
+
 ## D-053 · El producto pasa a llamarse FulBot
 El nombre visible cambia de FutBot a **FulBot** (de "fulbo"): logo Ful**Bot** con "Bot" en azul, `BRAND`, textos, mensajes para compartir, nombres de archivo de las imágenes (`fulbot-…png`) y plantillas de mail. El repositorio (`Tobr1/FutBot`), el proyecto de Vercel y la URL de producción no cambian. Las decisiones y migraciones anteriores conservan el nombre que tenían.
 

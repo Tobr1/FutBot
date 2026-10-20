@@ -10,7 +10,7 @@ import type { PlayerDetail } from "../queries";
  * la página, #page-title, que StackHeader observa para mostrar el título
  * compacto al scrollear). A todo el ancho y al ras del header en mobile.
  */
-export function PlayerHero({ player, isMine, isAdmin }: { player: PlayerDetail; isMine: boolean; isAdmin: boolean }) {
+export function PlayerHero({ player, isMine }: { player: PlayerDetail; isMine: boolean }) {
   const tier = tierStyle(player.rating);
   const { isProvisional } = player;
 
@@ -80,9 +80,6 @@ export function PlayerHero({ player, isMine, isAdmin }: { player: PlayerDetail; 
             </ul>
           )}
 
-          {isAdmin && !player.isLinked && (
-            <p className="text-xs text-muted-foreground">Invitalo a vincular su cuenta desde el menú ⋯</p>
-          )}
         </div>
       </div>
     </div>

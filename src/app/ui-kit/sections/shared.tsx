@@ -35,6 +35,7 @@ import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { POSITION_LABELS, POSITIONS, type Position } from "@/domain/players/positions";
 import { ShareInvite } from "@/features/invitations/components/share-invite";
+import { InvitePlayerCard } from "@/features/players/components/invite-player-card";
 import { effectiveness } from "@/domain/players/stats";
 import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { type ActionState, errorState, idleState, successState } from "@/lib/action-result";
@@ -183,6 +184,12 @@ export function SharedSection() {
             url="https://fut-bot-seven.vercel.app/invitacion/e6eca6ea8efa46b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5"
             message="Sumate a &quot;Fútbol de los changos&quot; en FulBot:"
           />
+        </div>
+      </Demo>
+      <Demo title="InvitePlayerCard" note="Ficha sin cuenta (admin): recién creada, la pregunta va resaltada.">
+        <div className="grid max-w-md gap-3">
+          <InvitePlayerCard groupId="00000000-0000-4000-8000-000000000001" groupName="Los del Sábado" playerId="00000000-0000-4000-8000-000000000002" nickname="Juanchi" fresh />
+          <InvitePlayerCard groupId="00000000-0000-4000-8000-000000000001" groupName="Los del Sábado" playerId="00000000-0000-4000-8000-000000000003" nickname="Boni" />
         </div>
       </Demo>
       <Demo title="PageHeader" note="Una sola fila; en mobile la acción secundaria es un ícono.">
