@@ -70,6 +70,8 @@ export const updateMatchSchema = z.object({ ...matchFields, matchId: z.uuid() })
 
 export const matchRefSchema = z.object({ groupId: z.uuid(), matchId: z.uuid() });
 
+export const attendanceSchema = z.object({ matchId: z.uuid(), going: z.boolean() });
+
 export const matchStatusSchema = matchRefSchema.extend({
   status: z.enum(["scheduled", "in_progress", "cancelled"]),
 });

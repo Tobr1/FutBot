@@ -1155,6 +1155,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_my_attendance: {
+        Args: {
+          p_match_id: string
+          p_going: boolean
+        }
+        Returns: Database["public"]["Enums"]["participant_status"]
+      }
       shares_group_with: {
         Args: {
           p_profile_id: string

@@ -10,7 +10,8 @@ import { FlashToast } from "@/components/shared/flash-toast";
 import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
 import { awardsForMatch } from "@/domain/awards";
-import { formatMatchDate, isoToZoned } from "@/domain/matches/datetime";
+import { canChangeAttendance, myAttendance, reservesInOrder } from "@/domain/matches/attendance";
+import { formatMatchDate, formatMatchDay, isoToZoned } from "@/domain/matches/datetime";
 import { summarizeEvents } from "@/domain/matches/result";
 import { matchShareMessage, scorerLabel, shareFileName } from "@/domain/share/text";
 import { AwardFeed } from "@/features/awards/components/award-lists";
@@ -19,9 +20,11 @@ import { canEditParticipants, canEditTeams, canRecordResult } from "@/domain/mat
 import { teamForecast } from "@/domain/matches/team-generator";
 import { voteTargets, votingPhase } from "@/domain/voting/voting";
 import { getGroupContext } from "@/features/groups/queries";
+import { AttendanceCard } from "@/features/matches/components/attendance-card";
 import { MatchAdminMenu } from "@/features/matches/components/match-admin-menu";
 import { MatchHero, ParticipantList, ResultSummary, TeamColumns } from "@/features/matches/components/match-detail";
 import { ParticipantsSheet } from "@/features/matches/components/participants-sheet";
+import { WhatsAppCallButton } from "@/features/matches/components/whatsapp-call-button";
 import { ShareActions } from "@/features/share/components/share-actions";
 import { getMatch, listRosterForMatches } from "@/features/matches/queries";
 import { getGroupRatings, getMatchRatings, syncSkillHistory } from "@/features/stats/queries";
@@ -117,7 +120,13 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
   const ratingById: Record<string, number> = {};
   for (const p of loaded.participants) ratingById[p.id] = engine.byPlayer[p.id]?.skill ?? p.baseRating;
 
-  const confirmedCount = match.participants.filter((p) => p.status === "confirmed").length;
+  const confirmed = match.participants.filter((p) => p.status === "confirmed");
+  const confirmedCount = confirmed.length;
+  const reserves = reservesInOrder(match.participants);
+  const notGoing = match.participants.filter((p) => p.status === "dropped");
+  const capacity = match.playersPerTeam * 2;
+  // "Voy / No voy": partido programado que todavía no empezó.
+  const attendanceOpen = canChangeAttendance(match.status, match.scheduledAt, nowMs);
   // Pronóstico con la valoración actual: solo con equipos armados y antes de jugarse.
   const forecast =
     match.teamsReady && (match.status === "scheduled" || match.status === "in_progress")
@@ -177,6 +186,30 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
         />
 
         <MatchHero match={match} timeZone={timeZone} today={todayIso(timeZone, now)} nowMs={nowMs} />
+
+        {attendanceOpen && (
+          <div className="space-y-3">
+            <AttendanceCard
+              matchId={match.id}
+              attendance={myAttendance(match.participants, ctx.myPlayer?.id ?? null)}
+              free={Math.max(0, capacity - confirmedCount)}
+              claimHref={ctx.myPlayer ? undefined : routes.claimPlayer(slug)}
+            />
+            {ctx.isAdmin && (
+              <WhatsAppCallButton
+                path={routes.match(slug, match.id)}
+                message={{
+                  groupName: ctx.group.name,
+                  whenLabel: formatMatchDay(match.scheduledAt, timeZone),
+                  venue: match.venue,
+                  confirmed: confirmed.map((p) => p.nickname),
+                  reserves: reserves.map((p) => p.nickname),
+                  capacity,
+                }}
+              />
+            )}
+          </div>
+        )}
 
         {!finished && match.notes && (
           <p className="panel rounded-xl p-4 text-sm whitespace-pre-line text-muted-foreground">{match.notes}</p>
@@ -284,7 +317,7 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
 
         <section aria-labelledby="convocados" className="space-y-1">
           <div className="flex items-center justify-between gap-3">
-            <SectionHeader id="convocados" title="Convocados" count={match.participants.length} className="flex-1" />
+            <SectionHeader id="convocados" title="Convocados" count={confirmedCount + reserves.length} className="flex-1" />
             {editableParticipants && (
               <ParticipantsSheet
                 groupId={ctx.group.id}
@@ -305,7 +338,7 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
               />
             )}
           </div>
-          {match.participants.length === 0 ? (
+          {confirmedCount + reserves.length === 0 ? (
             <EmptyState
               size="sm"
               icon={UsersRound}
@@ -314,6 +347,11 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
             />
           ) : (
             <ParticipantList participants={match.participants} />
+          )}
+          {notGoing.length > 0 && (
+            <p className="px-1 pt-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">No van:</span> {notGoing.map((p) => p.nickname).join(", ")}
+            </p>
           )}
         </section>
 
