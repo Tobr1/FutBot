@@ -13,6 +13,7 @@ import { routes } from "@/lib/routes";
 import { signUpAction } from "../actions";
 import { AuthSwitchLink, AuthSwitchLinkFallback } from "./auth-switch-link";
 import { InvitationNextHint, NextPathInput } from "./next-path-input";
+import { ResendConfirmationButton } from "./resend-confirmation-button";
 
 /** Formulario de registro. Igual que el de ingreso, prerenderizable (ver SignInForm). */
 export function SignUpForm() {
@@ -36,6 +37,14 @@ export function SignUpForm() {
           </Suspense>
           <p className="text-xs text-muted-foreground">Si no lo ves en unos minutos, buscá en spam o promociones.</p>
         </div>
+        {state.values?.email && (
+          <div className="grid w-full gap-2">
+            <ResendConfirmationButton email={state.values.email} next={state.values.next} startCoolingDown />
+            <p className="text-xs text-muted-foreground">
+              ¿Escribiste mal el email? Volvé a <a href={routes.signup} className="font-medium text-primary underline-offset-4 hover:underline">crear la cuenta</a> con el correcto.
+            </p>
+          </div>
+        )}
       </div>
     );
   }

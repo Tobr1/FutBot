@@ -14,6 +14,7 @@ import { signInAction } from "../actions";
 import { AuthSwitchLink, AuthSwitchLinkFallback } from "./auth-switch-link";
 import { LinkErrorNotice } from "./link-error-notice";
 import { NextPathInput } from "./next-path-input";
+import { ResendConfirmationButton } from "./resend-confirmation-button";
 
 /**
  * Formulario de ingreso. No lee la URL en su nivel superior: lo que depende de
@@ -36,6 +37,9 @@ export function SignInForm() {
         <LinkErrorNotice show={state.status === "idle"} />
       </Suspense>
       <FormMessage state={state} />
+      {state.status === "error" && state.code === "email_not_confirmed" && values?.email && (
+        <ResendConfirmationButton email={values.email} next={values.next || undefined} variant="default" />
+      )}
 
       <FormField id="email" label="Email" errors={errors?.email}>
         <Input

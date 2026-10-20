@@ -6,10 +6,12 @@ import type { z } from "zod";
  */
 export type ActionState =
   | { status: "idle" }
-  | { status: "success"; message?: string }
+  | { status: "success"; message?: string; values?: Record<string, string> }
   | {
       status: "error";
       message: string;
+      /** Clave estable del error (p. ej. "email_not_confirmed") para reaccionar en la UI. */
+      code?: string;
       fieldErrors?: Record<string, string[] | undefined>;
       values?: Record<string, string>;
     };
@@ -20,8 +22,8 @@ export function errorState(message: string, extra: Omit<Extract<ActionState, { s
   return { status: "error", message, ...extra };
 }
 
-export function successState(message?: string): ActionState {
-  return { status: "success", message };
+export function successState(message?: string, values?: Record<string, string>): ActionState {
+  return values ? { status: "success", message, values } : { status: "success", message };
 }
 
 /** Devuelve los valores de texto del FormData para repoblar el formulario. */
