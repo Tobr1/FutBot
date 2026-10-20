@@ -12,6 +12,7 @@ import { fail, type MutationResult, ok } from "@/lib/mutation-result";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import {
+  attendanceSchema,
   createMatchSchema,
   importPlayersSchema,
   matchRefSchema,
@@ -253,4 +254,28 @@ export async function recordResultAction(input: unknown): Promise<MutationResult
   revalidateGroup();
   if (slug) redirect(`${routes.match(slug, v.matchId)}?resultado=1`, RedirectType.replace);
   return ok("Resultado guardado.");
+}
+
+const ATTENDANCE_MESSAGES = {
+  confirmed: "¡Listo, estás confirmado!",
+  reserve: "El partido está completo: quedaste de suplente.",
+  dropped: "Avisaste que no vas.",
+} as const;
+
+/** "Voy / No voy" del jugador de la cuenta actual. */
+export async function setMyAttendanceAction(
+  input: unknown,
+): Promise<MutationResult<{ status: keyof typeof ATTENDANCE_MESSAGES }>> {
+  const parsed = attendanceSchema.safeParse(input);
+  if (!parsed.success) return fail("Datos inválidos.");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("set_my_attendance", {
+    p_match_id: parsed.data.matchId,
+    p_going: parsed.data.going,
+  });
+  if (error || !data) return fail(toUserMessage(error));
+
+  revalidateGroup();
+  return ok(ATTENDANCE_MESSAGES[data], { status: data });
 }
