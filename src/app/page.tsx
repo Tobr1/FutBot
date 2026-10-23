@@ -47,10 +47,26 @@ const FEATURES = [
   },
 ];
 
+/** Cartas de muestra (datos inventados) con los seis atributos: oro, élite y plata. */
 const DEMO_TEAM: PlayerCardData[] = [
-  { nickname: "Brito", rating: 7.8, primaryPosition: "midfielder", stats: { matches: 24, goals: 9, assists: 14 } },
-  { nickname: "Vece", rating: 8.6, primaryPosition: "forward", stats: { matches: 21, goals: 27, assists: 6 } },
-  { nickname: "Paramo", rating: 6.9, primaryPosition: "goalkeeper", stats: { matches: 26, goals: 0, assists: 2 } },
+  {
+    nickname: "Brito",
+    rating: 7.8,
+    primaryPosition: "midfielder",
+    card: { overall: 78, tier: "gold", elite: false, provisional: false, attributes: { kind: "field", values: [74, 70, 84, 80, 72, 76] } },
+  },
+  {
+    nickname: "Vece",
+    rating: 8.6,
+    primaryPosition: "forward",
+    card: { overall: 86, tier: "gold", elite: true, provisional: false, attributes: { kind: "field", values: [88, 91, 78, 86, 52, 80] } },
+  },
+  {
+    nickname: "Paramo",
+    rating: 6.9,
+    primaryPosition: "goalkeeper",
+    card: { overall: 69, tier: "silver", elite: false, provisional: false, attributes: { kind: "goalkeeper", values: [70, 72, 64, 74, 58, 68] } },
+  },
 ];
 
 /** Abanico de cartas: el desplazamiento es relativo al ancho de cada carta, así escala del teléfono al escritorio. */

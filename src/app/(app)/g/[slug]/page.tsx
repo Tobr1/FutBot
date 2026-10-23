@@ -1,4 +1,4 @@
-import { ChevronRight, IdCard, Plus, Users } from "lucide-react";
+import { ChevronRight, IdCard, PenLine, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -17,6 +17,7 @@ import { formatMatchDate } from "@/domain/matches/datetime";
 import { topByRating } from "@/domain/players/sort";
 import { AwardFeed } from "@/features/awards/components/award-lists";
 import { getGroupAwards } from "@/features/awards/queries";
+import { getGroupAttributes } from "@/features/cards/queries";
 import { GroupHero } from "@/features/groups/components/group-hero";
 import { NextMatchCard } from "@/features/groups/components/next-match-card";
 import { type ChecklistStep, OnboardingChecklist } from "@/features/groups/components/onboarding-checklist";
@@ -47,11 +48,12 @@ export async function generateMetadata({ params }: PageProps<"/g/[slug]">) {
 export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) {
   const { slug } = await params;
   const ctx = await getGroupContext(slug);
-  const [players, members, seasons, matches] = await Promise.all([
+  const [players, members, seasons, matches, attributes] = await Promise.all([
     listPlayers(ctx.group.id),
     listMembers(ctx.group.id),
     listSeasons(ctx.group.id),
     getNextMatch(ctx.group.id),
+    getGroupAttributes(ctx.group.id),
   ]);
   // La hora actual solo después de connection(): la página es dinámica.
   await connection();
@@ -112,6 +114,24 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
             isAdmin={ctx.isAdmin}
             slug={slug}
           />
+
+          {myPlayer && !attributes.get(myPlayer.id)?.hasSelf && (
+            <Link
+              href={routes.playerAttributes(slug, myPlayer.id)}
+              transitionTypes={["nav-forward"]}
+              className="pressable relative flex items-center gap-3 rounded-xl bg-primary/10 px-4 py-3 ring-1 ring-primary/30 ring-inset focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/16 text-primary">
+                <PenLine className="size-5" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">Armá tu carta</span>
+                <span className="block text-sm text-muted-foreground">Autoevaluate en 6 atributos; después te validan tus compañeros.</span>
+              </span>
+              <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <LinkPending />
+            </Link>
+          )}
 
           {myPlayer ? (
             <MyPlayerStrip slug={slug} player={myPlayer} className="lg:hidden" />
@@ -198,6 +218,7 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
                         fullName: player.fullName,
                         avatarUrl: player.avatarUrl,
                         rating: player.rating,
+                        overall: player.card.overall,
                         primaryPosition: player.positions.primary,
                         stats: player.stats,
                       }}
@@ -230,6 +251,7 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
                   primaryPosition: myPlayer.positions.primary,
                   isProvisional: myPlayer.isProvisional,
                   stats: myPlayer.stats,
+                  card: myPlayer.card,
                 }}
               />
               <LinkPending />

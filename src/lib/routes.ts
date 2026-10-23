@@ -16,6 +16,10 @@ export const routes = {
   newPlayer: (slug: string) => `/g/${slug}/jugadores/nuevo`,
   player: (slug: string, id: string) => `/g/${slug}/jugadores/${id}`,
   editPlayer: (slug: string, id: string) => `/g/${slug}/jugadores/${id}/editar`,
+  /** Autoevaluación (ficha propia) o validación de un compañero. */
+  playerAttributes: (slug: string, id: string) => `/g/${slug}/jugadores/${id}/atributos`,
+  /** Compañeros para validar sus atributos. */
+  validateTeammates: (slug: string) => `/g/${slug}/validar`,
   comparePlayers: (slug: string, id: string, otherId?: string) =>
     `/g/${slug}/jugadores/${id}/comparar${otherId ? `?con=${encodeURIComponent(otherId)}` : ""}`,
   groupMatches: (slug: string) => `/g/${slug}/partidos`,

@@ -1,4 +1,4 @@
-import { Plus, Users } from "lucide-react";
+import { Plus, ShieldCheck, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Fab } from "@/components/layout/fab";
@@ -30,14 +30,24 @@ export default async function PlayersPage({ params }: PageProps<"/g/[slug]/jugad
               players.length === 0 ? "Todavía sin jugadores" : `${activeCount} ${activeCount === 1 ? "activo" : "activos"}`
             }
             actions={
-              ctx.isAdmin && (
-                <Button asChild className="hidden lg:inline-flex">
-                  <Link href={routes.newPlayer(slug)} transitionTypes={["nav-forward"]}>
-                    <Plus aria-hidden="true" />
-                    Agregar jugador
-                  </Link>
-                </Button>
-              )
+              <>
+                {ctx.myPlayer && (
+                  <Button asChild variant="secondary" size="sm" className="max-sm:size-11 max-sm:px-0">
+                    <Link href={routes.validateTeammates(slug)} transitionTypes={["nav-forward"]}>
+                      <ShieldCheck aria-hidden="true" />
+                      <span className="max-sm:sr-only">Validar</span>
+                    </Link>
+                  </Button>
+                )}
+                {ctx.isAdmin && (
+                  <Button asChild className="hidden lg:inline-flex">
+                    <Link href={routes.newPlayer(slug)} transitionTypes={["nav-forward"]}>
+                      <Plus aria-hidden="true" />
+                      Agregar jugador
+                    </Link>
+                  </Button>
+                )}
+              </>
             }
           />
 
