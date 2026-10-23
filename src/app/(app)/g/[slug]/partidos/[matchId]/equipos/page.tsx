@@ -9,7 +9,9 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { formatMatchDate } from "@/domain/matches/datetime";
+import { buildCard } from "@/domain/cards/cards";
 import { toBalancerPlayer } from "@/domain/matches/team-generator";
+import { getGroupAttributes } from "@/features/cards/queries";
 import type { Side } from "@/domain/matches/result";
 import { canEditTeams, formatLabel } from "@/domain/matches/status";
 import { getGroupContext } from "@/features/groups/queries";
@@ -30,16 +32,22 @@ export default async function MatchTeamsPage({ params }: PageProps<"/g/[slug]/pa
   const matchHref = routes.match(slug, match.id);
   if (!ctx.isAdmin) return <AccessDenied backHref={matchHref} />;
 
-  const [engine, allRules, previousTeams] = await Promise.all([
+  const [engine, allRules, previousTeams, attributes] = await Promise.all([
     getGroupRatings(ctx.group.id),
     listTeamRules(ctx.group.id),
     getPreviousTeams(ctx.group.id, match.id, match.scheduledAt),
+    getGroupAttributes(ctx.group.id),
   ]);
   const dayLabel = formatMatchDate(match.scheduledAt, ctx.group.timezone);
   const confirmed = match.participants.filter((p) => p.status === "confirmed");
   const initial: Record<string, Side> = {};
   for (const p of confirmed) if (p.side) initial[p.id] = p.side;
-  const balancer = confirmed.map((p) => toBalancerPlayer(p, engine.byPlayer[p.id]));
+  // Carta ya validada (3+ compañeros): pesa mitad en el armado; si no, solo los partidos.
+  const validatedOverall = (p: (typeof confirmed)[number]) => {
+    const card = buildCard({ attributes: attributes.get(p.id) ?? null, position: p.positions.primary, mvps: 0, formOverall: 0 });
+    return card.source === "attributes" && !card.provisional ? card.overall : null;
+  };
+  const balancer = confirmed.map((p) => toBalancerPlayer(p, engine.byPlayer[p.id], validatedOverall(p)));
   // Reglas del grupo con los dos jugadores convocados.
   const present = new Set(confirmed.map((p) => p.id));
   const rules = allRules.filter((r) => present.has(r.playerA) && present.has(r.playerB));

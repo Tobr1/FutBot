@@ -37,6 +37,12 @@ const rule = (id: string, playerA: string, playerB: string, kind: TeamRule["kind
 });
 
 describe("toBalancerPlayer", () => {
+  it("con carta validada mezcla mitad carta y mitad partidos", () => {
+    expect(toBalancerPlayer(source("x", 6), null, 80).skill).toBe(7);
+    expect(toBalancerPlayer(source("x", 6), { skill: 5, sigma: 1, recentForm: 0 }, 70).skill).toBe(6);
+    expect(toBalancerPlayer(source("x", 6), null, null).skill).toBe(6);
+  });
+
   it("usa la habilidad, σ y forma del motor", () => {
     const p = toBalancerPlayer(
       { id: "x", nickname: "Brito", baseRating: 5, positions: { primary: "defender", secondary: "midfielder" } },

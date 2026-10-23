@@ -12,6 +12,8 @@ export interface PlayerRowData {
   fullName?: string | null;
   avatarUrl?: string | null;
   rating: number;
+  /** Media de la carta (1-99); si no está, sale de `rating`. */
+  overall?: number;
   primaryPosition: Position | null;
   isActive?: boolean;
   stats?: { matches: number; goals: number; assists: number };
@@ -74,10 +76,10 @@ export function PlayerRow({
       leading={leading}
       title={player.nickname}
       subtitle={subtitle}
-      trailing={trailing ?? <RatingPill rating={player.rating} size="md" />}
+      trailing={trailing ?? <RatingPill rating={player.rating} value={player.overall} size="md" />}
       href={href}
       transitionTypes={href ? (transitionTypes ?? ["nav-forward"]) : undefined}
-      aria-label={href ? `${player.nickname}, valoración ${overall(player.rating)}` : undefined}
+      aria-label={href ? `${player.nickname}, media ${player.overall ?? overall(player.rating)}` : undefined}
       className={cn(player.isActive === false && "opacity-60", className)}
     />
   );

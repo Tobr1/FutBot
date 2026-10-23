@@ -42,15 +42,20 @@ export const NEW_PLAYER_SIGMA =
 
 const finite = (value: number | null | undefined): value is number => typeof value === "number" && Number.isFinite(value);
 
-/** Jugador para el optimizador: habilidad del motor (o nivel inicial), σ, forma y posiciones. */
-export function toBalancerPlayer(source: GeneratorSource, engine?: EngineSkill | null): BalancerPlayer {
+/**
+ * Jugador para el optimizador: habilidad del motor (o nivel inicial), σ, forma
+ * y posiciones. Con una carta ya validada (`cardOverall`, 1-99), la habilidad
+ * pasa a ser mitad carta y mitad partidos.
+ */
+export function toBalancerPlayer(source: GeneratorSource, engine?: EngineSkill | null, cardOverall?: number | null): BalancerPlayer {
   const hasEngine = Boolean(engine && finite(engine.skill));
+  const formSkill = hasEngine ? engine!.skill : source.baseRating;
   const primary = source.positions.primary;
   const secondary = source.positions.secondary && source.positions.secondary !== primary ? source.positions.secondary : null;
   return {
     id: source.id,
     name: source.nickname,
-    skill: hasEngine ? engine!.skill : source.baseRating,
+    skill: finite(cardOverall) ? (formSkill + cardOverall / 10) / 2 : formSkill,
     sigma: hasEngine && finite(engine!.sigma) ? engine!.sigma : UNKNOWN_SIGMA,
     form: hasEngine && finite(engine!.recentForm) ? engine!.recentForm : 0,
     primary,

@@ -1,6 +1,9 @@
 import "server-only";
 import { cache } from "react";
 import { type DominantFoot, type PlayerPositions, toPlayerPositions } from "@/domain/players/positions";
+import { buildCard, type CardModel } from "@/domain/cards/cards";
+import { overall } from "@/domain/players/rating";
+import { getGroupAttributes } from "@/features/cards/queries";
 import { getDisplayRatings } from "@/features/stats/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,6 +36,8 @@ export interface PlayerListItem {
   dominantFoot: DominantFoot | null;
   positions: PlayerPositions;
   stats: PlayerStatsSummary;
+  /** Carta: media de los atributos (o, sin atributos, de los partidos), nivel y élite. */
+  card: CardModel;
 }
 
 const PLAYER_COLUMNS =
@@ -41,10 +46,11 @@ const PLAYER_COLUMNS =
 /** Plantel del grupo con posiciones, avatar efectivo y totales. */
 export async function listPlayers(groupId: string): Promise<PlayerListItem[]> {
   const supabase = await createClient();
-  const [playersResult, statsResult, ratingOf] = await Promise.all([
+  const [playersResult, statsResult, ratingOf, attributes] = await Promise.all([
     supabase.from("players").select(PLAYER_COLUMNS).eq("group_id", groupId).order("nickname"),
     supabase.rpc("get_player_stats", { p_group_id: groupId }),
     getDisplayRatings(groupId),
+    getGroupAttributes(groupId),
   ]);
   if (playersResult.error) throw playersResult.error;
   if (statsResult.error) throw statsResult.error;
@@ -52,7 +58,7 @@ export async function listPlayers(groupId: string): Promise<PlayerListItem[]> {
   const avatars = await linkedAvatars(playersResult.data.map((p) => p.profile_id));
   const stats = new Map(statsResult.data.map((s) => [s.player_id, s]));
 
-  return playersResult.data.map((p) => ({
+  return playersResult.data.map((p) => withCard(attributes.get(p.id) ?? null, {
     id: p.id,
     nickname: p.nickname,
     fullName: p.full_name,
@@ -68,6 +74,19 @@ export async function listPlayers(groupId: string): Promise<PlayerListItem[]> {
   }));
 }
 
+/** Suma la carta a una ficha ya armada (posición, MVP y valoración por partidos). */
+function withCard<T extends Omit<PlayerListItem, "card">>(attributes: Parameters<typeof buildCard>[0]["attributes"], player: T): T & { card: CardModel } {
+  return {
+    ...player,
+    card: buildCard({
+      attributes,
+      position: player.positions.primary,
+      mvps: player.stats.mvps,
+      formOverall: overall(player.rating),
+    }),
+  };
+}
+
 export interface PlayerDetail extends PlayerListItem {
   linkedName: string | null;
   createdAt: string;
@@ -80,10 +99,11 @@ export interface PlayerDetail extends PlayerListItem {
 export const getPlayer = cache(async (groupId: string, playerId: string): Promise<PlayerDetail | null> => {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(playerId)) return null;
   const supabase = await createClient();
-  const [playerResult, statsResult, ratingOf] = await Promise.all([
+  const [playerResult, statsResult, ratingOf, attributes] = await Promise.all([
     supabase.from("players").select(PLAYER_COLUMNS).eq("group_id", groupId).eq("id", playerId).maybeSingle(),
     supabase.rpc("get_player_stats", { p_group_id: groupId }),
     getDisplayRatings(groupId),
+    getGroupAttributes(groupId),
   ]);
   if (playerResult.error) throw playerResult.error;
   const p = playerResult.data;
@@ -97,7 +117,7 @@ export const getPlayer = cache(async (groupId: string, playerId: string): Promis
     linkedAvatar = profile?.avatar_url ?? null;
   }
 
-  return {
+  return withCard(attributes.get(p.id) ?? null, {
     id: p.id,
     nickname: p.nickname,
     fullName: p.full_name,
@@ -112,7 +132,7 @@ export const getPlayer = cache(async (groupId: string, playerId: string): Promis
     stats: toStats(statsResult.data?.find((s) => s.player_id === p.id)),
     linkedName,
     createdAt: p.created_at,
-  };
+  });
 });
 
 /** Fichas sin cuenta, para que un miembro nuevo reclame la suya. */

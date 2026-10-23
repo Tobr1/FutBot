@@ -12,11 +12,14 @@ import { SectionHeader } from "@/components/shared/section-header";
 import { StatStrip } from "@/components/shared/stat-strip";
 import { Button } from "@/components/ui/button";
 import { FOOT_LABELS } from "@/domain/players/positions";
-import { overall, ratingTier, TIER_LABELS } from "@/domain/players/rating";
+import { CARD_TIER_LABELS } from "@/domain/cards/cards";
+import { overall } from "@/domain/players/rating";
 import { effectiveness } from "@/domain/players/stats";
 import { playerShareMessage, shareFileName } from "@/domain/share/text";
 import { AwardProgressList, EarnedAwardsGrid } from "@/features/awards/components/award-lists";
 import { getPlayerAwards } from "@/features/awards/queries";
+import { CardPanel } from "@/features/cards/components/card-panel";
+import { getGroupAttributes, getMyValidatedIds } from "@/features/cards/queries";
 import { getGroupContext } from "@/features/groups/queries";
 import { PlayerAdminMenu } from "@/features/players/components/player-admin-actions";
 import { InvitePlayerCard } from "@/features/players/components/invite-player-card";
@@ -68,13 +71,16 @@ export default async function PlayerPage({ params, searchParams }: PageProps<"/g
     }));
 
   const isMine = ctx.myPlayer?.id === player.id;
+  const [attributes, myValidated] = await Promise.all([getGroupAttributes(ctx.group.id), getMyValidatedIds(ctx.group.id)]);
+  const published = attributes.get(player.id) ?? null;
+  const validatedByMe = myValidated.has(player.id);
   const { stats } = player;
   const winRate = effectiveness(stats);
   const shareText = playerShareMessage({
     nickname: player.nickname,
     groupName: ctx.group.name,
-    overall: overall(player.rating),
-    tierLabel: TIER_LABELS[ratingTier(player.rating)],
+    overall: player.card.overall,
+    tierLabel: player.card.elite ? "Élite" : CARD_TIER_LABELS[player.card.tier],
     matches: stats.matches,
     goals: stats.goals,
     mvps: stats.mvps,
@@ -115,6 +121,30 @@ export default async function PlayerPage({ params, searchParams }: PageProps<"/g
         />
 
         <PlayerHero player={player} isMine={isMine} />
+
+        <CardPanel
+          card={player.card}
+          validators={published?.validators ?? 0}
+          hasSelf={published?.hasSelf ?? false}
+          updatedAt={published?.updatedAt ?? null}
+          formOverall={overall(player.rating)}
+          mvps={stats.mvps}
+          action={
+            isMine
+              ? {
+                  href: routes.playerAttributes(slug, player.id),
+                  label: published?.hasSelf ? "Ajustar mi autoevaluación" : "Hacer mi autoevaluación",
+                  kind: "self",
+                }
+              : ctx.myPlayer && player.isActive
+                ? {
+                    href: routes.playerAttributes(slug, player.id),
+                    label: validatedByMe ? "Cambiar mi validación" : `Validar a ${player.nickname}`,
+                    kind: "peer",
+                  }
+                : null
+          }
+        />
 
         {ctx.isAdmin && !player.isLinked && player.isActive && (
           <InvitePlayerCard

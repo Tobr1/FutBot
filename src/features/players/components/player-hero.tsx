@@ -1,6 +1,6 @@
 import { Sparkles } from "lucide-react";
 import { PlayerCard } from "@/components/shared/player-card";
-import { tierStyle } from "@/components/shared/tier-styles";
+import { CARD_STYLES } from "@/components/shared/tier-styles";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { PlayerDetail } from "../queries";
@@ -11,16 +11,15 @@ import type { PlayerDetail } from "../queries";
  * compacto al scrollear). A todo el ancho y al ras del header en mobile.
  */
 export function PlayerHero({ player, isMine }: { player: PlayerDetail; isMine: boolean }) {
-  const tier = tierStyle(player.rating);
-  const { isProvisional } = player;
+  const style = CARD_STYLES[player.card.elite ? "elite" : player.card.tier];
+  const isProvisional = player.card.provisional;
 
   return (
     <div
       data-slot="player-hero"
       className="relative isolate -mx-4 -mt-6 overflow-hidden px-4 pt-5 pb-6 lg:mx-0 lg:mt-0 lg:rounded-2xl"
     >
-      <span aria-hidden="true" className={cn("absolute inset-0 -z-10 bg-gradient-to-b opacity-30", tier.card)} />
-      <span aria-hidden="true" className={cn("absolute inset-0 -z-10 opacity-60", tier.glowGradient)} />
+      <span aria-hidden="true" className={cn("absolute inset-0 -z-10 opacity-30", style.face)} />
       <span aria-hidden="true" className="pitch-lines absolute inset-0 -z-10 opacity-40" />
       <span aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-2/3 bg-gradient-to-b from-transparent to-background" />
 
@@ -37,6 +36,7 @@ export function PlayerHero({ player, isMine }: { player: PlayerDetail; isMine: b
             isProvisional,
             isLinked: player.isLinked,
             isActive: player.isActive,
+            card: player.card,
           }}
         />
 

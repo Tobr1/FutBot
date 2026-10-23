@@ -42,3 +42,42 @@ export const TIER_STYLES: Record<RatingTier, TierStyle> = {
 export function tierStyle(rating: number): TierStyle {
   return TIER_STYLES[ratingTier(rating)];
 }
+
+/** Estilos de la carta FulBot por nivel (bronce / plata / oro) y edición Élite. */
+export interface CardStyle {
+  /** Fondo de la carta (degradé completo, sin `bg-gradient-to-*`). */
+  face: string;
+  /** Brillo exterior (drop-shadow: respeta el recorte de la carta). */
+  frame: string;
+  /** Número, nivel y aros de atributos. */
+  text: string;
+  /** Color de los aros de atributos (valor CSS). */
+  ring: string;
+}
+
+export const CARD_STYLES: Record<"bronze" | "silver" | "gold" | "elite", CardStyle> = {
+  bronze: {
+    face: "bg-[linear-gradient(160deg,oklch(0.48_0.09_50)_0%,oklch(0.27_0.05_45)_38%,oklch(0.16_0.02_262)_100%)]",
+    frame: "drop-shadow-[0_0_10px_oklch(0.65_0.12_55/45%)]",
+    text: "text-[oklch(0.86_0.08_60)]",
+    ring: "oklch(0.74 0.11 58)",
+  },
+  silver: {
+    face: "bg-[linear-gradient(160deg,oklch(0.62_0.02_250)_0%,oklch(0.32_0.025_255)_40%,oklch(0.16_0.02_262)_100%)]",
+    frame: "drop-shadow-[0_0_10px_oklch(0.85_0.02_250/35%)]",
+    text: "text-[oklch(0.94_0.01_250)]",
+    ring: "oklch(0.88 0.015 250)",
+  },
+  gold: {
+    face: "bg-[linear-gradient(160deg,oklch(0.7_0.13_85)_0%,oklch(0.36_0.07_75)_40%,oklch(0.16_0.02_262)_100%)]",
+    frame: "drop-shadow-[0_0_12px_oklch(0.84_0.13_88/45%)]",
+    text: "text-gold",
+    ring: "oklch(0.86 0.13 88)",
+  },
+  elite: {
+    face: "bg-[linear-gradient(160deg,oklch(0.45_0.2_262)_0%,oklch(0.22_0.09_270)_42%,oklch(0.13_0.03_262)_100%)]",
+    frame: "drop-shadow-[0_0_16px_oklch(0.62_0.22_258/70%)]",
+    text: "text-[oklch(0.88_0.11_240)]",
+    ring: "oklch(0.72 0.19 250)",
+  },
+};

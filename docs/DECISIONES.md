@@ -2,6 +2,13 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-058 · Cartas con seis atributos (autoevaluación + compañeros)
+Fase 2 del kit de diseño. La media de la carta sale de seis atributos de 1 a 99: RIT, TIR, PAS, REG, DEF y FIS para jugadores de campo, y estirada, manos, saque, reflejos, velocidad y posicionamiento para arqueros. El tipo sale de la posición principal. Cada jugador con ficha se autoevalúa y cada compañero puede validarlo (una validación activa por par, editable). Con 5 o más validaciones se descarta la más alta y la más baja de cada atributo. Los valores individuales solo los ve quien los cargó, y `player_attribute_revisions` guarda el historial sin acceso desde la app.
+
+El valor publicado es 20 % autoevaluación y 80 % el promedio de los compañeros (`get_group_attributes`, migración `20261023001100`). La carta es provisional hasta tener 3 validaciones. La media se pondera por posición (`domain/cards`) con las tablas del kit para DEF, MED y DEL y una propuesta para ARQ. Los niveles son bronce hasta 59, plata de 60 a 74 y oro desde 75. La edición Élite llega con 10 MVP y solo cambia el diseño, no la media. Sin atributos, la carta muestra provisionalmente la media de los partidos.
+
+La "forma por partidos" (notas de 1 a 10) queda aparte y no toca los atributos. El armado de equipos usa mitad carta y mitad partidos solo cuando la carta está validada; si no, solo partidos. Los pesos y umbrales son una propuesta inicial ajustable, no un modelo validado.
+
 ## D-057 · Votación paso a paso, cierre manual y lista de votaciones
 Fase 1 del kit de diseño de votaciones y cartas. La votación se sigue abriendo sola al cargar el resultado, con la ventana del grupo. El admin puede cerrarla antes con `close_match_voting` (migración `20261023001000`), que adelanta el cierre y elige el MVP en el momento con la misma regla que al vencer; la acción recalcula el historial de valoraciones. También puede avisar por WhatsApp con el link a votar. Votar pasa a ser un paso por jugador: escala 1–10 sin valor marcado (botones y no barra deslizable, porque una barra siempre arranca en algún número) o "No lo vi", que no es un voto y no cuenta en el promedio. Después vienen el MVP y un resumen editable antes de enviar; se manda todo junto con `submit_match_votes`. El borrador se guarda en el teléfono (localStorage) hasta enviar. `/g/[slug]/votaciones` agrupa "Te falta votar", "Ya votaste", "Abiertas" (donde no jugué) y "Cerradas", solo con cantidades y nunca con notas.
 

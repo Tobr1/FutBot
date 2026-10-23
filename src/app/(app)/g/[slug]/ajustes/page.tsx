@@ -89,6 +89,7 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
                   fullName: player.fullName,
                   avatarUrl: player.avatarUrl,
                   rating: player.rating,
+                  overall: player.card.overall,
                   primaryPosition: player.positions.primary,
                   isActive: player.isActive,
                   stats: player.stats,
@@ -114,6 +115,14 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
         <section aria-labelledby="mas-grupo" className="space-y-1">
           <SectionHeader id="mas-grupo" title="Grupo" />
           <ListGroup>
+            <ListRow
+              href={routes.validateTeammates(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={ShieldCheck} />}
+              title="Validar compañeros"
+              subtitle="Los atributos de cada carta"
+              chevron
+            />
             <ListRow
               href={routes.groupVotings(slug)}
               transitionTypes={FORWARD}

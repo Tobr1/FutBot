@@ -232,6 +232,7 @@ export function PlayersGrid({ slug, players }: { slug: string; players: PlayerLi
                     isLinked: player.isLinked,
                     isActive: player.isActive,
                     stats: player.stats,
+                    card: player.card,
                   }}
                 />
                 <LinkPending />
@@ -250,6 +251,7 @@ export function PlayersGrid({ slug, players }: { slug: string; players: PlayerLi
                 fullName: player.fullName,
                 avatarUrl: player.avatarUrl,
                 rating: player.rating,
+                overall: player.card.overall,
                 primaryPosition: player.positions.primary,
                 isActive: player.isActive,
                 stats: player.stats,

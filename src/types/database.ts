@@ -578,6 +578,109 @@ export type Database = {
           },
         ]
       }
+      player_attribute_revisions: {
+        Row: {
+          id: number
+          player_id: string
+          group_id: string
+          kind: Database["public"]["Enums"]["attribute_kind"]
+          source: string
+          validator_player_id: string | null
+          scores: number[]
+          created_at: string
+        }
+        Insert: {
+          id?: never
+          player_id: string
+          group_id: string
+          kind: Database["public"]["Enums"]["attribute_kind"]
+          source: string
+          validator_player_id?: string | null
+          scores: number[]
+          created_at?: string
+        }
+        Update: {
+          id?: never
+          player_id?: string
+          group_id?: string
+          kind?: Database["public"]["Enums"]["attribute_kind"]
+          source?: string
+          validator_player_id?: string | null
+          scores?: number[]
+          created_at?: string
+        }
+        Relationships: []
+      }
+      player_attribute_validations: {
+        Row: {
+          player_id: string
+          group_id: string
+          kind: Database["public"]["Enums"]["attribute_kind"]
+          validator_player_id: string
+          validator_profile_id: string
+          v1: number
+          v2: number
+          v3: number
+          v4: number
+          v5: number
+          v6: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          player_id: string
+          group_id: string
+          kind: Database["public"]["Enums"]["attribute_kind"]
+          validator_player_id: string
+          validator_profile_id: string
+          v1: number
+          v2: number
+          v3: number
+          v4: number
+          v5: number
+          v6: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          player_id?: string
+          group_id?: string
+          kind?: Database["public"]["Enums"]["attribute_kind"]
+          validator_player_id?: string
+          validator_profile_id?: string
+          v1?: number
+          v2?: number
+          v3?: number
+          v4?: number
+          v5?: number
+          v6?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_attribute_validations_player_fkey"
+            columns: ["player_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id", "group_id"]
+          },
+          {
+            foreignKeyName: "player_attribute_validations_validator_fkey"
+            columns: ["validator_player_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id", "group_id"]
+          },
+          {
+            foreignKeyName: "player_attribute_validations_validator_profile_id_fkey"
+            columns: ["validator_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_positions: {
         Row: {
           player_id: string
@@ -604,6 +707,66 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id", "group_id"]
+          },
+        ]
+      }
+      player_self_assessments: {
+        Row: {
+          player_id: string
+          group_id: string
+          kind: Database["public"]["Enums"]["attribute_kind"]
+          profile_id: string
+          v1: number
+          v2: number
+          v3: number
+          v4: number
+          v5: number
+          v6: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          player_id: string
+          group_id: string
+          kind: Database["public"]["Enums"]["attribute_kind"]
+          profile_id: string
+          v1: number
+          v2: number
+          v3: number
+          v4: number
+          v5: number
+          v6: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          player_id?: string
+          group_id?: string
+          kind?: Database["public"]["Enums"]["attribute_kind"]
+          profile_id?: string
+          v1?: number
+          v2?: number
+          v3?: number
+          v4?: number
+          v5?: number
+          v6?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_self_assessments_player_fkey"
+            columns: ["player_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id", "group_id"]
+          },
+          {
+            foreignKeyName: "player_self_assessments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1011,6 +1174,34 @@ export type Database = {
         }
         Returns: string
       }
+      get_attribute_validation_form: {
+        Args: {
+          p_player_id: string
+        }
+        Returns: {
+          kind: Database["public"]["Enums"]["attribute_kind"] | null
+          source: string | null
+          scores: number[] | null
+        }[]
+      }
+      get_group_attributes: {
+        Args: {
+          p_group_id: string
+        }
+        Returns: {
+          player_id: string | null
+          kind: Database["public"]["Enums"]["attribute_kind"] | null
+          a1: number | null
+          a2: number | null
+          a3: number | null
+          a4: number | null
+          a5: number | null
+          a6: number | null
+          has_self: boolean | null
+          validators: number | null
+          updated_at: string | null
+        }[]
+      }
       get_head_to_head: {
         Args: {
           p_group_id: string
@@ -1040,6 +1231,14 @@ export type Database = {
           inviter_name: string | null
           status: string | null
           is_member: boolean | null
+        }[]
+      }
+      get_my_attribute_validations: {
+        Args: {
+          p_group_id: string
+        }
+        Returns: {
+          player_id: string | null
         }[]
       }
       get_player_stats: {
@@ -1112,6 +1311,12 @@ export type Database = {
         }
         Returns: string
       }
+      player_attribute_kind: {
+        Args: {
+          p_player_id: string
+        }
+        Returns: Database["public"]["Enums"]["attribute_kind"]
+      }
       record_match_result: {
         Args: {
           p_match_id: string
@@ -1131,6 +1336,13 @@ export type Database = {
         }
         Returns: number
       }
+      save_attribute_validation: {
+        Args: {
+          p_player_id: string
+          p_values: number[]
+        }
+        Returns: Database["public"]["Enums"]["attribute_kind"]
+      }
       save_player: {
         Args: {
           p_group_id: string
@@ -1143,6 +1355,13 @@ export type Database = {
           p_secondary_position?: Database["public"]["Enums"]["player_position"]
         }
         Returns: string
+      }
+      save_self_assessment: {
+        Args: {
+          p_group_id: string
+          p_values: number[]
+        }
+        Returns: Database["public"]["Enums"]["attribute_kind"]
       }
       set_match_participants: {
         Args: {
@@ -1205,6 +1424,7 @@ export type Database = {
       }
     }
     Enums: {
+      attribute_kind: "field" | "goalkeeper"
       dominant_foot: "right" | "left" | "both"
       group_role: "admin" | "player"
       match_event_type: "goal" | "own_goal" | "assist"
@@ -1233,6 +1453,7 @@ export type FunctionReturns<T extends keyof PublicSchema["Functions"]> = PublicS
 export const Constants = {
   public: {
     Enums: {
+      attribute_kind: ["field", "goalkeeper"],
       dominant_foot: ["right", "left", "both"],
       group_role: ["admin", "player"],
       match_event_type: ["goal", "own_goal", "assist"],

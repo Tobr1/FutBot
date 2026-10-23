@@ -11,6 +11,8 @@ export interface SortablePlayer {
   nickname: string;
   /** Valoración visible (motor o nivel inicial). */
   rating: number;
+  /** Media de la carta (1-99): si está, ordena por ella. */
+  card?: { overall: number };
   stats: { matches: number; goals: number; assists: number };
 }
 
@@ -21,7 +23,7 @@ export function isPlayerSortKey(value: unknown): value is PlayerSortKey {
 const byNickname = (a: SortablePlayer, b: SortablePlayer) => a.nickname.localeCompare(b.nickname, "es-AR");
 
 const METRIC: Record<Exclude<PlayerSortKey, "name">, (p: SortablePlayer) => number> = {
-  rating: (p) => p.rating,
+  rating: (p) => (p.card ? p.card.overall / 10 : p.rating),
   matches: (p) => p.stats.matches,
   goals: (p) => p.stats.goals,
   assists: (p) => p.stats.assists,

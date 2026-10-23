@@ -35,6 +35,8 @@ import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { POSITION_LABELS, POSITIONS, type Position } from "@/domain/players/positions";
 import { ResendConfirmationButton } from "@/features/auth/components/resend-confirmation-button";
+import { AttributesForm } from "@/features/cards/components/attributes-form";
+import { CardPanel } from "@/features/cards/components/card-panel";
 import { GroupHero } from "@/features/groups/components/group-hero";
 import { ShareInvite } from "@/features/invitations/components/share-invite";
 import { InvitePlayerCard } from "@/features/players/components/invite-player-card";
@@ -307,6 +309,59 @@ export function SharedSection() {
               <figcaption className="text-2xs text-muted-foreground">{card.note}</figcaption>
             </figure>
           ))}
+        </div>
+      </Demo>
+
+      <Demo title="Cartas FulBot" note="Media de los seis atributos: bronce hasta 59, plata 60-74, oro desde 75. Élite con 10 MVP (solo cambia el diseño). Provisional con menos de 3 validaciones.">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {(
+            [
+              { name: "Francis", pos: "defender", ovr: 50, tier: "bronze", elite: false, prov: true, v: [52, 38, 46, 48, 50, 55] },
+              { name: "Vece", pos: "midfielder", ovr: 63, tier: "silver", elite: false, prov: false, v: [68, 54, 60, 61, 62, 66] },
+              { name: "Manu", pos: "forward", ovr: 78, tier: "gold", elite: false, prov: false, v: [80, 68, 72, 75, 78, 76] },
+              { name: "Brito", pos: "goalkeeper", ovr: 79, tier: "gold", elite: true, prov: false, v: [82, 80, 70, 84, 60, 79] },
+            ] as const
+          ).map((c) => (
+            <PlayerCard
+              key={c.name}
+              headingLevel="p"
+              player={{
+                nickname: c.name,
+                rating: c.ovr / 10,
+                primaryPosition: c.pos,
+                card: {
+                  overall: c.ovr,
+                  tier: c.tier,
+                  elite: c.elite,
+                  provisional: c.prov,
+                  attributes: { kind: c.pos === "goalkeeper" ? "goalkeeper" : "field", values: [...c.v] },
+                },
+              }}
+            />
+          ))}
+        </div>
+      </Demo>
+
+      <Demo title="Atributos: formulario y cómo se arma la carta" note="AttributesForm (6 barras 1-99 con la media en vivo) y CardPanel (validaciones, forma por partidos y camino a Élite).">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <AttributesForm
+            mode="peer"
+            groupId="00000000-0000-4000-8000-000000000001"
+            playerId="00000000-0000-4000-8000-000000000002"
+            position="defender"
+            kind="field"
+            initial={[52, 38, 46, 48, 50, 55]}
+            backHref="#"
+          />
+          <CardPanel
+            card={{ overall: 50, tier: "bronze", elite: false, provisional: true, attributes: { kind: "field", values: [52, 38, 46, 48, 50, 55] }, source: "attributes" }}
+            validators={1}
+            hasSelf
+            updatedAt="2026-10-20T18:00:00Z"
+            formOverall={62}
+            mvps={3}
+            action={{ href: "#", label: "Validar a Francis", kind: "peer" }}
+          />
         </div>
       </Demo>
 
