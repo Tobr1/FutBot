@@ -1,5 +1,4 @@
 import "server-only";
-import { io } from "next/cache";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -26,11 +25,6 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   // Sin Supabase configurado no hay sesión posible: el login muestra cómo configurarlo.
   if (!isSupabaseConfigured) return null;
   const supabase = await createClient();
-  // getClaims compara el vencimiento del token con la hora actual (Date.now()).
-  // Con partialPrefetching el shell se arma con las cookies disponibles, así que
-  // io() avisa que lo que sigue es por request: en el prerender suspende (queda
-  // el fallback del <Suspense>) y en un request real resuelve al instante.
-  await io();
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims?.sub) return null;
   return { id: data.claims.sub, email: (data.claims.email as string | undefined) ?? null };
