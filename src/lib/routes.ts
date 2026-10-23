@@ -43,6 +43,8 @@ export const routes = {
   groupAudit: (slug: string) => `/g/${slug}/ajustes/auditoria`,
   groupTeamRules: (slug: string) => `/g/${slug}/ajustes/reglas`,
   claimPlayer: (slug: string) => `/g/${slug}/mi-ficha`,
+  /** Votaciones del grupo: abiertas, pendientes, votadas y cerradas. */
+  groupVotings: (slug: string) => `/g/${slug}/votaciones`,
   /** Quien abre un grupo sin ser miembro (o uno que no existe). */
   groupUnavailable: "/grupo-no-disponible",
 } as const;

@@ -104,13 +104,12 @@ export function StatsSection() {
         <p className="text-sm text-muted-foreground">Votación, calificaciones, rankings, evolución, historial y comparador con datos de ejemplo.</p>
       </header>
 
-      <Demo title="Jugador del partido" note="VotingForm: calificaciones y un único MVP (radiogroup, sin uno mismo). Se envían juntos.">
+      <Demo title="Votar paso a paso" note="VotingForm: un jugador por pantalla (1-10 sin valor marcado o 'No lo vi'), el MVP y un resumen antes de enviar. Con votos ya enviados arranca en el resumen.">
         <div className="max-w-2xl">
           <VotingForm
             groupId="00000000-0000-4000-8000-000000000001"
             matchId="00000000-0000-4000-8000-000000000002"
             saved={{}}
-            savedMvp="00000000-0000-4000-8000-0000000000b2"
             groups={[
               {
                 key: "teammates",

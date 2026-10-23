@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   UserRound,
   Users,
+  Vote,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -113,6 +114,14 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
         <section aria-labelledby="mas-grupo" className="space-y-1">
           <SectionHeader id="mas-grupo" title="Grupo" />
           <ListGroup>
+            <ListRow
+              href={routes.groupVotings(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={Vote} />}
+              title="Votaciones"
+              subtitle="Pendientes, votadas y cerradas"
+              chevron
+            />
             <ListRow
               href={routes.groupHistory(slug)}
               transitionTypes={FORWARD}

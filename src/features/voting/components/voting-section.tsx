@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Clock, IdCard, Lock, Star, Vote } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -32,6 +33,7 @@ export function OpenVotingCard({
   eligible,
   voteHref,
   me,
+  adminActions,
 }: {
   closesAt: string;
   nowMs: number;
@@ -39,6 +41,8 @@ export function OpenVotingCard({
   eligible: number;
   voteHref: string;
   me: MyVoteStatus;
+  /** Avisar por WhatsApp / cerrar antes de tiempo (solo admin). */
+  adminActions?: ReactNode;
 }) {
   const soon = closesSoon(closesAt, nowMs);
   return (
@@ -78,6 +82,7 @@ export function OpenVotingCard({
         </Button>
       )}
       {me.kind === "not-participant" && <p className="text-sm text-muted-foreground">Votan solo quienes jugaron el partido.</p>}
+      {adminActions}
 
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Lock className="size-3.5 shrink-0" aria-hidden="true" />

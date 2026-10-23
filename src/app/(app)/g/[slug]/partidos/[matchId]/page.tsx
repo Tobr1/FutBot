@@ -18,7 +18,7 @@ import { AwardFeed } from "@/features/awards/components/award-lists";
 import { getGroupAwards } from "@/features/awards/queries";
 import { canEditParticipants, canEditTeams, canRecordResult } from "@/domain/matches/status";
 import { teamForecast } from "@/domain/matches/team-generator";
-import { voteTargets, votingPhase } from "@/domain/voting/voting";
+import { timeLeftLabel, voteTargets, votingPhase } from "@/domain/voting/voting";
 import { getGroupContext } from "@/features/groups/queries";
 import { getGroupInvitationToken } from "@/features/invitations/queries";
 import { AttendanceCard } from "@/features/matches/components/attendance-card";
@@ -36,6 +36,7 @@ import {
   OpenVotingCard,
   type PublishedRating,
 } from "@/features/voting/components/voting-section";
+import { VotingAdminActions } from "@/features/voting/components/voting-admin-actions";
 import { finalizeVoting, getMyVotes, getVotingProgress } from "@/features/voting/queries";
 import { todayIso } from "@/lib/format";
 import { routes } from "@/lib/routes";
@@ -97,6 +98,23 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
         eligible={progress?.eligibleVoters ?? 0}
         voteHref={routes.matchVote(slug, loaded.id)}
         me={me}
+        adminActions={
+          ctx.isAdmin && (
+            <VotingAdminActions
+              matchId={loaded.id}
+              votePath={routes.matchVote(slug, loaded.id)}
+              message={{
+                groupName: ctx.group.name,
+                dayLabel,
+                scoreLine:
+                  loaded.teams.a.score !== null && loaded.teams.b.score !== null
+                    ? `${loaded.teams.a.name} ${loaded.teams.a.score}–${loaded.teams.b.score} ${loaded.teams.b.name}`
+                    : null,
+                timeLeft: timeLeftLabel(loaded.votingClosesAt!, nowMs),
+              }}
+            />
+          )
+        }
       />
     );
   } else if (phase === "closed") {

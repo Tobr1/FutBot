@@ -32,7 +32,7 @@ export function NAV_ITEMS(slug: string): GroupNavItem[] {
       href: routes.groupMatches(slug),
       label: "Partidos",
       icon: CalendarDays,
-      matches: [routes.groupMatches(slug), routes.groupHistory(slug)],
+      matches: [routes.groupMatches(slug), routes.groupHistory(slug), routes.groupVotings(slug)],
     },
     { key: "plantel", href: routes.groupPlayers(slug), label: "Plantel", icon: Users, matches: [routes.groupPlayers(slug)] },
     {

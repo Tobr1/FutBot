@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-057 · Votación paso a paso, cierre manual y lista de votaciones
+Fase 1 del kit de diseño de votaciones y cartas. La votación se sigue abriendo sola al cargar el resultado, con la ventana del grupo. El admin puede cerrarla antes con `close_match_voting` (migración `20261023001000`), que adelanta el cierre y elige el MVP en el momento con la misma regla que al vencer; la acción recalcula el historial de valoraciones. También puede avisar por WhatsApp con el link a votar. Votar pasa a ser un paso por jugador: escala 1–10 sin valor marcado (botones y no barra deslizable, porque una barra siempre arranca en algún número) o "No lo vi", que no es un voto y no cuenta en el promedio. Después vienen el MVP y un resumen editable antes de enviar; se manda todo junto con `submit_match_votes`. El borrador se guarda en el teléfono (localStorage) hasta enviar. `/g/[slug]/votaciones` agrupa "Te falta votar", "Ya votaste", "Abiertas" (donde no jugué) y "Cerradas", solo con cantidades y nunca con notas.
+
 ## D-056 · Escenas de fondo (imágenes conceptuales)
 Diez imágenes generadas por IA, sin texto ni personas reconocibles (`src/assets/escenas/`), decoran sin informar: alt vacío y nunca se presentan como fotos del grupo. Se usan con `next/image` (importación estática: tamaños por pantalla, WebP/AVIF y desenfoque mientras carga) a través de `SceneImage`, siempre con degradés oscuros que garantizan que el texto se lea: portada, cabecera del inicio del grupo (`GroupHero`), `PageHeader scene` en Partidos, Plantel, Rankings y Más, `EmptyState scene` en las pantallas vacías y la tarjeta de "Próximo partido" sin fecha. Las imágenes de cabecera se piden con prioridad (`loading="eager"`, `fetchPriority="high"`); el resto, diferidas. Quedan pendientes las texturas y cuatro fotos de detalle (tanda 2).
 

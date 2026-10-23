@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { RedirectType, redirect } from "next/navigation";
 import { toUserMessage } from "@/lib/errors";
-import { fail, type MutationResult } from "@/lib/mutation-result";
+import { syncSkillHistory } from "@/features/stats/queries";
+import { fail, type MutationResult, ok } from "@/lib/mutation-result";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
-import { submitRatingsSchema } from "./schemas";
+import { closeVotingSchema, submitRatingsSchema } from "./schemas";
 
 /**
  * Emite o actualiza (hasta el cierre) las calificaciones y el voto al MVP de
@@ -34,4 +35,24 @@ export async function submitRatingsAction(input: unknown): Promise<MutationResul
   revalidatePath("/g/[slug]", "layout");
   if (group) redirect(`${routes.match(group.slug, matchId)}?votos=1`, RedirectType.replace);
   return { ok: true, message: "¡Votos enviados!" };
+}
+
+/**
+ * Cierra la votación antes de tiempo (solo admin): se publican las
+ * calificaciones y se elige el MVP en el momento, como al vencer.
+ */
+export async function closeVotingAction(input: unknown): Promise<MutationResult> {
+  const parsed = closeVotingSchema.safeParse(input);
+  if (!parsed.success) return fail("Datos inválidos.");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("close_match_voting", { p_match_id: parsed.data.matchId });
+  if (error) return fail(toUserMessage(error));
+
+  // El MVP ya quedó elegido: la página del partido no va a recalcular el
+  // historial de valoraciones por su cuenta, así que se hace acá.
+  const { data: match } = await supabase.from("matches").select("group_id").eq("id", parsed.data.matchId).maybeSingle();
+  if (match) await syncSkillHistory(match.group_id);
+  revalidatePath("/g/[slug]", "layout");
+  return ok("Votación cerrada: ya se ven las calificaciones y el MVP.");
 }

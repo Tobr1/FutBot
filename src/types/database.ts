@@ -969,6 +969,12 @@ export type Database = {
         }
         Returns: string
       }
+      close_match_voting: {
+        Args: {
+          p_match_id: string
+        }
+        Returns: string
+      }
       create_group: {
         Args: {
           p_name: string
