@@ -1,6 +1,7 @@
 import { ChevronRight, MapPin, Star, Users } from "lucide-react";
 import Link from "next/link";
 import { useId } from "react";
+import { SceneImage } from "@/components/brand/scene";
 import { LinkPending } from "@/components/shared/link-pending";
 import { Badge } from "@/components/ui/badge";
 import { DateChip, Scoreline } from "@/features/matches/components/match-card";
@@ -41,6 +42,11 @@ export function NextMatchCard({
   if (!featured) {
     const content = (
       <>
+        {/* Cancha vacía de fondo, detrás del contenido (isolate + -z-10). */}
+        <span aria-hidden="true" className="absolute inset-0 -z-10">
+          <SceneImage scene="cancha" sizes="(min-width: 1024px) 640px, 100vw" className="opacity-40" />
+          <span className="absolute inset-0 bg-linear-to-r from-surface-1 via-surface-1/80 to-surface-1/30" />
+        </span>
         <div aria-hidden="true" className="flex shrink-0 items-center gap-2 opacity-70">
           <span className={SHIELD} />
           <span className="font-display text-sm font-bold tracking-wider text-muted-foreground">VS</span>
@@ -57,7 +63,7 @@ export function NextMatchCard({
         {isAdmin && <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />}
       </>
     );
-    const base = cn("panel flex items-center gap-4 rounded-xl px-4 py-3.5", className);
+    const base = cn("panel relative isolate flex items-center gap-4 overflow-hidden rounded-xl px-4 py-3.5", className);
     return isAdmin ? (
       <Link
         href={routes.newMatch(slug)}

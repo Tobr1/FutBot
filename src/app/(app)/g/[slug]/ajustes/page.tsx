@@ -51,7 +51,7 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
   return (
     <ScreenTransition>
       <div className="space-y-6">
-        <PageHeader title="Más" />
+        <PageHeader scene="mas" title="Más" />
 
         {isAdmin && (
           <Link

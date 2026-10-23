@@ -41,6 +41,7 @@ export default async function RankingsPage({ params, searchParams }: PageProps<"
     <ScreenTransition>
       <div className="space-y-6">
         <PageHeader
+          scene="rankings"
           title="Rankings"
           description={`${seasonLabel} · ${data.matchCount} ${data.matchCount === 1 ? "partido" : "partidos"}`}
           actions={
@@ -82,6 +83,7 @@ export default async function RankingsPage({ params, searchParams }: PageProps<"
             size="lg"
             icon={Trophy}
             tone="gold"
+            scene="luces"
             headingLevel="h2"
             title="Sin partidos jugados"
             description={

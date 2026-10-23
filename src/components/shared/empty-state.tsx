@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { type SceneKey, SceneImage } from "@/components/brand/scene";
 import { cn } from "@/lib/utils";
 
 type Tone = "neutral" | "primary" | "gold";
@@ -19,6 +20,8 @@ const GLOW: Record<Tone, string> = {
 /**
  * Estado vacío. `md`/`lg` es un bloque centrado con ícono; `sm` es una fila
  * compacta (ícono, texto y acción a la derecha) para secciones secundarias.
+ * `scene` (solo md/lg) suma una imagen de fondo arriba que se funde con el
+ * panel, sin tapar el texto.
  */
 export function EmptyState({
   icon: Icon,
@@ -30,6 +33,7 @@ export function EmptyState({
   tone = "primary",
   headingLevel = "h3",
   art,
+  scene,
 }: {
   icon?: LucideIcon;
   title: string;
@@ -41,6 +45,8 @@ export function EmptyState({
   headingLevel?: "h1" | "h2" | "h3";
   /** Ilustración propia; reemplaza al ícono. */
   art?: ReactNode;
+  /** Imagen de fondo decorativa (md/lg). */
+  scene?: SceneKey;
 }) {
   const Heading = headingLevel;
 
@@ -68,9 +74,20 @@ export function EmptyState({
         "panel flex flex-col items-center gap-4 rounded-2xl px-6 text-center",
         large ? "py-14 lg:py-20" : "py-10 lg:py-14",
         GLOW[tone],
+        // Con escena: los hijos se apilan sobre la imagen y hay más aire arriba.
+        scene && "relative overflow-hidden *:relative",
+        scene && (large ? "pt-28 lg:pt-36" : "pt-24 lg:pt-28"),
         className,
       )}
     >
+      {scene && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute! inset-x-0 top-0 h-44 [mask-image:linear-gradient(to_bottom,black_30%,transparent)] lg:h-56"
+        >
+          <SceneImage scene={scene} sizes="(min-width: 1024px) 768px, 100vw" className="opacity-60" />
+        </div>
+      )}
       {art ??
         (Icon && (
           <span

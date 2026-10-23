@@ -24,6 +24,7 @@ export default async function PlayersPage({ params }: PageProps<"/g/[slug]/jugad
       <div>
         <div className="space-y-6 lg:space-y-8">
           <PageHeader
+            scene="plantel"
             title="Plantel"
             description={
               players.length === 0 ? "Todavía sin jugadores" : `${activeCount} ${activeCount === 1 ? "activo" : "activos"}`
@@ -44,6 +45,7 @@ export default async function PlayersPage({ params }: PageProps<"/g/[slug]/jugad
             <EmptyState
               size="lg"
               icon={Users}
+              scene="mas"
               headingLevel="h2"
               title="Todavía no hay jugadores"
               description={

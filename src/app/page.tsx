@@ -2,6 +2,7 @@ import { ArrowRight, BarChart3, ClipboardPaste, Scale, ShieldCheck, Trophy, Vote
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
+import { SceneImage } from "@/components/brand/scene";
 import { PlayerCard, type PlayerCardData } from "@/components/shared/player-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -80,7 +81,16 @@ export default function LandingPage() {
       </header>
 
       <main id="main" tabIndex={-1} className="outline-none">
-        <section className="mx-auto grid max-w-6xl items-center gap-6 px-4 pt-2 pb-14 sm:gap-12 sm:pt-10 sm:pb-20 lg:grid-cols-[1.1fr_1fr] lg:pt-20">
+        <section className="relative isolate">
+          {/* Escena de fondo (pelota de noche) que se funde con la página. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] [mask-image:linear-gradient(to_bottom,black_40%,transparent)] sm:h-[640px]"
+          >
+            <SceneImage scene="hero-fulbot" sizes="100vw" eager className="opacity-45" />
+            <span className="absolute inset-0 bg-linear-to-r from-background/85 via-background/40 to-background/10 lg:from-background/90" />
+          </div>
+        <div className="mx-auto grid max-w-6xl items-center gap-6 px-4 pt-2 pb-14 sm:gap-12 sm:pt-10 sm:pb-20 lg:grid-cols-[1.1fr_1fr] lg:pt-20">
           <div className="space-y-5 sm:space-y-7">
             <p className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wider text-primary uppercase">
               Fútbol amateur con datos
@@ -123,6 +133,7 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+        </div>
         </section>
 
         <section className="border-t border-hairline bg-surface-1/40" aria-labelledby="features-title">

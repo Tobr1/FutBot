@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-056 · Escenas de fondo (imágenes conceptuales)
+Diez imágenes generadas por IA, sin texto ni personas reconocibles (`src/assets/escenas/`), decoran sin informar: alt vacío y nunca se presentan como fotos del grupo. Se usan con `next/image` (importación estática: tamaños por pantalla, WebP/AVIF y desenfoque mientras carga) a través de `SceneImage`, siempre con degradés oscuros que garantizan que el texto se lea: portada, cabecera del inicio del grupo (`GroupHero`), `PageHeader scene` en Partidos, Plantel, Rankings y Más, `EmptyState scene` en las pantallas vacías y la tarjeta de "Próximo partido" sin fecha. Las imágenes de cabecera se piden con prioridad (`loading="eager"`, `fetchPriority="high"`); el resto, diferidas. Quedan pendientes las texturas y cuatro fotos de detalle (tanda 2).
+
 ## D-055 · "Reenviar mail" de confirmación
 Con Gmail como SMTP, algunos mails de confirmación caen en spam o no llegan aunque Supabase los registre como enviados. Después de registrarse, la pantalla "Revisá tu email" ofrece "Reenviar mail" (con cuenta regresiva de 60 s, el intervalo mínimo de Supabase por cuenta) y un acceso para corregir el email; al ingresar sin haber confirmado, el error `email_not_confirmed` muestra el mismo botón. La acción (`auth.resend`, tipo signup) responde igual exista o no la cuenta, para no revelar cuentas; solo informa el límite de envíos.
 
