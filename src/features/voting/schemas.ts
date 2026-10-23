@@ -21,4 +21,6 @@ export const submitRatingsSchema = z.object({
   mvpPlayerId: z.uuid().nullable().default(null),
 }).refine((v) => v.ratings.length > 0 || v.mvpPlayerId !== null, "Calificá al menos a un jugador o elegí al MVP.");
 
+export const closeVotingSchema = z.object({ matchId: z.uuid() });
+
 export type SubmitRatingsInput = z.infer<typeof submitRatingsSchema>;

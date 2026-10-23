@@ -447,3 +447,36 @@ describe("voto al MVP", () => {
     expect(await finalize(s, admin)).toBeNull();
   });
 });
+
+describe("cerrar la votación a mano", () => {
+  it("el admin la cierra antes de tiempo y se elige el MVP en el momento", async () => {
+    const s = await setupFinishedMatch();
+    const [admin, manu, vece, paramo, tadeo] = s.voters;
+    for (const voter of [manu, paramo, tadeo]) {
+      await t.rpc(voter.userId, "submit_match_votes", { p_match_id: s.matchId, p_ratings: [], p_mvp_player_id: vece.playerId });
+    }
+    const [row] = await t.rpc<{ close_match_voting: string | null }>(admin.userId, "close_match_voting", { p_match_id: s.matchId });
+    expect(row.close_match_voting).toBe(vece.playerId);
+
+    const [match] = await t.sql<{ open: boolean; mvp_source: string }>(
+      "select voting_closes_at > now() as open, mvp_source from public.matches where id = $1",
+      [s.matchId],
+    );
+    expect(match.open).toBe(false);
+    expect(match.mvp_source).toBe("votes");
+    await expectDbError(vote(s, manu, [[vece, 8]]), "voting_closed");
+  });
+
+  it("un jugador no puede cerrarla", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu] = s.voters;
+    await expectDbError(t.rpc(manu.userId, "close_match_voting", { p_match_id: s.matchId }), "match_not_found");
+  });
+
+  it("no se cierra dos veces", async () => {
+    const s = await setupFinishedMatch();
+    const [admin] = s.voters;
+    await closeVoting(s);
+    await expectDbError(t.rpc(admin.userId, "close_match_voting", { p_match_id: s.matchId }), "voting_closed");
+  });
+});

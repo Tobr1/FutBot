@@ -1,4 +1,4 @@
-import { CalendarDays, CalendarPlus, ChevronRight, History, Plus } from "lucide-react";
+import { CalendarDays, CalendarPlus, ChevronRight, History, Plus, Vote } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -74,14 +74,22 @@ export default async function MatchesPage({ params }: PageProps<"/g/[slug]/parti
                 : `${upcoming.length} ${upcoming.length === 1 ? "próximo" : "próximos"} · ${pastTotal} ${pastTotal === 1 ? "jugado" : "jugados"}`
             }
             actions={
-              ctx.isAdmin && (
-                <Button asChild className="hidden lg:inline-flex">
-                  <Link href={routes.newMatch(slug)} transitionTypes={["nav-forward"]}>
-                    <Plus aria-hidden="true" />
-                    Nuevo partido
+              <>
+                <Button asChild variant="secondary" size="sm" className="max-sm:size-11 max-sm:px-0">
+                  <Link href={routes.groupVotings(slug)} transitionTypes={["nav-forward"]}>
+                    <Vote aria-hidden="true" />
+                    <span className="max-sm:sr-only">Votaciones</span>
                   </Link>
                 </Button>
-              )
+                {ctx.isAdmin && (
+                  <Button asChild className="hidden lg:inline-flex">
+                    <Link href={routes.newMatch(slug)} transitionTypes={["nav-forward"]}>
+                      <Plus aria-hidden="true" />
+                      Nuevo partido
+                    </Link>
+                  </Button>
+                )}
+              </>
             }
           />
 
