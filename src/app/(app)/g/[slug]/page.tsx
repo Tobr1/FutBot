@@ -171,6 +171,7 @@ export default async function GroupHomePage({ params }: PageProps<"/g/[slug]">) 
               <EmptyState
                 size="md"
                 icon={Users}
+                scene="inicio"
                 title="Plantel vacío"
                 description={ctx.isAdmin ? "Cargá a los jugadores del grupo para empezar." : "Un admin todavía no cargó jugadores."}
                 action={

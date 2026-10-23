@@ -35,6 +35,7 @@ import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { POSITION_LABELS, POSITIONS, type Position } from "@/domain/players/positions";
 import { ResendConfirmationButton } from "@/features/auth/components/resend-confirmation-button";
+import { GroupHero } from "@/features/groups/components/group-hero";
 import { ShareInvite } from "@/features/invitations/components/share-invite";
 import { InvitePlayerCard } from "@/features/players/components/invite-player-card";
 import { effectiveness } from "@/domain/players/stats";
@@ -185,6 +186,22 @@ export function SharedSection() {
             url="https://fut-bot-seven.vercel.app/invitacion/e6eca6ea8efa46b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5"
             message="Sumate a &quot;Fútbol de los changos&quot; en FulBot:"
           />
+        </div>
+      </Demo>
+      <Demo title="Escenas" note="Imágenes conceptuales (IA, sin texto) de fondo: GroupHero, PageHeader con scene y EmptyState con scene. El texto va siempre sobre degradés oscuros.">
+        <div className="grid gap-6">
+          <GroupHero
+            group={{ name: "Fútbol de los changos", description: "Los jueves a las 21 en la canchita.", default_players_per_team: 5 }}
+            seasonName="Temporada 2026"
+            activePlayers={14}
+            members={9}
+            isAdmin
+            slug="demo"
+          />
+          <PageHeader scene="hero-partidos" title="Partidos" description="2 próximos · 18 jugados" id="demo-escena-partidos" />
+          <PageHeader scene="rankings" title="Rankings" description="Temporada 2026 · 18 partidos" id="demo-escena-rankings" />
+          <EmptyState size="lg" icon={CalendarDays} scene="partidos" headingLevel="h2" title="Todavía no hay partidos" description="Creá el primero: elegí fecha y cancha, y pegá la lista de WhatsApp para convocar." />
+          <EmptyState size="md" icon={Users} scene="inicio" title="Plantel vacío" description="Cargá a los jugadores del grupo para empezar." />
         </div>
       </Demo>
       <Demo title="ResendConfirmationButton" note="Reenviar el mail de confirmación: recién enviado arranca con la cuenta regresiva de 60 s (límite de Supabase).">

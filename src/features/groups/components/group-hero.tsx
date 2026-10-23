@@ -1,5 +1,6 @@
 import { Shield, UserPlus } from "lucide-react";
 import Link from "next/link";
+import { SceneImage } from "@/components/brand/scene";
 import { GroupCrest } from "@/components/shared/group-crest";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,8 @@ type HeroGroup = Pick<Tables<"groups">, "name" | "description" | "default_player
 /**
  * Banda superior del inicio del grupo: escudo, chips, nombre y tres números.
  * En mobile va a todo el ancho (sangra el padding del <main>); en escritorio
- * es un bloque redondeado dentro de la columna principal.
+ * es un bloque redondeado dentro de la columna principal. Va sobre una escena
+ * (arco y cancha de noche) oscurecida para que los textos se lean.
  */
 export function GroupHero({
   group,
@@ -40,8 +42,11 @@ export function GroupHero({
   return (
     <section
       aria-labelledby="page-title"
-      className="pitch-lines relative -mx-4 -mt-4 overflow-hidden px-4 pt-5 pb-5 lg:mx-0 lg:mt-0 lg:rounded-2xl lg:ring-1 lg:ring-hairline"
+      className="pitch-lines relative -mx-4 -mt-4 overflow-hidden px-4 pt-16 pb-5 lg:mx-0 lg:mt-0 lg:rounded-2xl lg:px-6 lg:pt-24 lg:pb-6 lg:ring-1 lg:ring-hairline"
     >
+      <SceneImage scene="hero-grupo" sizes="(min-width: 1024px) 720px, 100vw" eager />
+      <span aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-background via-background/70 to-background/10" />
+      <span aria-hidden="true" className="absolute inset-0 bg-linear-to-r from-background/60 to-transparent" />
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_0%_0%,oklch(0.66_0.19_256/22%),transparent_60%)]"

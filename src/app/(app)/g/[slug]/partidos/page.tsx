@@ -66,6 +66,7 @@ export default async function MatchesPage({ params }: PageProps<"/g/[slug]/parti
       <div>
         <div className="space-y-6 lg:space-y-8">
           <PageHeader
+            scene="hero-partidos"
             title="Partidos"
             description={
               total === 0
@@ -88,6 +89,7 @@ export default async function MatchesPage({ params }: PageProps<"/g/[slug]/parti
             <EmptyState
               size="lg"
               icon={CalendarDays}
+              scene="partidos"
               headingLevel="h2"
               title="Todavía no hay partidos"
               description={
