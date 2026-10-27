@@ -50,6 +50,12 @@ export interface ResultDraft {
   /** Asistencias por jugador. */
   assists: Record<string, number>;
   ownGoals: OwnGoal[];
+  /**
+   * Goles que el admin marcó como "sin autor", por equipo. Si está, el
+   * resultado cierra solo cuando goles asignados + sin autor = marcador.
+   * No se guardan como eventos: son la diferencia con el marcador (D-005).
+   */
+  unknown?: Record<Side, number>;
 }
 
 export type SideOf = (playerId: string) => Side | null;
@@ -64,6 +70,10 @@ export interface SideCheck {
   credited: number;
   /** Goles del marcador sin autor asignado (nunca negativo). */
   unassigned: number;
+  /** Goles marcados como "sin autor" (0 si el borrador no los lleva). */
+  unknown: number;
+  /** Marcador menos asignados menos sin autor: > 0 faltan, < 0 sobran "sin autor". */
+  unaccounted: number;
   assists: number;
   goalsExceedScore: boolean;
   assistsExceedGoals: boolean;
@@ -72,6 +82,7 @@ export interface SideCheck {
 export type ResultIssue =
   | { kind: "goals_exceed_score"; side: Side }
   | { kind: "assists_exceed_goals"; side: Side }
+  | { kind: "goals_unaccounted"; side: Side; missing: number }
   | { kind: "player_not_in_match"; playerId: string }
   | { kind: "own_goal_wrong_team"; playerId: string };
 
@@ -129,17 +140,22 @@ export function checkResult(draft: ResultDraft, sideOf: SideOf): ResultCheck {
   const build = (side: Side): SideCheck => {
     const score = side === "a" ? draft.scoreA : draft.scoreB;
     const credited = playerGoals[side] + ownGoalsFor[side];
+    const unknown = Math.max(0, draft.unknown?.[side] ?? 0);
+    const unaccounted = draft.unknown ? score - credited - unknown : 0;
     const check: SideCheck = {
       score,
       playerGoals: playerGoals[side],
       ownGoalsFor: ownGoalsFor[side],
       credited,
       unassigned: Math.max(0, score - credited),
+      unknown,
+      unaccounted,
       assists: assists[side],
       goalsExceedScore: credited > score,
       assistsExceedGoals: assists[side] > playerGoals[side],
     };
     if (check.goalsExceedScore) issues.push({ kind: "goals_exceed_score", side });
+    else if (unaccounted !== 0) issues.push({ kind: "goals_unaccounted", side, missing: unaccounted });
     if (check.assistsExceedGoals) issues.push({ kind: "assists_exceed_goals", side });
     return check;
   };
@@ -185,7 +201,9 @@ export interface StoredEvent {
 /** Eventos guardados → borrador editable (para corregir un resultado). */
 export function eventsToDraft(scoreA: number | null, scoreB: number | null, events: readonly StoredEvent[]): ResultDraft {
   const draft: ResultDraft = { scoreA: scoreA ?? 0, scoreB: scoreB ?? 0, goals: {}, assists: {}, ownGoals: [] };
+  const credited: Record<Side, number> = { a: 0, b: 0 };
   for (const event of events) {
+    if (event.type !== "assist") credited[event.side] += 1;
     if (event.type === "own_goal") {
       draft.ownGoals.push({ beneficiary: event.side, playerId: event.playerId });
     } else if (event.playerId) {
@@ -193,7 +211,14 @@ export function eventsToDraft(scoreA: number | null, scoreB: number | null, even
       target[event.playerId] = (target[event.playerId] ?? 0) + 1;
     }
   }
+  // Lo que el marcador tiene de más respecto de los eventos son goles sin autor.
+  draft.unknown = { a: Math.max(0, draft.scoreA - credited.a), b: Math.max(0, draft.scoreB - credited.b) };
   return draft;
+}
+
+/** Completa como "sin autor" los goles que faltan asignar en cada equipo. */
+export function fillUnknown(draft: ResultDraft, check: ResultCheck): ResultDraft {
+  return { ...draft, unknown: { a: check.a.unassigned, b: check.b.unassigned } };
 }
 
 export interface PlayerTally {

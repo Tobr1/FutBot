@@ -4,6 +4,7 @@ import {
   clampScore,
   draftToEvents,
   eventsToDraft,
+  fillUnknown,
   outcome,
   ownGoalBeneficiary,
   pruneDraft,
@@ -150,11 +151,17 @@ describe("eventos", () => {
         { beneficiary: "a", playerId: "dani" },
         { beneficiary: "b", playerId: null },
       ],
+      unknown: { a: 0, b: 0 },
     });
   });
 
+  it("lo que el marcador tiene de más vuelve como goles sin autor", () => {
+    const back = eventsToDraft(4, 2, [{ type: "goal", playerId: "ana", side: "a" }]);
+    expect(back.unknown).toEqual({ a: 3, b: 2 });
+  });
+
   it("sin marcador previo arranca en 0–0", () => {
-    expect(eventsToDraft(null, null, [])).toMatchObject({ scoreA: 0, scoreB: 0 });
+    expect(eventsToDraft(null, null, [])).toMatchObject({ scoreA: 0, scoreB: 0, unknown: { a: 0, b: 0 } });
   });
 });
 
@@ -208,5 +215,37 @@ describe("pruneDraft", () => {
       { beneficiary: "a", playerId: "dani" },
       { beneficiary: "b", playerId: null },
     ]);
+  });
+});
+
+describe("goles sin autor (control al cerrar el resultado)", () => {
+  const sideOf = (id: string) => (["ana", "beto", "caro"].includes(id) ? "a" : ["dani", "eli"].includes(id) ? "b" : null);
+
+  it("cierra cuando asignados + sin autor = marcador", () => {
+    const check = checkResult(draft({ scoreA: 3, scoreB: 1, goals: { ana: 2, dani: 1 }, unknown: { a: 1, b: 0 } }), sideOf);
+    expect(check.valid).toBe(true);
+    expect(check.a).toMatchObject({ credited: 2, unknown: 1, unaccounted: 0 });
+  });
+
+  it("si faltan goles por asignar no cierra", () => {
+    const check = checkResult(draft({ scoreA: 3, scoreB: 1, goals: { ana: 1, dani: 1 }, unknown: { a: 0, b: 0 } }), sideOf);
+    expect(check.valid).toBe(false);
+    expect(check.issues).toContainEqual({ kind: "goals_unaccounted", side: "a", missing: 2 });
+  });
+
+  it("si sobran goles sin autor tampoco", () => {
+    const check = checkResult(draft({ scoreA: 1, scoreB: 0, goals: { ana: 1 }, unknown: { a: 1, b: 0 } }), sideOf);
+    expect(check.issues).toContainEqual({ kind: "goals_unaccounted", side: "a", missing: -1 });
+  });
+
+  it("sin el dato de sin autor se mantiene la regla vieja (asignados ≤ marcador)", () => {
+    expect(checkResult(draft({ scoreA: 3, scoreB: 0, goals: { ana: 1 } }), sideOf).valid).toBe(true);
+  });
+
+  it("fillUnknown completa lo que falta en cada equipo", () => {
+    const d = draft({ scoreA: 3, scoreB: 2, goals: { ana: 1, dani: 2 }, unknown: { a: 0, b: 0 } });
+    const filled = fillUnknown(d, checkResult(d, sideOf));
+    expect(filled.unknown).toEqual({ a: 2, b: 0 });
+    expect(checkResult(filled, sideOf).valid).toBe(true);
   });
 });
