@@ -11,6 +11,7 @@ import { MatchCard } from "@/features/matches/components/match-card";
 import { ResultSummary, TeamColumns } from "@/features/matches/components/match-detail";
 import { MatchCardSkeleton } from "@/features/matches/components/match-skeletons";
 import { MatchStatusBadge } from "@/features/matches/components/match-status-badge";
+import { ResultEditor } from "@/features/matches/components/result-editor";
 import { Stepper } from "@/features/matches/components/stepper";
 import { TeamBuilder } from "@/features/matches/components/team-builder";
 import { WhatsAppCallButton } from "@/features/matches/components/whatsapp-call-button";
@@ -316,6 +317,22 @@ export function MatchesSection() {
               confirmed: ["Brito", "Manu", "Vece"],
               reserves: [],
               capacity: 10,
+            }}
+          />
+        </div>
+      </Demo>
+      <Demo title="Cargar resultado" note="ResultEditor: cada gol del marcador tiene que estar asignado o marcado sin autor; si no, no se guarda. Acá Azul tiene 3 y solo hay 2 asignados.">
+        <div className="max-w-2xl">
+          <ResultEditor
+            groupId="00000000-0000-4000-8000-000000000001"
+            matchId="00000000-0000-4000-8000-000000000002"
+            isCorrection={false}
+            initialMvp={null}
+            initialNotes=""
+            initial={{ scoreA: 3, scoreB: 1, goals: { r1: 2, r4: 1 }, assists: {}, ownGoals: [], unknown: { a: 0, b: 0 } }}
+            teams={{
+              a: { name: "Azul", members: [{ id: "r1", nickname: "Brito", avatarUrl: null }, { id: "r2", nickname: "Manu", avatarUrl: null }] },
+              b: { name: "Rojo", members: [{ id: "r3", nickname: "Vece", avatarUrl: null }, { id: "r4", nickname: "Paramo", avatarUrl: null }] },
             }}
           />
         </div>

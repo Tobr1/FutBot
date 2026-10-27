@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, History, Loader2, Plus, Star, X } from "lucide-react";
+import { AlertTriangle, CircleCheck, CircleHelp, History, Loader2, Plus, Star, X } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { StickyActionBar } from "@/components/layout/sticky-action-bar";
@@ -13,6 +13,7 @@ import {
   checkResult,
   clampScore,
   draftToEvents,
+  fillUnknown,
   otherSide,
   type ResultCheck,
   type ResultDraft,
@@ -43,6 +44,12 @@ export function resultMessages(check: ResultCheck, teams: Record<Side, ResultTea
     const c = check[side];
     if (c.goalsExceedScore) {
       messages.push(`${teams[side].name}: hay ${c.credited} goles asignados y el marcador dice ${c.score}.`);
+    } else if (c.unaccounted > 0) {
+      messages.push(
+        `${teams[side].name}: ${c.unaccounted === 1 ? "falta asignar 1 gol" : `faltan asignar ${c.unaccounted} goles`}. Ponele autor o sumalo como sin autor.`,
+      );
+    } else if (c.unaccounted < 0) {
+      messages.push(`${teams[side].name}: hay ${-c.unaccounted} sin autor de más para el marcador.`);
     }
     if (c.assistsExceedGoals) {
       messages.push(`${teams[side].name}: hay ${c.assists} asistencias y solo ${c.playerGoals} goles de sus jugadores.`);
@@ -56,9 +63,10 @@ export function resultMessages(check: ResultCheck, teams: Record<Side, ResultTea
 
 /**
  * Carga o corrección del resultado: marcador con steppers grandes, goles y
- * asistencias por jugador, goles en contra, destacado y notas. Valida en
- * vivo lo mismo que la base (goles asignados ≤ marcador, asistencias ≤
- * goles por equipo); los goles sin autor se permiten.
+ * asistencias por jugador, goles en contra, goles sin autor, destacado y
+ * notas. Valida en vivo lo mismo que la base (asignados ≤ marcador,
+ * asistencias ≤ goles) y además que cada gol del marcador esté contado:
+ * asignados + sin autor = marcador, o no se puede guardar.
  */
 export function ResultEditor({
   groupId,
@@ -77,7 +85,7 @@ export function ResultEditor({
   initialNotes: string;
   isCorrection: boolean;
 }) {
-  const [draft, setDraft] = useState<ResultDraft>(initial);
+  const [draft, setDraft] = useState<ResultDraft>(() => ({ ...initial, unknown: initial.unknown ?? { a: 0, b: 0 } }));
   const [mvp, setMvp] = useState<string | null>(initialMvp);
   const [notes, setNotes] = useState(initialNotes);
   const [mvpOpen, setMvpOpen] = useState(false);
@@ -98,6 +106,9 @@ export function ResultEditor({
 
   const setScore = (side: Side, value: number) =>
     setDraft((d) => (side === "a" ? { ...d, scoreA: clampScore(value) } : { ...d, scoreB: clampScore(value) }));
+  const setUnknown = (side: Side, value: number) =>
+    setDraft((d) => ({ ...d, unknown: { ...(d.unknown ?? { a: 0, b: 0 }), [side]: Math.max(0, value) } }));
+  const canFillUnknown = (["a", "b"] as const).some((side) => check[side].unaccounted > 0) && !check.issues.some((i) => i.kind === "goals_exceed_score");
   const setCount = (kind: "goals" | "assists", playerId: string, value: number) =>
     setDraft((d) => ({ ...d, [kind]: { ...d[kind], [playerId]: Math.max(0, value) } }));
 
@@ -137,18 +148,7 @@ export function ResultEditor({
                 value={side === "a" ? draft.scoreA : draft.scoreB}
                 onChange={(value) => setScore(side, value)}
               />
-              <p
-                className={cn(
-                  "text-xs tabular",
-                  check[side].goalsExceedScore ? "font-semibold text-destructive" : "text-muted-foreground",
-                )}
-              >
-                {check[side].goalsExceedScore
-                  ? `${check[side].credited} asignados`
-                  : check[side].unassigned > 0
-                    ? `${check[side].unassigned} sin autor`
-                    : "Todos con autor"}
-              </p>
+              <GoalCount check={check[side]} />
             </div>
           ))}
           <span aria-hidden="true" className="col-start-2 row-start-1 self-center pt-6 font-display text-3xl font-extrabold text-muted-foreground">
@@ -234,6 +234,27 @@ export function ResultEditor({
                   </button>
                 </li>
               ))}
+              <li className="flex min-h-14 items-center gap-3 py-1.5 pr-4 pl-4 sm:pr-4">
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <CircleHelp className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold">Sin autor</span>
+                    <span className="block text-xs text-muted-foreground">Goles que nadie recuerda quién hizo</span>
+                  </span>
+                </span>
+                {/* En escritorio queda bajo la columna de goles (la de asistencias queda vacía). */}
+                <div className="flex shrink-0 gap-3">
+                  <div className="flex justify-center sm:w-[7.5rem]">
+                    <Stepper
+                      label={`goles sin autor de ${teams[side].name}`}
+                      value={draft.unknown?.[side] ?? 0}
+                      max={side === "a" ? draft.scoreA : draft.scoreB}
+                      onChange={(value) => setUnknown(side, value)}
+                    />
+                  </div>
+                  <span aria-hidden="true" className="hidden sm:block sm:w-[7.5rem]" />
+                </div>
+              </li>
             </ul>
             <button
               type="button"
@@ -340,6 +361,12 @@ export function ResultEditor({
             ))}
           </div>
         )}
+        {canFillUnknown && (
+          <Button type="button" variant="secondary" size="lg" className="w-full lg:w-auto" onClick={() => setDraft((d) => fillUnknown(d, check))}>
+            <CircleHelp aria-hidden="true" />
+            Marcar los que faltan como sin autor
+          </Button>
+        )}
         <Button
           type="button"
           size="lg"
@@ -353,5 +380,28 @@ export function ResultEditor({
         </Button>
       </StickyActionBar>
     </div>
+  );
+}
+
+/** "5 de 5 ✓ · 1 sin autor", "Faltan 2" o "3 asignados" (de más), bajo el marcador de cada equipo. */
+function GoalCount({ check }: { check: ResultCheck["a"] }) {
+  if (check.goalsExceedScore) {
+    return <p className="text-xs font-semibold text-destructive tabular">{check.credited} asignados</p>;
+  }
+  if (check.unaccounted > 0) {
+    return (
+      <p className="text-xs font-semibold text-warning tabular">
+        {check.unaccounted === 1 ? "Falta 1" : `Faltan ${check.unaccounted}`} de {check.score}
+      </p>
+    );
+  }
+  if (check.unaccounted < 0) {
+    return <p className="text-xs font-semibold text-destructive tabular">{-check.unaccounted} sin autor de más</p>;
+  }
+  return (
+    <p className="inline-flex items-center gap-1 text-xs text-success tabular">
+      <CircleCheck className="size-3.5" aria-hidden="true" />
+      {check.score === 0 ? "Sin goles" : `${check.score} de ${check.score}${check.unknown > 0 ? ` · ${check.unknown} sin autor` : ""}`}
+    </p>
   );
 }

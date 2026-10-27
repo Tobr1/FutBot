@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-059 · Cada gol del marcador tiene que estar contado
+Fase 3 del kit de diseño. Al cargar o corregir un resultado, cada equipo muestra "3 de 3 · 1 sin autor", "Falta 1 de 3" o "2 sin autor de más". Solo se puede guardar cuando goles de jugadores + goles en contra a favor + **sin autor** = marcador. "Sin autor" es un contador explícito por equipo, con un atajo para "Marcar los que faltan como sin autor". Al corregir, arranca con la diferencia entre el marcador y los eventos guardados. No hay cambios en la base: los goles sin autor siguen sin guardarse como eventos (D-005) y la RPC mantiene su regla de "asignados ≤ marcador". El control nuevo es de la pantalla, para que el admin no deje goles sin revisar. Las asistencias se mantienen.
+
 ## D-058 · Cartas con seis atributos (autoevaluación + compañeros)
 Fase 2 del kit de diseño. La media de la carta sale de seis atributos de 1 a 99: RIT, TIR, PAS, REG, DEF y FIS para jugadores de campo, y estirada, manos, saque, reflejos, velocidad y posicionamiento para arqueros. El tipo sale de la posición principal. Cada jugador con ficha se autoevalúa y cada compañero puede validarlo (una validación activa por par, editable). Con 5 o más validaciones se descarta la más alta y la más baja de cada atributo. Los valores individuales solo los ve quien los cargó, y `player_attribute_revisions` guarda el historial sin acceso desde la app.
 
