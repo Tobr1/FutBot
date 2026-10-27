@@ -21,6 +21,8 @@ import { teamForecast } from "@/domain/matches/team-generator";
 import { timeLeftLabel, voteTargets, votingPhase } from "@/domain/voting/voting";
 import { getGroupContext } from "@/features/groups/queries";
 import { getGroupInvitationToken } from "@/features/invitations/queries";
+import { PredictionCard } from "@/features/predictions/components/prediction-card";
+import { getMatchPredictions } from "@/features/predictions/queries";
 import { AttendanceCard } from "@/features/matches/components/attendance-card";
 import { MatchAdminMenu } from "@/features/matches/components/match-admin-menu";
 import { MatchHero, ParticipantList, ResultSummary, TeamColumns } from "@/features/matches/components/match-detail";
@@ -148,6 +150,13 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
   const attendanceOpen = canChangeAttendance(match.status, match.scheduledAt, nowMs);
   // Link del grupo para el mensaje de WhatsApp (los que todavía no entraron).
   const inviteToken = attendanceOpen && ctx.isAdmin ? await getGroupInvitationToken(ctx.group.id, now) : null;
+  // Pronósticos: abiertos con los equipos armados y antes del inicio; desde el inicio se ven todos.
+  const predictionPhase = match.status === "cancelled" ? null : attendanceOpen ? (match.teamsReady ? "open" : "waiting") : "locked";
+  const predictions = predictionPhase ? await getMatchPredictions(match.id, ctx.userId, predictionPhase === "locked") : null;
+  const finalScore =
+    match.status === "finished" && match.teams.a.score !== null && match.teams.b.score !== null
+      ? { a: match.teams.a.score, b: match.teams.b.score }
+      : null;
   // Pronóstico con la valoración actual: solo con equipos armados y antes de jugarse.
   const forecast =
     match.teamsReady && (match.status === "scheduled" || match.status === "in_progress")
@@ -345,6 +354,20 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
             </Button>
           )}
         </section>
+
+        {predictionPhase && predictions && (
+          <PredictionCard
+            matchId={match.id}
+            teams={{ a: match.teams.a.name, b: match.teams.b.name }}
+            mine={predictions.mine}
+            count={predictions.count}
+            phase={predictionPhase}
+            entries={predictions.entries}
+            result={finalScore}
+            myProfileId={ctx.userId}
+            standingsHref={routes.groupPredictions(slug)}
+          />
+        )}
 
         <section aria-labelledby="convocados" className="space-y-1">
           <div className="flex items-center justify-between gap-3">

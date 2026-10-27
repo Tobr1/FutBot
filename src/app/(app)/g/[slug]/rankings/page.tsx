@@ -1,4 +1,4 @@
-import { Award, ChartLine, History, Trophy } from "lucide-react";
+import { Award, ChartLine, History, Target, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -46,6 +46,12 @@ export default async function RankingsPage({ params, searchParams }: PageProps<"
           description={`${seasonLabel} · ${data.matchCount} ${data.matchCount === 1 ? "partido" : "partidos"}`}
           actions={
             <>
+              <Button asChild variant="ghost" size="sm" className="max-sm:size-11 max-sm:px-0">
+                <Link href={routes.groupPredictions(slug)} transitionTypes={["nav-forward"]}>
+                  <Target aria-hidden="true" />
+                  <span className="max-sm:sr-only">Pronósticos</span>
+                </Link>
+              </Button>
               <Button asChild variant="ghost" size="sm" className="max-sm:size-11 max-sm:px-0">
                 <Link href={routes.groupAwards(slug)} transitionTypes={["nav-forward"]}>
                   <Award aria-hidden="true" />
