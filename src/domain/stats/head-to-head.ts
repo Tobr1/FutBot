@@ -109,7 +109,6 @@ export function compareRows(a: ComparableStats, b: ComparableStats): CompareRow[
     { key: "wins", label: "Ganados", a: String(a.wins), b: String(b.wins), better: pick(a.wins, b.wins) },
     { key: "goals", label: "Goles", a: String(a.goals), b: String(b.goals), better: pick(a.goals, b.goals) },
     { key: "goalsPerMatch", label: "Goles por partido", a: fmt1(gpmA), b: fmt1(gpmB), better: pick(gpmA, gpmB) },
-    { key: "assists", label: "Asistencias", a: String(a.assists), b: String(b.assists), better: pick(a.assists, b.assists) },
     { key: "mvps", label: "MVP", a: String(a.mvps), b: String(b.mvps), better: pick(a.mvps, b.mvps) },
   ];
 }

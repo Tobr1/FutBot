@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-060 · No se registran asistencias
+Revierte la parte de asistencias de D-059: controlarlas en cada partido complica la carga y no aporta lo suficiente. El resultado solo lleva goles, goles en contra y sin autor. Las asistencias dejan de mostrarse en la carta (PJ / G / MVP), la ficha, la lista del plantel (y su orden), el detalle del partido, el comparador y la imagen para compartir. Desaparecen la pestaña "Asistidores" de rankings, el premio "Asistidor serial" y el récord de asistencias. Las asistencias ya guardadas quedan en la base sin usarse en la app; al corregir un resultado viejo se descartan las suyas. El motor de valoración sigue leyendo las existentes, pero ya no van a llegar nuevas.
+
 ## D-059 · Cada gol del marcador tiene que estar contado
 Fase 3 del kit de diseño. Al cargar o corregir un resultado, cada equipo muestra "3 de 3 · 1 sin autor", "Falta 1 de 3" o "2 sin autor de más". Solo se puede guardar cuando goles de jugadores + goles en contra a favor + **sin autor** = marcador. "Sin autor" es un contador explícito por equipo, con un atajo para "Marcar los que faltan como sin autor". Al corregir, arranca con la diferencia entre el marcador y los eventos guardados. No hay cambios en la base: los goles sin autor siguen sin guardarse como eventos (D-005) y la RPC mantiene su regla de "asignados ≤ marcador". El control nuevo es de la pantalla, para que el admin no deje goles sin revisar. Las asistencias se mantienen.
 

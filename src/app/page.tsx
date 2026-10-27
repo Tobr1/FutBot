@@ -30,13 +30,13 @@ const FEATURES = [
   {
     icon: BarChart3,
     title: "Estadísticas de verdad",
-    text: "Goles, asistencias, victorias, MVP y la evolución de cada jugador fecha a fecha.",
+    text: "Goles, victorias, MVP y la evolución de cada jugador fecha a fecha.",
     soon: false,
   },
   {
     icon: Trophy,
     title: "Rankings y premios",
-    text: "Goleador, asistidor, el más regular, el mejor momento. Con mínimos para que sean justos.",
+    text: "Goleador, el más regular, el mejor momento y los MVP. Con mínimos para que sean justos.",
     soon: true,
   },
   {
@@ -119,7 +119,7 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
-              Registrá resultados, goles y asistencias, votá el rendimiento de cada uno y dejá que FulBot arme equipos
+              Registrá resultados y goles, votá el rendimiento de cada uno y dejá que FulBot arme equipos
               equilibrados con lo que aprende de cada fecha.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">

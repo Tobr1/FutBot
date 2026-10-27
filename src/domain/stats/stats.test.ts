@@ -190,7 +190,7 @@ describe("cara a cara", () => {
     expect(byKey.overall.better).toBe("a");
     expect(byKey.winRate).toMatchObject({ a: "70%", b: "38%", better: "a" });
     expect(byKey.goalsPerMatch).toMatchObject({ a: "0,8", b: "1,0", better: "b" });
-    expect(byKey.assists.better).toBeNull();
+    expect(byKey.assists).toBeUndefined();
   });
 
   it("sin partidos no compara porcentajes", () => {
@@ -270,9 +270,10 @@ describe("partidos del jugador", () => {
 });
 
 describe("rankings: presentación", () => {
-  it("tiene las 8 pestañas y resuelve el slug", () => {
-    expect(RANKING_TABS).toHaveLength(8);
-    expect(new Set(RANKING_TABS.map((t) => t.slug)).size).toBe(8);
+  it("tiene las 7 pestañas (sin asistidores) y resuelve el slug", () => {
+    expect(RANKING_TABS).toHaveLength(7);
+    expect(new Set(RANKING_TABS.map((t) => t.slug)).size).toBe(7);
+    expect(RANKING_TABS.some((t) => t.kind === "assisters")).toBe(false);
     expect(rankingTabBySlug("goleadores").kind).toBe("scorers");
     expect(rankingTabBySlug("cualquiera").kind).toBe("best");
   });

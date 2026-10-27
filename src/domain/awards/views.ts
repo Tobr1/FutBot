@@ -208,14 +208,12 @@ export function computeRecords(lines: readonly MatchLineRow[]): GroupRecords {
   if (matches.length === 0) return { players, matches: matchRecords };
 
   let goals: { id: string; value: number; match: MatchSummary } | null = null;
-  let assists: { id: string; value: number; match: MatchSummary } | null = null;
   let biggest: MatchSummary | null = null;
   let mostGoals: MatchSummary | null = null;
   for (const match of matches) {
     for (const id of [...match.lines.keys()].sort()) {
       const line = match.lines.get(id)!;
       if (line.goals > 0 && (!goals || line.goals > goals.value)) goals = { id, value: line.goals, match };
-      if (line.assists > 0 && (!assists || line.assists > assists.value)) assists = { id, value: line.assists, match };
     }
     const diff = Math.abs(match.score.a - match.score.b);
     if (diff > 0 && (!biggest || diff > Math.abs(biggest.score.a - biggest.score.b))) biggest = match;
@@ -231,17 +229,6 @@ export function computeRecords(lines: readonly MatchLineRow[]): GroupRecords {
       display: plural(goals.value, "gol", "goles"),
       at: goals.match.scheduledAt,
       matchId: goals.match.matchId,
-    });
-  }
-  if (assists) {
-    players.push({
-      kind: "assists-in-match",
-      title: "Más asistencias en un partido",
-      playerId: assists.id,
-      value: assists.value,
-      display: plural(assists.value, "asistencia", "asistencias"),
-      at: assists.match.scheduledAt,
-      matchId: assists.match.matchId,
     });
   }
 

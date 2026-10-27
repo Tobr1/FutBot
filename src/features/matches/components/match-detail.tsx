@@ -196,7 +196,7 @@ function Tally({ title, items }: { title: string; items: ReactNode[] }) {
   );
 }
 
-/** Detalle del resultado: goleadores, asistencias, goles en contra, MVP y notas. */
+/** Detalle del resultado: goleadores, goles en contra y sin autor, MVP y notas. */
 export function ResultSummary({ match, ratings }: { match: MatchDetail; ratings?: Record<string, number> }) {
   const names = new Map(match.participants.map((p) => [p.id, p.nickname]));
   const name = (id: string | null) => (id ? (names.get(id) ?? "—") : "sin autor");
@@ -230,26 +230,13 @@ export function ResultSummary({ match, ratings }: { match: MatchDetail; ratings?
               </li>,
             );
           }
-          const assists = s.assisters.map((t) => (
-            <li key={`a-${t.playerId}`} className="flex items-baseline justify-between gap-2">
-              <span className="truncate">{name(t.playerId)}</span>
-              {t.count > 1 && <span className="shrink-0 text-muted-foreground tabular">×{t.count}</span>}
-            </li>
-          ));
           return (
             <div key={side} className="min-w-0 space-y-3">
               <p className={cn("flex items-center gap-1.5 text-sm font-semibold", TEAM_STYLES[side].text)}>
                 <span aria-hidden="true" className={cn("size-2 rounded-full", TEAM_STYLES[side].dot)} />
                 <span className="truncate">{match.teams[side].name}</span>
               </p>
-              {goals.length === 0 && assists.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin goles</p>
-              ) : (
-                <>
-                  <Tally title="Goles" items={goals} />
-                  <Tally title="Asistencias" items={assists} />
-                </>
-              )}
+              {goals.length === 0 ? <p className="text-sm text-muted-foreground">Sin goles</p> : <Tally title="Goles" items={goals} />}
             </div>
           );
         })}

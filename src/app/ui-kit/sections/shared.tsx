@@ -69,17 +69,17 @@ const DEMO_ROWS: (PlayerRowData & { id: string })[] = [
     fullName: "Juan Cruz Medina",
     rating: 8.4,
     primaryPosition: "forward",
-    stats: { matches: 21, goals: 17, assists: 6 },
+    stats: { matches: 21, goals: 17, mvps: 6 },
   },
-  { id: "2", nickname: "Tano", rating: 7.1, primaryPosition: "midfielder", stats: { matches: 18, goals: 5, assists: 9 } },
-  { id: "3", nickname: "Ruso", rating: 6.0, primaryPosition: "defender", stats: { matches: 12, goals: 1, assists: 2 } },
+  { id: "2", nickname: "Tano", rating: 7.1, primaryPosition: "midfielder", stats: { matches: 18, goals: 5, mvps: 9 } },
+  { id: "3", nickname: "Ruso", rating: 6.0, primaryPosition: "defender", stats: { matches: 12, goals: 1, mvps: 2 } },
   {
     id: "4",
     nickname: "Maximiliano Gutiérrez",
     rating: 4.2,
     primaryPosition: "goalkeeper",
     isActive: false,
-    stats: { matches: 3, goals: 0, assists: 0 },
+    stats: { matches: 3, goals: 0, mvps: 0 },
   },
 ];
 
@@ -93,7 +93,7 @@ const DEMO_CARDS: { width: string; note: string; player: PlayerCardData; showFul
       rating: 8.4,
       primaryPosition: "forward",
       isProvisional: true,
-      stats: { matches: 2, goals: 3, assists: 1 },
+      stats: { matches: 2, goals: 3, mvps: 1 },
     },
   },
   {
@@ -105,7 +105,7 @@ const DEMO_CARDS: { width: string; note: string; player: PlayerCardData; showFul
       rating: 7.1,
       primaryPosition: "goalkeeper",
       isLinked: false,
-      stats: { matches: 128, goals: 14, assists: 102 },
+      stats: { matches: 128, goals: 14, mvps: 102 },
     },
   },
   {
@@ -116,7 +116,7 @@ const DEMO_CARDS: { width: string; note: string; player: PlayerCardData; showFul
       fullName: "Sebastián Ivanov",
       rating: 6.0,
       primaryPosition: "defender",
-      stats: { matches: 12, goals: 1, assists: 2 },
+      stats: { matches: 12, goals: 1, mvps: 2 },
     },
   },
   {

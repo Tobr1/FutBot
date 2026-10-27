@@ -18,7 +18,7 @@ export function MyPlayerStrip({
   player: PlayerListItem;
   className?: string;
 }) {
-  const { matches, goals, assists } = player.stats;
+  const { matches, goals, mvps } = player.stats;
   return (
     <Link
       href={routes.player(slug, player.id)}
@@ -35,10 +35,10 @@ export function MyPlayerStrip({
         <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
           {player.positions.primary && <PositionBadge position={player.positions.primary} size="sm" />}
           <span className="truncate tabular" aria-hidden="true">
-            PJ {matches} · G {goals} · A {assists}
+            PJ {matches} · G {goals} · MVP {mvps}
           </span>
           <span className="sr-only">
-            {matches} partidos, {goals} goles, {assists} asistencias
+            {matches} partidos, {goals} goles, {mvps} veces jugador del partido
           </span>
         </p>
       </div>

@@ -298,7 +298,7 @@ export function TeamBuilder({
       {finished && (
         <p className="flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-sm text-warning ring-1 ring-warning/25 ring-inset">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          El partido ya tiene resultado: si cambiás a alguien de equipo, se descartan sus goles y asistencias. La corrección queda registrada.
+          El partido ya tiene resultado: si cambiás a alguien de equipo, se descartan sus goles. La corrección queda registrada.
         </p>
       )}
 
