@@ -7,6 +7,8 @@ const BUSINESS_ERRORS: Record<string, string> = {
   not_authenticated: "Tu sesión expiró. Volvé a ingresar.",
   forbidden: "No tenés permisos para hacer esto.",
   admin_reserved: "Solo el administrador de FulBot puede tener ese rol.",
+  invalid_subscription: "Este navegador no devolvió una suscripción válida.",
+  invalid_preference: "Elegí un tipo de aviso válido.",
   invalid_prediction: "Cada equipo va de 0 a 30 goles.",
   predictions_closed: "El partido ya empezó: los pronósticos están cerrados.",
   teams_not_ready: "Todavía no están armados los equipos.",

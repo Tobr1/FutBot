@@ -2,6 +2,11 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-062 · Avisos al celular (Web Push)
+Tres avisos, sin cron: **partido nuevo** (al crear un partido, a los demás miembros), **votación abierta** (al cargar el resultado, a los que jugaron) y **validar compañeros** (con la primera autoevaluación de una ficha, a los demás miembros con ficha). Cada aviso sale una sola vez por partido o ficha (`push_dispatches`): corregir un resultado o editar la autoevaluación no avisa de nuevo. Se activan por dispositivo en Perfil › Avisos al celular, y cada cuenta elige cuáles recibe. En iPhone solo funcionan con la app instalada. `public/sw.js` solo muestra avisos y abre la pantalla correspondiente: no cachea nada.
+
+Como la app no usa la service role key (D-007), las suscripciones ajenas se leen con `get_push_targets` (migración `20261027001300`), que exige dos cosas a la vez: la sesión de quien hizo la acción (admin del grupo o dueño de la ficha) y una clave de despacho que solo tiene el servidor. Esa clave se deriva de `VAPID_PRIVATE_KEY`, y en la base se guarda solo su sha256, en `private.push_dispatch_keys`, sin permisos para la app; se carga a mano, nunca en una migración. La clave pública VAPID está en el código (`src/lib/push/config.ts`). Rotar la privada obliga a rotar la pública y recargar el hash, y los dispositivos se vuelven a suscribir. El envío corre en `after()`: un aviso que falla nunca rompe la acción. Los dispositivos dados de baja (404/410) se borran solos.
+
 ## D-061 · Pronósticos de los miembros
 Con los dos equipos armados y antes de que empiece el partido, cada miembro pronostica el resultado (`match_predictions`, migración `20261027001200`): uno por cuenta, editable hasta el inicio y escrito solo con `save_match_prediction`. Antes del inicio cada uno ve únicamente el suyo y la cantidad total (`get_prediction_count`); desde el inicio, por RLS, todos ven los de todos. Los puntos se calculan al leer con el resultado cargado y no se guardan: 3 por el exacto, 1 por acertar quién gana o el empate. `/g/[slug]/pronosticos` ordena por puntos, después por cantidad de exactos y después por menos partidos pronosticados.
 

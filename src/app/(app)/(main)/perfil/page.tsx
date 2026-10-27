@@ -6,6 +6,9 @@ import { InstallAppRow } from "@/components/pwa/install-app-row";
 import { ListGroup, ListRow } from "@/components/shared/list-group";
 import { SectionHeader } from "@/components/shared/section-header";
 import { signOutAction } from "@/features/auth/actions";
+import { PushSettings } from "@/features/notifications/components/push-settings";
+import { getNotificationPreferences } from "@/features/notifications/queries";
+import { isPushConfigured } from "@/features/notifications/send";
 import { AvatarUploader } from "@/features/profile/components/avatar-uploader";
 import { ProfileForm } from "@/features/profile/components/profile-form";
 import { getCurrentProfile } from "@/lib/auth/session";
@@ -14,7 +17,7 @@ import { routes } from "@/lib/routes";
 export const metadata: Metadata = { title: "Mi perfil" };
 
 export default async function ProfilePage() {
-  const profile = await getCurrentProfile();
+  const [profile, preferences] = await Promise.all([getCurrentProfile(), getNotificationPreferences()]);
 
   return (
     <ScreenTransition>
@@ -37,6 +40,11 @@ export default async function ProfilePage() {
         <section aria-labelledby="datos" className="lg:panel lg:rounded-xl lg:p-6">
           <SectionHeader id="datos" title="Datos" className="mb-2" />
           <ProfileForm displayName={profile.displayName} />
+        </section>
+
+        <section aria-labelledby="avisos">
+          <SectionHeader id="avisos" title="Avisos al celular" />
+          <PushSettings preferences={preferences} configured={isPushConfigured()} />
         </section>
 
         <section aria-labelledby="cuenta">

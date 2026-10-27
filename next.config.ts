@@ -11,6 +11,20 @@ const nextConfig: NextConfig = {
     // la señal y habilita useOffline() (next/offline) para el aviso "Sin conexión".
     useOffline: true,
   },
+  // El service worker de los avisos (public/sw.js) se revisa siempre: así cada
+  // deploy lo actualiza sin esperar a que venza una caché.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {
