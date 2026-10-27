@@ -405,6 +405,51 @@ export type Database = {
           },
         ]
       }
+      match_predictions: {
+        Row: {
+          match_id: string
+          group_id: string
+          profile_id: string
+          score_a: number
+          score_b: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          match_id: string
+          group_id: string
+          profile_id: string
+          score_a: number
+          score_b: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          match_id?: string
+          group_id?: string
+          profile_id?: string
+          score_a?: number
+          score_b?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_predictions_match_fkey"
+            columns: ["match_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id", "group_id"]
+          },
+          {
+            foreignKeyName: "match_predictions_member_fkey"
+            columns: ["group_id", "profile_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["group_id", "profile_id"]
+          },
+        ]
+      }
       match_ratings: {
         Row: {
           id: string
@@ -1259,6 +1304,12 @@ export type Database = {
           mvps: number | null
         }[]
       }
+      get_prediction_count: {
+        Args: {
+          p_match_id: string
+        }
+        Returns: number
+      }
       get_rating_aggregates: {
         Args: {
           p_group_id: string
@@ -1305,6 +1356,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      match_predictions_locked: {
+        Args: {
+          p_match_id: string
+        }
+        Returns: boolean
+      }
       normalize_name: {
         Args: {
           p_value: string
@@ -1342,6 +1399,14 @@ export type Database = {
           p_values: number[]
         }
         Returns: Database["public"]["Enums"]["attribute_kind"]
+      }
+      save_match_prediction: {
+        Args: {
+          p_match_id: string
+          p_score_a: number
+          p_score_b: number
+        }
+        Returns: undefined
       }
       save_player: {
         Args: {

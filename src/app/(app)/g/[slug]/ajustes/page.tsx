@@ -10,6 +10,7 @@ import {
   LogOut,
   Settings2,
   ShieldCheck,
+  Target,
   UserRound,
   Users,
   Vote,
@@ -121,6 +122,14 @@ export default async function GroupMorePage({ params }: PageProps<"/g/[slug]/aju
               leading={<RowIcon icon={ShieldCheck} />}
               title="Validar compañeros"
               subtitle="Los atributos de cada carta"
+              chevron
+            />
+            <ListRow
+              href={routes.groupPredictions(slug)}
+              transitionTypes={FORWARD}
+              leading={<RowIcon icon={Target} />}
+              title="Pronosticadores"
+              subtitle="Quién la ve venir"
               chevron
             />
             <ListRow

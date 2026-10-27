@@ -40,7 +40,7 @@ export function NAV_ITEMS(slug: string): GroupNavItem[] {
       href: routes.groupRankings(slug),
       label: "Rankings",
       icon: Trophy,
-      matches: [routes.groupRankings(slug), routes.groupAwards(slug), routes.groupAnalytics(slug)],
+      matches: [routes.groupRankings(slug), routes.groupAwards(slug), routes.groupAnalytics(slug), routes.groupPredictions(slug)],
     },
     {
       key: "mas",

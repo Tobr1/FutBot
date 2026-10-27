@@ -49,6 +49,8 @@ export const routes = {
   claimPlayer: (slug: string) => `/g/${slug}/mi-ficha`,
   /** Votaciones del grupo: abiertas, pendientes, votadas y cerradas. */
   groupVotings: (slug: string) => `/g/${slug}/votaciones`,
+  /** Tabla de pronosticadores del grupo. */
+  groupPredictions: (slug: string) => `/g/${slug}/pronosticos`,
   /** Quien abre un grupo sin ser miembro (o uno que no existe). */
   groupUnavailable: "/grupo-no-disponible",
 } as const;

@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-061 · Pronósticos de los miembros
+Con los dos equipos armados y antes de que empiece el partido, cada miembro pronostica el resultado (`match_predictions`, migración `20261027001200`): uno por cuenta, editable hasta el inicio y escrito solo con `save_match_prediction`. Antes del inicio cada uno ve únicamente el suyo y la cantidad total (`get_prediction_count`); desde el inicio, por RLS, todos ven los de todos. Los puntos se calculan al leer con el resultado cargado y no se guardan: 3 por el exacto, 1 por acertar quién gana o el empate. `/g/[slug]/pronosticos` ordena por puntos, después por cantidad de exactos y después por menos partidos pronosticados.
+
 ## D-060 · No se registran asistencias
 Revierte la parte de asistencias de D-059: controlarlas en cada partido complica la carga y no aporta lo suficiente. El resultado solo lleva goles, goles en contra y sin autor. Las asistencias dejan de mostrarse en la carta (PJ / G / MVP), la ficha, la lista del plantel (y su orden), el detalle del partido, el comparador y la imagen para compartir. Desaparecen la pestaña "Asistidores" de rankings, el premio "Asistidor serial" y el récord de asistencias. Las asistencias ya guardadas quedan en la base sin usarse en la app; al corregir un resultado viejo se descartan las suyas. El motor de valoración sigue leyendo las existentes, pero ya no van a llegar nuevas.
 

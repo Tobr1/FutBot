@@ -12,6 +12,7 @@ import { ResultSummary, TeamColumns } from "@/features/matches/components/match-
 import { MatchCardSkeleton } from "@/features/matches/components/match-skeletons";
 import { MatchStatusBadge } from "@/features/matches/components/match-status-badge";
 import { ResultEditor } from "@/features/matches/components/result-editor";
+import { PredictionCard } from "@/features/predictions/components/prediction-card";
 import { Stepper } from "@/features/matches/components/stepper";
 import { TeamBuilder } from "@/features/matches/components/team-builder";
 import { WhatsAppCallButton } from "@/features/matches/components/whatsapp-call-button";
@@ -318,6 +319,26 @@ export function MatchesSection() {
               reserves: [],
               capacity: 10,
             }}
+          />
+        </div>
+      </Demo>
+      <Demo title="Pronósticos" note="PredictionCard: abierto (antes del inicio, con equipos armados) y cerrado con resultado 3–1 y puntos de cada uno.">
+        <div className="grid gap-3 lg:grid-cols-2">
+          <PredictionCard matchId="00000000-0000-4000-8000-000000000002" teams={{ a: "Azul", b: "Rojo" }} mine={null} count={4} phase="open" entries={[]} result={null} myProfileId="yo" standingsHref="#" />
+          <PredictionCard
+            matchId="00000000-0000-4000-8000-000000000002"
+            teams={{ a: "Azul", b: "Rojo" }}
+            mine={{ a: 3, b: 1 }}
+            count={3}
+            phase="locked"
+            result={{ a: 3, b: 1 }}
+            myProfileId="yo"
+            standingsHref="#"
+            entries={[
+              { profileId: "yo", name: "Brito", avatarUrl: null, prediction: { a: 3, b: 1 } },
+              { profileId: "m", name: "Manu", avatarUrl: null, prediction: { a: 2, b: 0 } },
+              { profileId: "v", name: "Vece", avatarUrl: null, prediction: { a: 1, b: 2 } },
+            ]}
           />
         </div>
       </Demo>
