@@ -28,7 +28,7 @@ export interface PlayerCardData {
   isProvisional?: boolean;
   isLinked?: boolean;
   isActive?: boolean;
-  stats?: { matches: number; goals: number; assists: number };
+  stats?: { matches: number; goals: number; mvps?: number };
   /** Carta calculada (media de atributos, nivel, élite). */
   card?: PlayerCardModel | null;
 }
@@ -44,7 +44,7 @@ function resolveCard(player: PlayerCardData): PlayerCardModel {
 
 /**
  * Carta FulBot: media, posición, foto, nombre y los seis atributos (o, si
- * todavía no hay, partidos/goles/asistencias). Bronce, plata y oro según la
+ * todavía no hay, partidos/goles/MVP). Bronce, plata y oro según la
  * media; la edición Élite (10 MVP) solo cambia el diseño.
  *
  * Se dimensiona con unidades de contenedor (cqw): todo escala con el ancho de
@@ -165,7 +165,7 @@ export function PlayerCard({
               <dl className="mt-[3cqw] grid grid-cols-3 rounded-[3cqw] bg-black/25 py-[2.5cqw] text-white">
                 <CardStat label="PJ" srLabel="Partidos jugados" value={player.stats.matches} />
                 <CardStat label="G" srLabel="Goles" value={player.stats.goals} />
-                <CardStat label="A" srLabel="Asistencias" value={player.stats.assists} />
+                <CardStat label="MVP" srLabel="Jugador del partido" value={player.stats.mvps ?? 0} />
               </dl>
             )
           )}

@@ -16,7 +16,7 @@ export interface PlayerRowData {
   overall?: number;
   primaryPosition: Position | null;
   isActive?: boolean;
-  stats?: { matches: number; goals: number; assists: number };
+  stats?: { matches: number; goals: number; mvps?: number };
 }
 
 const RANK_COLORS: Record<number, string> = {

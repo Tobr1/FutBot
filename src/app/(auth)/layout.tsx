@@ -8,7 +8,7 @@ import { routes } from "@/lib/routes";
 
 const HIGHLIGHTS = [
   { icon: Scale, text: "Equipos parejos armados con datos, no a dedo." },
-  { icon: BarChart3, text: "Goles, asistencias y calificaciones de cada fecha." },
+  { icon: BarChart3, text: "Goles, MVP y calificaciones de cada fecha." },
   { icon: Trophy, text: "Rankings y premios para picar la competencia." },
 ];
 
@@ -17,7 +17,7 @@ const DEMO_PLAYER: PlayerCardData = {
   fullName: "Tu ficha, partido a partido",
   rating: 8.4,
   primaryPosition: "forward",
-  stats: { matches: 32, goals: 41, assists: 17 },
+  stats: { matches: 32, goals: 41, mvps: 17 },
 };
 
 export default function AuthLayout({ children }: { children: ReactNode }) {

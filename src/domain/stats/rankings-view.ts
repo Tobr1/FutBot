@@ -20,7 +20,6 @@ export interface RankingTab {
 export const RANKING_TABS: readonly RankingTab[] = [
   { kind: "best", slug: "mejor", label: "Mejor jugador", description: "Valoración con nivel alto y sostenido.", unit: "" },
   { kind: "scorers", slug: "goleadores", label: "Goleadores", description: "Goles en la temporada.", unit: "goles" },
-  { kind: "assisters", slug: "asistidores", label: "Asistidores", description: "Asistencias en la temporada.", unit: "asist." },
   { kind: "bestAverage", slug: "promedio", label: "Mejor promedio", description: "Promedio de calificaciones por partido.", unit: "" },
   { kind: "winRate", slug: "victorias", label: "% victorias", description: "Ganados más medio empate, sobre jugados.", unit: "" },
   { kind: "mostRegular", slug: "regular", label: "Más regular", description: "Calificaciones más parejas (0 a 100).", unit: "" },

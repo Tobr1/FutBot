@@ -78,7 +78,6 @@ export async function getPlayerShareArt(
       stats: [
         { label: "PJ", value: String(stats.matches) },
         { label: "GOLES", value: String(stats.goals) },
-        { label: "ASIST.", value: String(stats.assists) },
         { label: "MVP", value: String(stats.mvps) },
         { label: "%VIC", value: winRate === null ? "—" : `${winRate}%` },
       ],

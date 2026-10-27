@@ -27,10 +27,10 @@ describe("computeAwards por partido", () => {
   ];
   const awards = computeAwards({ lines, timeZone: TZ, positions: { arq: "goalkeeper", tano: "defender" } });
 
-  it("da hat-trick, asistidor serial, primer MVP y debut en el primer partido", () => {
+  it("da hat-trick, primer MVP y debut en el primer partido (sin premio por asistencias)", () => {
     const m1 = awardsForMatch(awards, "m1");
     expect(kinds(m1.filter((a) => a.playerId === "brito"))).toEqual(["debut", "hat-trick", "mvp"]);
-    expect(kinds(m1.filter((a) => a.playerId === "manu"))).toEqual(["assists", "debut"]);
+    expect(kinds(m1.filter((a) => a.playerId === "manu"))).toEqual(["debut"]);
     const hat = m1.find((a) => a.kind === "hat-trick")!;
     expect(hat).toMatchObject({ tier: "gold", icon: "Flame", description: "3 goles en un partido", earnedAt: saturday(0), matchId: "m1" });
     // Los de oro primero.

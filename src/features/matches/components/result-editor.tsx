@@ -51,9 +51,6 @@ export function resultMessages(check: ResultCheck, teams: Record<Side, ResultTea
     } else if (c.unaccounted < 0) {
       messages.push(`${teams[side].name}: hay ${-c.unaccounted} sin autor de más para el marcador.`);
     }
-    if (c.assistsExceedGoals) {
-      messages.push(`${teams[side].name}: hay ${c.assists} asistencias y solo ${c.playerGoals} goles de sus jugadores.`);
-    }
   }
   if (check.issues.some((i) => i.kind === "player_not_in_match" || i.kind === "own_goal_wrong_team")) {
     messages.push("Hay goles de jugadores que ya no están en ese equipo: revisalos.");
@@ -62,11 +59,12 @@ export function resultMessages(check: ResultCheck, teams: Record<Side, ResultTea
 }
 
 /**
- * Carga o corrección del resultado: marcador con steppers grandes, goles y
- * asistencias por jugador, goles en contra, goles sin autor, destacado y
- * notas. Valida en vivo lo mismo que la base (asignados ≤ marcador,
- * asistencias ≤ goles) y además que cada gol del marcador esté contado:
- * asignados + sin autor = marcador, o no se puede guardar.
+ * Carga o corrección del resultado: marcador con steppers grandes, goles
+ * por jugador, goles en contra, goles sin autor, destacado y notas. Valida
+ * en vivo lo mismo que la base (asignados ≤ marcador) y además que cada gol
+ * del marcador esté contado: asignados + sin autor = marcador, o no se
+ * puede guardar. Las asistencias ya no se cargan (D-060): al corregir un
+ * resultado viejo, las que tenía se descartan.
  */
 export function ResultEditor({
   groupId,
@@ -85,7 +83,7 @@ export function ResultEditor({
   initialNotes: string;
   isCorrection: boolean;
 }) {
-  const [draft, setDraft] = useState<ResultDraft>(() => ({ ...initial, unknown: initial.unknown ?? { a: 0, b: 0 } }));
+  const [draft, setDraft] = useState<ResultDraft>(() => ({ ...initial, assists: {}, unknown: initial.unknown ?? { a: 0, b: 0 } }));
   const [mvp, setMvp] = useState<string | null>(initialMvp);
   const [notes, setNotes] = useState(initialNotes);
   const [mvpOpen, setMvpOpen] = useState(false);
@@ -109,8 +107,8 @@ export function ResultEditor({
   const setUnknown = (side: Side, value: number) =>
     setDraft((d) => ({ ...d, unknown: { ...(d.unknown ?? { a: 0, b: 0 }), [side]: Math.max(0, value) } }));
   const canFillUnknown = (["a", "b"] as const).some((side) => check[side].unaccounted > 0) && !check.issues.some((i) => i.kind === "goals_exceed_score");
-  const setCount = (kind: "goals" | "assists", playerId: string, value: number) =>
-    setDraft((d) => ({ ...d, [kind]: { ...d[kind], [playerId]: Math.max(0, value) } }));
+  const setGoals = (playerId: string, value: number) =>
+    setDraft((d) => ({ ...d, goals: { ...d.goals, [playerId]: Math.max(0, value) } }));
 
   function save() {
     if (!check.valid || isPending) return;
@@ -168,36 +166,24 @@ export function ResultEditor({
                 <span aria-hidden="true" className={cn("size-2 rounded-full", SIDE_DOT[side])} />
                 {teams[side].name}
               </h2>
-              <div aria-hidden="true" className="hidden shrink-0 gap-3 pr-4 text-2xs font-semibold tracking-[0.12em] text-muted-foreground uppercase sm:flex">
-                <span className="w-[7.5rem] text-center">Goles</span>
-                <span className="w-[7.5rem] text-center">Asist.</span>
-              </div>
+              <span aria-hidden="true" className="w-[7.5rem] shrink-0 pr-4 text-center text-2xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                Goles
+              </span>
             </div>
             <ul className="list-group">
               {teams[side].members.map((member) => (
-                <li key={member.id} className="px-4 py-2 sm:flex sm:min-h-14 sm:items-center sm:gap-3 sm:py-1.5">
-                  <span className="flex min-w-0 items-center gap-2 sm:flex-1">
+                <li key={member.id} className="flex min-h-14 items-center gap-3 py-1.5 pr-4 pl-4">
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
                     <UserAvatar name={member.nickname} src={member.avatarUrl} size="xs" />
                     <span className="min-w-0 truncate text-[15px] font-semibold">{member.nickname}</span>
                     {mvp === member.id && <Star className="size-3.5 shrink-0 fill-current text-gold" aria-label="Destacado" />}
                   </span>
-                  {/* En el teléfono, los dos contadores van en una segunda línea con su etiqueta. */}
-                  <div className="mt-1.5 grid grid-cols-2 gap-2 sm:mt-0 sm:flex sm:gap-3">
-                    {(["goals", "assists"] as const).map((kind) => (
-                      <div
-                        key={kind}
-                        className="flex min-w-0 flex-col items-center gap-1 rounded-xl bg-surface-2/60 py-1.5 sm:w-[7.5rem] sm:flex-row sm:justify-center sm:bg-transparent sm:py-0"
-                      >
-                        <span aria-hidden="true" className="text-2xs font-semibold tracking-[0.12em] text-muted-foreground uppercase sm:hidden">
-                          {kind === "goals" ? "Goles" : "Asist."}
-                        </span>
-                        <Stepper
-                          label={`${kind === "goals" ? "goles" : "asistencias"} de ${member.nickname}`}
-                          value={draft[kind][member.id] ?? 0}
-                          onChange={(value) => setCount(kind, member.id, value)}
-                        />
-                      </div>
-                    ))}
+                  <div className="flex w-[7.5rem] shrink-0 justify-center">
+                    <Stepper
+                      label={`goles de ${member.nickname}`}
+                      value={draft.goals[member.id] ?? 0}
+                      onChange={(value) => setGoals(member.id, value)}
+                    />
                   </div>
                 </li>
               ))}
@@ -234,7 +220,7 @@ export function ResultEditor({
                   </button>
                 </li>
               ))}
-              <li className="flex min-h-14 items-center gap-3 py-1.5 pr-4 pl-4 sm:pr-4">
+              <li className="flex min-h-14 items-center gap-3 py-1.5 pr-4 pl-4">
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   <CircleHelp className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                   <span className="min-w-0">
@@ -242,17 +228,13 @@ export function ResultEditor({
                     <span className="block text-xs text-muted-foreground">Goles que nadie recuerda quién hizo</span>
                   </span>
                 </span>
-                {/* En escritorio queda bajo la columna de goles (la de asistencias queda vacía). */}
-                <div className="flex shrink-0 gap-3">
-                  <div className="flex justify-center sm:w-[7.5rem]">
-                    <Stepper
-                      label={`goles sin autor de ${teams[side].name}`}
-                      value={draft.unknown?.[side] ?? 0}
-                      max={side === "a" ? draft.scoreA : draft.scoreB}
-                      onChange={(value) => setUnknown(side, value)}
-                    />
-                  </div>
-                  <span aria-hidden="true" className="hidden sm:block sm:w-[7.5rem]" />
+                <div className="flex w-[7.5rem] shrink-0 justify-center">
+                  <Stepper
+                    label={`goles sin autor de ${teams[side].name}`}
+                    value={draft.unknown?.[side] ?? 0}
+                    max={side === "a" ? draft.scoreA : draft.scoreB}
+                    onChange={(value) => setUnknown(side, value)}
+                  />
                 </div>
               </li>
             </ul>

@@ -157,17 +157,7 @@ export function computeAwards(input: AwardsInput): Award[] {
       } else if (line.goals === 2) {
         awards.push(make("brace", id, matchId, { ...base, title: "Doblete", description: "2 goles en un partido", icon: "Goal", tier: "bronze" }));
       }
-      if (line.assists >= 3) {
-        awards.push(
-          make("assists", id, matchId, {
-            ...base,
-            title: "Asistidor serial",
-            description: `${line.assists} asistencias en un partido`,
-            icon: "Handshake",
-            tier: "silver",
-          }),
-        );
-      }
+      // Sin premio por asistencias: ya no se cargan (D-060).
 
       if (line.isMvp) {
         st.mvps += 1;

@@ -19,7 +19,6 @@ const SORT_OPTIONS: ChoiceOption<PlayerSortKey>[] = [
   { value: "rating", label: "Valoración" },
   { value: "matches", label: "Partidos" },
   { value: "goals", label: "Goles" },
-  { value: "assists", label: "Asistencias" },
   { value: "name", label: "A–Z" },
 ];
 

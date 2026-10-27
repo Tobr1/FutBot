@@ -3,7 +3,7 @@
  * menor y los empates se resuelven por apodo; "name" ordena A-Z.
  */
 
-export const PLAYER_SORT_KEYS = ["rating", "matches", "goals", "assists", "name"] as const;
+export const PLAYER_SORT_KEYS = ["rating", "matches", "goals", "name"] as const;
 
 export type PlayerSortKey = (typeof PLAYER_SORT_KEYS)[number];
 
@@ -13,7 +13,7 @@ export interface SortablePlayer {
   rating: number;
   /** Media de la carta (1-99): si está, ordena por ella. */
   card?: { overall: number };
-  stats: { matches: number; goals: number; assists: number };
+  stats: { matches: number; goals: number };
 }
 
 export function isPlayerSortKey(value: unknown): value is PlayerSortKey {
@@ -26,7 +26,6 @@ const METRIC: Record<Exclude<PlayerSortKey, "name">, (p: SortablePlayer) => numb
   rating: (p) => (p.card ? p.card.overall / 10 : p.rating),
   matches: (p) => p.stats.matches,
   goals: (p) => p.stats.goals,
-  assists: (p) => p.stats.assists,
 };
 
 /** Devuelve una copia ordenada; no modifica el arreglo original. */
