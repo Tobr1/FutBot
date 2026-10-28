@@ -384,7 +384,7 @@ export function MatchesSection() {
 
       <Demo
         title="Armado completo"
-        note="TeamBuilder con los mismos 10 jugadores: generar, fijar, reglas y edición manual. Guardar equipos o reglas falla a propósito (sin Supabase)."
+        note="TeamBuilder con equipos ya armados y dos sin equipo: tocá a uno y después a otro para cambiarlos; también generar, fijar y reglas. Guardar equipos o reglas falla a propósito (sin Supabase)."
       >
         <TeamBuilder
           groupId="00000000-0000-4000-8000-000000000000"
@@ -395,7 +395,7 @@ export function MatchesSection() {
           previousTeams={{ a: ["p1", "p2", "p3", "p4", "p5"], b: ["p6", "p7", "p8", "p9", "p10"] }}
           rulesHref="#"
           canEditRules
-          initial={{}}
+          initial={{ p1: "a", p2: "a", p3: "a", p4: "a", p5: "b", p6: "b", p7: "b", p8: "b" }}
           initialNames={{ a: "Azul", b: "Rojo" }}
           finished={false}
         />

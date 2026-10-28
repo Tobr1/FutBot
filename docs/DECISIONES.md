@@ -2,6 +2,9 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-063 · Cambiar jugadores de equipo uno por uno
+En el armador, tocar a un jugador ya no lo hace rotar (Azul → Rojo → sin equipo), porque cambiar uno por otro requería varios toques poco claros. Ahora tocar a un jugador lo elige; el siguiente toque sobre alguien del otro equipo los intercambia (`swapPlayers`), y "Entra" en un jugador sin equipo lo hace entrar en su lugar. Mientras está elegido también se puede pasar al otro equipo o sacar del equipo. Los fijados siguen a su jugador. Desde el partido se entra con "Cambiar" (o "Corregir" si ya tiene resultado).
+
 ## D-062 · Avisos al celular (Web Push)
 Tres avisos, sin cron: **partido nuevo** (al crear un partido, a los demás miembros), **votación abierta** (al cargar el resultado, a los que jugaron) y **validar compañeros** (con la primera autoevaluación de una ficha, a los demás miembros con ficha). Cada aviso sale una sola vez por partido o ficha (`push_dispatches`): corregir un resultado o editar la autoevaluación no avisa de nuevo. Se activan por dispositivo en Perfil › Avisos al celular, y cada cuenta elige cuáles recibe. En iPhone solo funcionan con la app instalada. `public/sw.js` solo muestra avisos y abre la pantalla correspondiente: no cachea nada.
 

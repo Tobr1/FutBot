@@ -4,17 +4,19 @@ import {
   balanceLabel,
   balanceShare,
   cleanTeamName,
-  cycleSide,
+  swapPlayers,
   snakeDraft,
   teamsSaveIssue,
   teamStrength,
 } from "./teams";
 
-describe("cycleSide", () => {
-  it("recorre Sin equipo → A → B → Sin equipo", () => {
-    expect(cycleSide(null)).toBe("a");
-    expect(cycleSide("a")).toBe("b");
-    expect(cycleSide("b")).toBeNull();
+describe("swapPlayers", () => {
+  it("cambia uno por otro entre equipos sin tocar al resto", () => {
+    expect(swapPlayers({ ana: "a", beto: "b", caro: "a" }, "ana", "beto")).toEqual({ ana: "b", beto: "a", caro: "a" });
+  });
+
+  it("un suplente entra por uno de un equipo", () => {
+    expect(swapPlayers({ ana: "a", dani: null }, "ana", "dani")).toEqual({ ana: null, dani: "a" });
   });
 });
 
