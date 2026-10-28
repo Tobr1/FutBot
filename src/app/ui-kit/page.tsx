@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { InstallAppCard } from "@/components/pwa/install-app-card";
+import { PushSettings } from "@/features/notifications/components/push-settings";
 import { AwardsSection } from "./sections/awards";
 import { ChromeSection } from "./sections/chrome";
 import { InstallGuidesDemo } from "./sections/install";
@@ -92,6 +93,10 @@ export default function UiKitPage() {
           </p>
           <InstallAppCard />
           <InstallGuidesDemo />
+          <p className="text-sm text-muted-foreground">
+            PushSettings (Perfil › Avisos al celular): el estado del dispositivo es el real de este navegador.
+          </p>
+          <PushSettings preferences={{ match_created: true, voting_open: true, validation_request: false }} configured />
         </section>
       </div>
     </main>

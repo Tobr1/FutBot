@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { ResumeRefresh } from "@/components/layout/resume-refresh";
+import { PushSync } from "@/features/notifications/components/push-sync";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         {children}
       </main>
       <ResumeRefresh />
+      <PushSync />
     </div>
   );
 }

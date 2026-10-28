@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/layout/app-header";
 import { GroupBottomNav, GroupBottomNavSkeleton, GroupTabs, GroupTabsSkeleton } from "@/components/layout/group-nav";
 import { GroupSwitcher } from "@/components/layout/group-switcher";
 import { ResumeRefresh } from "@/components/layout/resume-refresh";
+import { PushSync } from "@/features/notifications/components/push-sync";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGroupContext, getIsAppAdmin, getMyGroups } from "@/features/groups/queries";
 
@@ -41,6 +42,7 @@ export default function GroupLayout({ children, params }: LayoutProps<"/g/[slug]
         <GroupBottomNav />
       </Suspense>
       <ResumeRefresh />
+      <PushSync />
     </div>
   );
 }

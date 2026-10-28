@@ -1,5 +1,5 @@
 /**
- * Armado manual de equipos: asignación por toque, fuerza de cada equipo y un
+ * Armado manual de equipos: intercambios por toque, fuerza de cada equipo y un
  * reparto rápido en serpiente. El optimizador "Generar parejos" vive aparte
  * (src/domain/balancer); acá solo hay ayudas simples y deterministas.
  */
@@ -7,12 +7,22 @@ import type { Side } from "./result";
 
 export type Assignment = Side | null;
 
-/** Ciclo al tocar un jugador: Sin equipo → A → B → Sin equipo. */
-export function cycleSide(current: Assignment): Assignment {
-  if (current === null) return "a";
-  if (current === "a") return "b";
-  return null;
+/**
+ * Intercambia a dos jugadores: cada uno queda donde estaba el otro (equipo o
+ * sin equipo). Sirve para "cambiar uno por otro" sin desarmar nada más.
+ */
+export function swapPlayers(
+  assignment: Readonly<Record<string, Assignment>>,
+  first: string,
+  second: string,
+): Record<string, Assignment> {
+  const firstSide = assignment[first] ?? null;
+  const secondSide = assignment[second] ?? null;
+  return { ...assignment, [first]: secondSide, [second]: firstSide };
 }
+
+/** Otro equipo. */
+export const otherSide = (side: Side): Side => (side === "a" ? "b" : "a");
 
 export interface TeamStrength {
   count: number;

@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { toUserMessage } from "@/lib/errors";
 import { fail, type MutationResult, ok } from "@/lib/mutation-result";
 import { createClient } from "@/lib/supabase/server";
+import { dispatchPush } from "@/features/notifications/send";
 import { selfAssessmentSchema, validationSchema } from "./schemas";
 
 /** Guarda la autoevaluación de mi ficha en el grupo (la RPC verifica que es mía). */
@@ -16,6 +18,19 @@ export async function saveSelfAssessmentAction(input: unknown): Promise<Mutation
     p_values: parsed.data.values,
   });
   if (error) return fail(toUserMessage(error));
+  // La primera autoevaluación avisa a los compañeros (la base no repite el aviso).
+  after(async () => {
+    const { data: claims } = await supabase.auth.getClaims();
+    const userId = claims?.claims.sub;
+    if (!userId) return;
+    const { data: player } = await supabase
+      .from("players")
+      .select("id")
+      .eq("group_id", parsed.data.groupId)
+      .eq("profile_id", userId)
+      .maybeSingle();
+    if (player) await dispatchPush(supabase, "validation_request", player.id);
+  });
   revalidatePath("/g/[slug]", "layout");
   return ok("Autoevaluación guardada. Ahora tus compañeros pueden validarla.");
 }

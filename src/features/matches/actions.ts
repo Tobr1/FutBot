@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { RedirectType, redirect } from "next/navigation";
+import { after } from "next/server";
 import { zonedDateTimeToIso } from "@/domain/matches/datetime";
 import { orderForSave } from "@/domain/matches/participants";
 import { cleanTeamName } from "@/domain/matches/teams";
@@ -11,6 +12,7 @@ import { toUserMessage } from "@/lib/errors";
 import { fail, type MutationResult, ok } from "@/lib/mutation-result";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
+import { dispatchPush } from "@/features/notifications/send";
 import {
   attendanceSchema,
   createMatchSchema,
@@ -116,6 +118,7 @@ export async function createMatchAction(_prev: ActionState, formData: FormData):
   });
   if (error || !matchId) return errorState(toUserMessage(error), { values: formValues(formData) });
 
+  after(() => dispatchPush(supabase, "match_created", matchId));
   revalidateGroup();
   redirect(`${routes.match(group.slug, matchId)}?creado=1`, RedirectType.replace);
 }
@@ -250,6 +253,7 @@ export async function recordResultAction(input: unknown): Promise<MutationResult
   });
   if (error) return fail(toUserMessage(error));
 
+  after(() => dispatchPush(supabase, "voting_open", v.matchId));
   const slug = await matchGroupSlug(v.matchId);
   revalidateGroup();
   if (slug) redirect(`${routes.match(slug, v.matchId)}?resultado=1`, RedirectType.replace);

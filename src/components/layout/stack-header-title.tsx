@@ -27,7 +27,10 @@ export function StackHeaderTitle({ title, targetId = "page-title" }: { title: st
     }
     // Lo que tapa al título: todo el chrome hasta el borde inferior de esta barra.
     const bar = ref.current?.closest("[data-stack-header]");
-    const coveredPx = Math.round(bar?.getBoundingClientRect().bottom ?? FALLBACK_PX) || FALLBACK_PX;
+    // Si la página cargó ya scrolleada (ancla, restauración de scroll) la barra puede
+    // quedar fuera de pantalla: un borde ≤ 0 daría un rootMargin inválido.
+    const measured = Math.round(bar?.getBoundingClientRect().bottom ?? 0);
+    const coveredPx = measured > 0 ? measured : FALLBACK_PX;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry) return;

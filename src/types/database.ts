@@ -588,6 +588,38 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          profile_id: string
+          match_created: boolean
+          voting_open: boolean
+          validation_request: boolean
+          updated_at: string
+        }
+        Insert: {
+          profile_id: string
+          match_created?: boolean
+          voting_open?: boolean
+          validation_request?: boolean
+          updated_at?: string
+        }
+        Update: {
+          profile_id?: string
+          match_created?: boolean
+          voting_open?: boolean
+          validation_request?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_aliases: {
         Row: {
           id: string
@@ -957,6 +989,62 @@ export type Database = {
         }
         Relationships: []
       }
+      push_dispatches: {
+        Row: {
+          event: Database["public"]["Enums"]["push_event"]
+          ref_id: string
+          dispatched_at: string
+        }
+        Insert: {
+          event: Database["public"]["Enums"]["push_event"]
+          ref_id: string
+          dispatched_at?: string
+        }
+        Update: {
+          event?: Database["public"]["Enums"]["push_event"]
+          ref_id?: string
+          dispatched_at?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          endpoint: string
+          profile_id: string
+          p256dh: string
+          auth: string
+          user_agent: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          endpoint: string
+          profile_id: string
+          p256dh: string
+          auth: string
+          user_agent?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          endpoint?: string
+          profile_id?: string
+          p256dh?: string
+          auth?: string
+          user_agent?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seasons: {
         Row: {
           id: string
@@ -1213,6 +1301,12 @@ export type Database = {
         }
         Returns: string
       }
+      delete_push_subscription: {
+        Args: {
+          p_endpoint: string
+        }
+        Returns: undefined
+      }
       finalize_match_voting: {
         Args: {
           p_match_id: string
@@ -1310,6 +1404,18 @@ export type Database = {
         }
         Returns: number
       }
+      get_push_targets: {
+        Args: {
+          p_key: string
+          p_event: Database["public"]["Enums"]["push_event"]
+          p_ref: string
+        }
+        Returns: {
+          endpoint: string | null
+          p256dh: string | null
+          auth: string | null
+        }[]
+      }
       get_rating_aggregates: {
         Args: {
           p_group_id: string
@@ -1374,6 +1480,13 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["attribute_kind"]
       }
+      prune_push_subscriptions: {
+        Args: {
+          p_key: string
+          p_endpoints: string[]
+        }
+        Returns: undefined
+      }
       record_match_result: {
         Args: {
           p_match_id: string
@@ -1421,6 +1534,15 @@ export type Database = {
         }
         Returns: string
       }
+      save_push_subscription: {
+        Args: {
+          p_endpoint: string
+          p_p256dh: string
+          p_auth: string
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
       save_self_assessment: {
         Args: {
           p_group_id: string
@@ -1451,6 +1573,13 @@ export type Database = {
           p_going: boolean
         }
         Returns: Database["public"]["Enums"]["participant_status"]
+      }
+      set_notification_preference: {
+        Args: {
+          p_event: Database["public"]["Enums"]["push_event"]
+          p_enabled: boolean
+        }
+        Returns: undefined
       }
       shares_group_with: {
         Args: {
@@ -1496,6 +1625,7 @@ export type Database = {
       match_status: "scheduled" | "in_progress" | "finished" | "cancelled"
       participant_status: "confirmed" | "reserve" | "dropped"
       player_position: "goalkeeper" | "defender" | "midfielder" | "forward"
+      push_event: "match_created" | "voting_open" | "validation_request"
       team_constraint_kind: "together" | "apart"
       team_side: "a" | "b"
     }
@@ -1525,6 +1655,7 @@ export const Constants = {
       match_status: ["scheduled", "in_progress", "finished", "cancelled"],
       participant_status: ["confirmed", "reserve", "dropped"],
       player_position: ["goalkeeper", "defender", "midfielder", "forward"],
+      push_event: ["match_created", "voting_open", "validation_request"],
       team_constraint_kind: ["together", "apart"],
       team_side: ["a", "b"],
     },

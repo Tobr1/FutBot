@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Eraser, Loader2, Pin, PinOff, Shuffle, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowLeftRight, Eraser, Loader2, Pin, PinOff, Shuffle, Sparkles, UserMinus, X } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { StickyActionBar } from "@/components/layout/sticky-action-bar";
@@ -35,9 +35,10 @@ import {
 import {
   type Assignment,
   balanceLabel,
-  cycleSide,
   DEFAULT_TEAM_NAMES,
+  otherSide,
   snakeDraft,
+  swapPlayers,
   TEAM_NAME_MAX,
   teamsSaveIssue,
   teamStrength,
@@ -115,6 +116,8 @@ export function TeamBuilder({
   const [names, setNames] = useState(initialNames);
   const [pins, setPins] = useState<Record<string, Side>>({});
   const [pinMode, setPinMode] = useState(false);
+  /** Jugador de un equipo elegido para cambiarlo: el próximo toque decide con quién. */
+  const [selected, setSelected] = useState<string | null>(null);
   const [generation, setGeneration] = useState<Generation | null>(null);
   const [altIndex, setAltIndex] = useState(0);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -166,20 +169,47 @@ export function TeamBuilder({
   function move(id: string, side: Assignment) {
     setAssignment((current) => ({ ...current, [id]: side }));
     setPins((current) => pinsAfterMove(current, id, side));
+    setSelected(null);
+  }
+
+  /** Cada uno queda donde estaba el otro; los fijados siguen a su jugador. */
+  function swap(first: string, second: string) {
+    const firstSide = assignment[first] ?? null;
+    const secondSide = assignment[second] ?? null;
+    setAssignment((current) => swapPlayers(current, first, second));
+    setPins((current) => pinsAfterMove(pinsAfterMove(current, first, secondSide), second, firstSide));
+    setSelected(null);
+    toast.success(`Cambiaste a ${nicknameById[first]} por ${nicknameById[second]}.`);
   }
 
   function tapTeamPlayer(id: string, side: Side) {
-    if (pinMode) setPins((current) => togglePin(current, id, side));
-    else move(id, cycleSide(side));
+    if (pinMode) {
+      setPins((current) => togglePin(current, id, side));
+      return;
+    }
+    if (selected === null || selected === id) {
+      setSelected(selected === id ? null : id);
+      return;
+    }
+    // Del mismo equipo: cambia la selección; del otro, los intercambia.
+    if (assignment[selected] === side) setSelected(id);
+    else swap(selected, id);
+  }
+
+  function togglePinMode() {
+    setPinMode((v) => !v);
+    setSelected(null);
   }
 
   function snake() {
+    setSelected(null);
     const { a, b } = snakeDraft(players.map((p) => ({ id: p.id, rating: p.rating, nickname: p.nickname })));
     setAssignment(Object.fromEntries([...a.map((id) => [id, "a"]), ...b.map((id) => [id, "b"])]));
     setPins({});
   }
 
   function clearAll() {
+    setSelected(null);
     setAssignment({});
     setPins({});
   }
@@ -219,6 +249,7 @@ export function TeamBuilder({
     setPins((current) => pinsAfterApply(current, split));
     setPanelOpen(false);
     setPinMode(false);
+    setSelected(null);
     toast.success("Equipos listos. Ajustalos si querés y guardalos.");
   }
 
@@ -238,6 +269,7 @@ export function TeamBuilder({
   }
 
   const label = balanceLabel(gap);
+  const selectedSide = selected ? (assignment[selected] ?? null) : null;
 
   return (
     <div className="space-y-5">
@@ -325,7 +357,7 @@ export function TeamBuilder({
             type="button"
             variant={pinMode ? "default" : "secondary"}
             size="sm"
-            onClick={() => setPinMode((v) => !v)}
+            onClick={togglePinMode}
             aria-pressed={pinMode}
             disabled={!anyAssigned && !pinMode}
           >
@@ -428,6 +460,34 @@ export function TeamBuilder({
           </div>
         ))}
 
+      <div aria-live="polite">
+        {selected && selectedSide && (
+          <div className="flex flex-col gap-2 rounded-xl bg-primary/8 p-3 ring-1 ring-primary/25 ring-inset">
+            <p className="flex items-start gap-2 text-sm">
+              <ArrowLeftRight className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="font-semibold">{nicknameById[selected]}</span> elegido. Tocá a uno de{" "}
+                {teamNames[otherSide(selectedSide)]} o de Sin equipo para cambiarlos.
+              </span>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="secondary" size="sm" onClick={() => move(selected, otherSide(selectedSide))}>
+                <ArrowLeftRight aria-hidden="true" />
+                Pasar a {teamNames[otherSide(selectedSide)]}
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={() => move(selected, null)}>
+                <UserMinus aria-hidden="true" />
+                Sacar del equipo
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setSelected(null)}>
+                <X aria-hidden="true" />
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-2 lg:gap-3">
         {(["a", "b"] as const).map((side) => (
           <section
@@ -460,22 +520,28 @@ export function TeamBuilder({
               <ul className="space-y-1 p-2">
                 {groups[side].map((player) => {
                   const pinned = pins[player.id] === side;
+                  const isSelected = selected === player.id;
+                  const swapTarget = selectedSide !== null && selectedSide !== side;
                   return (
                     <li key={player.id}>
                       <button
                         type="button"
                         onClick={() => tapTeamPlayer(player.id, side)}
-                        aria-pressed={pinMode ? pinned : undefined}
+                        aria-pressed={pinMode ? pinned : isSelected}
                         aria-label={
                           pinMode
                             ? `${player.nickname}: ${pinned ? "fijado, soltar" : `fijar en ${teamNames[side]}`}`
-                            : `${player.nickname}${pinned ? " (fijado)" : ""}: pasar a ${side === "a" ? teamNames.b : "sin equipo"}`
+                            : swapTarget && selected
+                              ? `Cambiar a ${nicknameById[selected]} por ${player.nickname}`
+                              : `${player.nickname}${pinned ? " (fijado)" : ""}: elegir para cambiarlo`
                         }
                         className={cn(
                           "pressable flex min-h-11 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left ring-1 ring-inset",
                           "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
                           SIDE_STYLE[side].chip,
                           pinMode && pinned && "ring-2 ring-primary",
+                          isSelected && "ring-2 ring-primary bg-primary/12",
+                          swapTarget && "outline-1 outline-offset-1 outline-primary/50 outline-dashed",
                         )}
                       >
                         <UserAvatar name={player.nickname} src={player.avatarUrl} size="xs" />
@@ -500,7 +566,7 @@ export function TeamBuilder({
             Sin equipo <span className="text-xs font-normal text-muted-foreground tabular">{groups.pool.length}</span>
           </h2>
           <p className="text-xs text-muted-foreground">
-            {pinMode ? "Modo fijar: tocá a alguien de un equipo." : "Tocá un jugador de un equipo para cambiarlo."}
+            {pinMode ? "Modo fijar: tocá a alguien de un equipo." : "Tocá a uno y después a otro para cambiarlos."}
           </p>
         </div>
         {groups.pool.length === 0 ? (
@@ -517,7 +583,19 @@ export function TeamBuilder({
                     <RatingPill rating={player.rating} size="sm" className="h-5 min-w-7 text-xs" />
                   </span>
                 </span>
-                {(["a", "b"] as const).map((side) => (
+                {selected && selectedSide ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => swap(selected, player.id)}
+                    aria-label={`Que entre ${player.nickname} por ${nicknameById[selected]}`}
+                    className="shrink-0"
+                  >
+                    <ArrowLeftRight aria-hidden="true" />
+                    Entra
+                  </Button>
+                ) : (["a", "b"] as const).map((side) => (
                   <button
                     key={side}
                     type="button"
