@@ -12,6 +12,7 @@ import { ResultSummary, TeamColumns } from "@/features/matches/components/match-
 import { MatchCardSkeleton } from "@/features/matches/components/match-skeletons";
 import { MatchStatusBadge } from "@/features/matches/components/match-status-badge";
 import { ResultEditor } from "@/features/matches/components/result-editor";
+import { RosterPicker, type RosterOption, SelectionSummary } from "@/features/matches/components/roster-picker";
 import { PredictionCard } from "@/features/predictions/components/prediction-card";
 import { Stepper } from "@/features/matches/components/stepper";
 import { TeamBuilder } from "@/features/matches/components/team-builder";
@@ -21,6 +22,7 @@ import { GeneratorIssues, GeneratorPanel } from "@/features/teams/components/gen
 import { TeamRuleList } from "@/features/teams/components/team-rules";
 import { ForecastCard } from "@/features/teams/components/win-probability";
 import { type BalancerPlayer, balanceTeams } from "@/domain/balancer";
+import type { GuestEntry, Selection } from "@/domain/matches/participants";
 import { matchesSplit, mergeConstraints, type TeamRule, teamForecast } from "@/domain/matches/team-generator";
 
 /*
@@ -146,6 +148,7 @@ const player = (id: string, nickname: string, rating: number, side: "a" | "b" | 
   baseRating: rating,
   positions: { primary: "midfielder", secondary: null },
   isActive: true,
+  isGuest: false,
   status: "confirmed",
   sortOrder: 0,
   side,
@@ -197,6 +200,36 @@ const ROSTER = [
   { id: "r4", nickname: "Toto" },
   { id: "r5", nickname: "Tota" },
 ];
+
+const PICKER_ROSTER: RosterOption[] = [
+  { id: "c1", nickname: "Juanchi", avatarUrl: null, baseRating: 7.4, primaryPosition: "forward", isActive: true },
+  { id: "c2", nickname: "Manu", avatarUrl: null, baseRating: 6.8, primaryPosition: "midfielder", isActive: true },
+  { id: "c3", nickname: "Vece", avatarUrl: null, baseRating: 6.1, primaryPosition: "goalkeeper", isActive: true },
+  { id: "c4", nickname: "Toto", avatarUrl: null, baseRating: 5.9, primaryPosition: "defender", isActive: true },
+  { id: "c5", nickname: "Primo de Toto", avatarUrl: null, baseRating: 5, primaryPosition: null, isActive: true, isGuest: true },
+];
+
+/** Convocatoria con invitados (estado local, sin guardar). */
+function GuestPickerDemo() {
+  const [selection, setSelection] = useState<Selection[]>([
+    { playerId: "c1", status: "confirmed" },
+    { playerId: "c2", status: "confirmed" },
+  ]);
+  const [guests, setGuests] = useState<GuestEntry[]>([{ nickname: "El Colo", status: "confirmed" }]);
+  return (
+    <div className="space-y-3">
+      <SelectionSummary selection={selection} capacity={6} guests={guests} />
+      <RosterPicker
+        players={PICKER_ROSTER}
+        selection={selection}
+        onChange={setSelection}
+        capacity={6}
+        guests={guests}
+        onGuestsChange={setGuests}
+      />
+    </div>
+  );
+}
 
 /* Generador de equipos con datos fijos: el optimizador es determinista. */
 const GEN_PLAYERS: BalancerPlayer[] = [
@@ -424,6 +457,13 @@ export function MatchesSection() {
           players={Object.fromEntries(GEN_PLAYERS.map((p) => [p.id, { nickname: p.name, avatarUrl: null }]))}
           canEdit={false}
         />
+      </Demo>
+
+      <Demo
+        title="Convocatoria con invitados"
+        note="RosterPicker 3 vs 3 con un invitado (El Colo). Sumar invitado con un nombre nuevo lo agrega; con Toto lo convoca del plantel; con Primo de Toto reusa su ficha de invitado."
+      >
+        <GuestPickerDemo />
       </Demo>
 
       <Demo title="Importar lista de WhatsApp" note="Pegá una lista: reconocidos, dudosos (elegir) y nuevos (crear ficha o ignorar). Plantel: Juanchi, Manu, Vece, Toto, Tota.">

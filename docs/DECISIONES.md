@@ -2,6 +2,11 @@
 
 Formato breve: contexto → decisión → consecuencias. Las más nuevas, arriba.
 
+## D-064 · Invitados del partido
+A veces vienen 1 o 2 personas solo a completar, y el admin no quiere sumarlas al plantel ni a la app. En la convocatoria (al crear el partido o con "Editar"), "Sumar invitado" pide solo el nombre: entra directo como titular, o como suplente si ya está completo, sin confirmar asistencia. Por dentro es una ficha con `players.is_guest` (migración `20261030001400`), que se crea al guardar dentro de la misma transacción de `create_match` o `set_match_participants`. Por eso puede jugar en un equipo, hacer goles, ser MVP y recibir votos como cualquiera. Si el mismo nombre vuelve otro día, se reusa su ficha de invitado. Un nombre que ya es de alguien del plantel se rechaza: hay que elegirlo de la lista; en la pantalla, escribirlo lo convoca directamente.
+
+Los invitados no aparecen en el plantel, ni para reclamar ficha, ni para validar atributos, ni en rankings, logros, récords, asistencia o duos del análisis. El motor de valoración sí los tiene en cuenta, porque juegan y pesan en la fuerza de su equipo. Desde su ficha, el admin puede usar "Sumar al plantel" (`is_guest = false`). Vincular una cuenta a una ficha de invitado también la pasa al plantel, y una ficha con cuenta no puede ser invitada.
+
 ## D-063 · Cambiar jugadores de equipo uno por uno
 En el armador, tocar a un jugador ya no lo hace rotar (Azul → Rojo → sin equipo), porque cambiar uno por otro requería varios toques poco claros. Ahora tocar a un jugador lo elige; el siguiente toque sobre alguien del otro equipo los intercambia (`swapPlayers`), y "Entra" en un jugador sin equipo lo hace entrar en su lugar. Mientras está elegido también se puede pasar al otro equipo o sacar del equipo. Los fijados siguen a su jugador. Desde el partido se entra con "Cambiar" (o "Corregir" si ya tiene resultado).
 

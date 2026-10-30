@@ -79,11 +79,12 @@ const awardsFor = cache(async (groupId: string, today: string | null, minMatches
     players[p.id] = { nickname: p.nickname, avatarUrl: p.avatarUrl };
   }
 
-  const input = { lines: history.lines, timeZone: history.timeZone, positions, today, performances: result.byMatch, seasonChampions, openVotingAt };
+  // Los invitados no ganan logros ni récords.
+  const input = { lines: history.memberLines, timeZone: history.timeZone, positions, today, performances: result.byMatch, seasonChampions, openVotingAt };
   return {
     awards: computeAwards(input),
     months: monthlyAwards(input),
-    records: computeRecords(history.lines),
+    records: computeRecords(history.memberLines),
     players,
   };
 });

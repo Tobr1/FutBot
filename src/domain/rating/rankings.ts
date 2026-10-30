@@ -50,6 +50,8 @@ export interface RankingOptions {
   minMatches: number;
   /** Mínimo de partidos con votos para "Mejor promedio". Por defecto, `minMatches`. */
   minVotedMatches?: number;
+  /** Jugadores que no compiten (invitados): no entran ni cuentan como excluidos. */
+  exclude?: ReadonlySet<string>;
 }
 
 /** Número con un decimal y coma (7.45 → "7,5"). Evita "-0,0". */
@@ -94,9 +96,10 @@ export function buildRankings(
   const minMatches = Math.max(1, options.minMatches);
   const minVoted = Math.max(1, options.minVotedMatches ?? minMatches);
 
+  const competes = (id: string) => !options.exclude?.has(id);
   const totalsById = new Map(totals.map((t) => [t.playerId, t]));
-  const ratingIds = Object.keys(result.byPlayer).filter((id) => result.byPlayer[id].matches > 0);
-  const totalIds = totals.filter((t) => t.matches > 0).map((t) => t.playerId);
+  const ratingIds = Object.keys(result.byPlayer).filter((id) => result.byPlayer[id].matches > 0 && competes(id));
+  const totalIds = totals.filter((t) => t.matches > 0 && competes(t.playerId)).map((t) => t.playerId);
 
   // Rankings de valoración: sobre los jugadores con partidos en el motor.
   const ratingUniverse = ratingIds.length;

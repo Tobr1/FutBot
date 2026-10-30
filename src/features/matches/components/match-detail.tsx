@@ -99,7 +99,13 @@ function ParticipantRow({ player, index }: { player: MatchParticipant; index: nu
       <span className="w-5 text-right text-xs text-muted-foreground tabular">{index + 1}</span>
       <UserAvatar name={player.nickname} src={player.avatarUrl} size="sm" />
       <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{player.nickname}</span>
-      {player.positions.primary && <PositionBadge position={player.positions.primary} size="sm" />}
+      {player.isGuest ? (
+        <Badge tone="neutral" size="sm">
+          Invitado
+        </Badge>
+      ) : (
+        player.positions.primary && <PositionBadge position={player.positions.primary} size="sm" />
+      )}
       {player.side && (
         <span className={cn("size-2.5 shrink-0 rounded-full", TEAM_STYLES[player.side].dot)}>
           <span className="sr-only">{player.side === "a" ? "Equipo azul" : "Equipo rojo"}</span>

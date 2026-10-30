@@ -11,7 +11,7 @@ import { UserAvatar } from "@/components/shared/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { resolveDayHint } from "@/domain/matches/datetime";
 import type { ConvocationEntry } from "@/domain/matches/import-review";
-import { dedupeSelection, type Selection } from "@/domain/matches/participants";
+import { confirmedGuests, dedupeSelection, type GuestEntry, type Selection } from "@/domain/matches/participants";
 import { squadSize } from "@/domain/matches/status";
 import { normalizeName } from "@/domain/names/normalize";
 import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
@@ -29,8 +29,9 @@ export type CreateMatchRosterPlayer = RosterOption & ImportRosterPlayer;
 
 /**
  * Alta de partido: datos + convocatoria eligiendo del plantel o pegando la
- * lista de WhatsApp. Las fichas nuevas y los alias se crean recién al
- * confirmar ("Crear partido"), justo antes de crear el partido.
+ * lista de WhatsApp, más invitados que vienen a completar. Las fichas nuevas
+ * y los alias se crean recién al confirmar ("Crear partido"), justo antes de
+ * crear el partido; los invitados, junto con el partido.
  */
 export function CreateMatchForm({
   groupId,
@@ -51,6 +52,7 @@ export function CreateMatchForm({
   const [mode, setMode] = useState<"plantel" | "whatsapp">("plantel");
   const [selection, setSelection] = useState<Selection[]>([]);
   const [newPlayers, setNewPlayers] = useState<NewEntry[]>([]);
+  const [guests, setGuests] = useState<GuestEntry[]>([]);
   const [aliases, setAliases] = useState<Array<{ playerId: string; alias: string }>>([]);
   const [playersPerTeam, setPlayersPerTeam] = useState(defaultPlayersPerTeam);
 
@@ -64,6 +66,7 @@ export function CreateMatchForm({
       selection: Selection[];
       newPlayers: NewEntry[];
       aliases: Array<{ playerId: string; alias: string }>;
+      guests: GuestEntry[];
     };
     formData.delete("convocation");
     let ids = created.current;
@@ -90,6 +93,7 @@ export function CreateMatchForm({
       }),
     ]);
     formData.set("participants", JSON.stringify(participants));
+    formData.set("guests", JSON.stringify(current.guests));
     return createMatchAction(prev, formData);
   }, idleState);
   useFormErrorFocus(formRef, state);
@@ -98,8 +102,10 @@ export function CreateMatchForm({
 
   const capacity = squadSize(playersPerTeam);
   const confirmed =
-    selection.filter((s) => s.status === "confirmed").length + newPlayers.filter((p) => p.status === "confirmed").length;
-  const reserve = selection.length + newPlayers.length - confirmed;
+    selection.filter((s) => s.status === "confirmed").length +
+    newPlayers.filter((p) => p.status === "confirmed").length +
+    confirmedGuests(guests);
+  const reserve = selection.length + newPlayers.length + guests.length - confirmed;
 
   return (
     <form
@@ -109,7 +115,7 @@ export function CreateMatchForm({
       className="grid max-w-2xl gap-8"
     >
       <input type="hidden" name="groupId" value={groupId} />
-      <input type="hidden" name="convocation" value={JSON.stringify({ selection, newPlayers, aliases })} />
+      <input type="hidden" name="convocation" value={JSON.stringify({ selection, newPlayers, aliases, guests })} />
       <FormMessage state={state} />
 
       <section aria-labelledby="datos-partido" className="grid gap-4">
@@ -156,6 +162,8 @@ export function CreateMatchForm({
               selection={selection}
               onChange={setSelection}
               capacity={Math.max(0, capacity - newPlayers.filter((p) => p.status === "confirmed").length)}
+              guests={guests}
+              onGuestsChange={setGuests}
               before={newPlayers.map((p) => (
                 <li key={p.nickname} className="flex min-h-14 items-center gap-3 px-4 py-2">
                   <UserAvatar name={p.nickname} size="sm" />

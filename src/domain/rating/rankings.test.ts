@@ -153,3 +153,15 @@ describe("buildRankings · rendimiento", () => {
     expect(ids(rankings.best)).toEqual(["a"]);
   });
 });
+
+describe("buildRankings · invitados", () => {
+  it("los excluidos no entran a ninguna lista ni cuentan como excluidos", () => {
+    const r = result({ a: { skill: 6 }, invitado: { skill: 9 } });
+    const t = [totals("a", { goals: 2, mvps: 1 }), totals("invitado", { goals: 7, mvps: 3 })];
+    const rankings = buildRankings(r, t, { minMatches: 1, exclude: new Set(["invitado"]) });
+    expect(ids(rankings.best)).toEqual(["a"]);
+    expect(ids(rankings.scorers)).toEqual(["a"]);
+    expect(ids(rankings.mvps)).toEqual(["a"]);
+    expect(rankings.best.excluded).toBe(0);
+  });
+});

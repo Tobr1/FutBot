@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { RedirectType, redirect } from "next/navigation";
 import { after } from "next/server";
 import { zonedDateTimeToIso } from "@/domain/matches/datetime";
-import { orderForSave } from "@/domain/matches/participants";
+import { type GuestEntry, orderForSave, type Selection } from "@/domain/matches/participants";
 import { cleanTeamName } from "@/domain/matches/teams";
 import { normalizeName } from "@/domain/names/normalize";
 import { type ActionState, errorState, formValues, parseForm } from "@/lib/action-result";
@@ -49,8 +49,15 @@ function revalidateGroup() {
   revalidatePath("/g/[slug]", "layout");
 }
 
-const toRpcParticipants = (list: Array<{ playerId: string; status: "confirmed" | "reserve" }>) =>
-  orderForSave(list).map((p) => ({ player_id: p.playerId, status: p.status }));
+/** Titulares primero y después suplentes; los invitados van por nombre y la base les arma la ficha. */
+function toRpcParticipants(list: Selection[], guests: GuestEntry[] = []) {
+  const ordered = orderForSave(list);
+  const byStatus = (status: Selection["status"]) => [
+    ...ordered.filter((p) => p.status === status).map((p) => ({ player_id: p.playerId, status: p.status })),
+    ...guests.filter((g) => g.status === status).map((g) => ({ guest: g.nickname, status: g.status })),
+  ];
+  return [...byStatus("confirmed"), ...byStatus("reserve")];
+}
 
 /**
  * Crea las fichas nuevas que el admin confirmó al importar una lista y
@@ -114,7 +121,7 @@ export async function createMatchAction(_prev: ActionState, formData: FormData):
     p_players_per_team: v.playersPerTeam,
     p_venue: v.venue,
     p_notes: v.notes,
-    p_participants: toRpcParticipants(v.participants),
+    p_participants: toRpcParticipants(v.participants, v.guests),
   });
   if (error || !matchId) return errorState(toUserMessage(error), { values: formValues(formData) });
 
@@ -201,12 +208,12 @@ export async function deleteMatchAction(input: unknown): Promise<MutationResult>
 export async function setParticipantsAction(input: unknown): Promise<MutationResult> {
   const parsed = setParticipantsSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Datos inválidos.");
-  const { matchId, participants } = parsed.data;
+  const { matchId, participants, guests } = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_match_participants", {
     p_match_id: matchId,
-    p_participants: toRpcParticipants(participants),
+    p_participants: toRpcParticipants(participants, guests),
   });
   if (error) return fail(toUserMessage(error));
 

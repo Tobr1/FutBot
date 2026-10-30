@@ -111,6 +111,7 @@ export default async function PlayerPage({ params, searchParams }: PageProps<"/g
                     id: player.id,
                     nickname: player.nickname,
                     isActive: player.isActive,
+                    isGuest: player.isGuest,
                     isLinked: player.isLinked,
                     matches: stats.matches,
                   }}
@@ -136,7 +137,7 @@ export default async function PlayerPage({ params, searchParams }: PageProps<"/g
                   label: published?.hasSelf ? "Ajustar mi autoevaluación" : "Hacer mi autoevaluación",
                   kind: "self",
                 }
-              : ctx.myPlayer && player.isActive
+              : ctx.myPlayer && player.isActive && !player.isGuest
                 ? {
                     href: routes.playerAttributes(slug, player.id),
                     label: validatedByMe ? "Cambiar mi validación" : `Validar a ${player.nickname}`,
@@ -146,7 +147,7 @@ export default async function PlayerPage({ params, searchParams }: PageProps<"/g
           }
         />
 
-        {ctx.isAdmin && !player.isLinked && player.isActive && (
+        {ctx.isAdmin && !player.isLinked && player.isActive && !player.isGuest && (
           <InvitePlayerCard
             groupId={ctx.group.id}
             groupName={ctx.group.name}

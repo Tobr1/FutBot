@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countSelection, dedupeSelection, orderForSave, type Selection, setSelectionStatus, toggleSelection } from "./participants";
+import { confirmedGuests, countSelection, dedupeSelection, orderForSave, resolveGuestName, type Selection, setSelectionStatus, toggleSelection } from "./participants";
 import {
   allowedStatusChanges,
   canDeleteMatch,
@@ -105,5 +105,44 @@ describe("estados del partido", () => {
       confirmed: 1,
       reserve: 1,
     });
+  });
+});
+
+describe("resolveGuestName", () => {
+  const roster = [
+    { id: "p1", nickname: "Juanchi" },
+    { id: "p2", nickname: "Primo de Toto", isGuest: true },
+  ];
+
+  it("un nombre nuevo es un invitado, sin espacios de más", () => {
+    expect(resolveGuestName("  El   Colo ", roster, [])).toEqual({ kind: "guest", nickname: "El Colo" });
+  });
+
+  it("si ya tiene ficha (del plantel o invitado de antes) se convoca esa", () => {
+    expect(resolveGuestName("juanchí", roster, [])).toEqual({ kind: "player", playerId: "p1", nickname: "Juanchi", isGuest: false });
+    expect(resolveGuestName("primo de toto", roster, [])).toEqual({
+      kind: "player",
+      playerId: "p2",
+      nickname: "Primo de Toto",
+      isGuest: true,
+    });
+  });
+
+  it("rechaza vacíos, largos y repetidos en la lista", () => {
+    expect(resolveGuestName(" !! ", roster, []).kind).toBe("invalid");
+    expect(resolveGuestName("x".repeat(31), roster, []).kind).toBe("invalid");
+    expect(resolveGuestName("COLO", roster, [{ nickname: "Colo", status: "confirmed" }])).toEqual({
+      kind: "invalid",
+      message: "COLO ya está en la lista.",
+    });
+  });
+
+  it("cuenta los invitados titulares", () => {
+    expect(
+      confirmedGuests([
+        { nickname: "A", status: "confirmed" },
+        { nickname: "B", status: "reserve" },
+      ]),
+    ).toBe(1);
   });
 });

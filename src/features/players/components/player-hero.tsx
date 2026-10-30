@@ -52,11 +52,16 @@ export function PlayerHero({ player, isMine }: { player: PlayerDetail; isMine: b
             {player.fullName && <p className="truncate text-sm text-muted-foreground">{player.fullName}</p>}
           </div>
 
-          {(isMine || !player.isActive || !player.isLinked || isProvisional) && (
+          {(isMine || player.isGuest || !player.isActive || !player.isLinked || isProvisional) && (
             <ul className="flex flex-wrap gap-1.5 pt-1" aria-label="Estado de la ficha">
               {isMine && (
                 <li>
                   <Badge tone="primary">Sos vos</Badge>
+                </li>
+              )}
+              {player.isGuest && (
+                <li>
+                  <Badge tone="primary">Invitado</Badge>
                 </li>
               )}
               {!player.isActive && (

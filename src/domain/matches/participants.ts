@@ -2,6 +2,7 @@
  * Convocatoria: lista ordenada de jugadores titulares y suplentes.
  * El orden se conserva (es el de la lista de WhatsApp o el de selección).
  */
+import { normalizeName } from "@/domain/names/normalize";
 import type { ParticipantStatus } from "./status";
 
 export interface Selection {
@@ -43,3 +44,38 @@ export function dedupeSelection(list: readonly Selection[]): Selection[] {
     return true;
   });
 }
+
+/* ---------- Invitados ---------- */
+
+/** Invitado a sumar: viene a completar, juega solo este partido y no entra al plantel. */
+export interface GuestEntry {
+  nickname: string;
+  status: ParticipantStatus;
+}
+
+export const GUEST_NAME_MAX = 30;
+
+export type GuestNameResult =
+  | { kind: "invalid"; message: string }
+  /** Ya tiene ficha (del plantel o de invitado en otro partido): se convoca esa. */
+  | { kind: "player"; playerId: string; nickname: string; isGuest: boolean }
+  | { kind: "guest"; nickname: string };
+
+/** Qué hacer con el nombre escrito en "Sumar invitado". Compara como la base (normalize_name). */
+export function resolveGuestName(
+  name: string,
+  roster: ReadonlyArray<{ id: string; nickname: string; isGuest?: boolean }>,
+  guests: readonly GuestEntry[],
+): GuestNameResult {
+  const nickname = name.trim().replace(/\s+/g, " ");
+  const key = normalizeName(nickname);
+  if (!key) return { kind: "invalid", message: "Escribí el nombre del invitado." };
+  if (nickname.length > GUEST_NAME_MAX) return { kind: "invalid", message: `Usá como máximo ${GUEST_NAME_MAX} caracteres.` };
+  if (guests.some((g) => normalizeName(g.nickname) === key)) return { kind: "invalid", message: `${nickname} ya está en la lista.` };
+  const existing = roster.find((p) => normalizeName(p.nickname) === key);
+  if (existing) return { kind: "player", playerId: existing.id, nickname: existing.nickname, isGuest: existing.isGuest === true };
+  return { kind: "guest", nickname };
+}
+
+/** Titulares que suman los invitados (para descontarlos del cupo). */
+export const confirmedGuests = (guests: readonly GuestEntry[]) => guests.filter((g) => g.status === "confirmed").length;

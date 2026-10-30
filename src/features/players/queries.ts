@@ -31,6 +31,8 @@ export interface PlayerListItem {
   /** Pocos partidos: la valoración todavía es provisional. */
   isProvisional: boolean;
   isActive: boolean;
+  /** Invitado: jugó partidos sueltos y no forma parte del plantel. */
+  isGuest: boolean;
   isLinked: boolean;
   profileId: string | null;
   dominantFoot: DominantFoot | null;
@@ -41,13 +43,13 @@ export interface PlayerListItem {
 }
 
 const PLAYER_COLUMNS =
-  "id, nickname, full_name, avatar_url, base_rating, is_active, profile_id, dominant_foot, created_at, player_positions(position, priority)" as const;
+  "id, nickname, full_name, avatar_url, base_rating, is_active, is_guest, profile_id, dominant_foot, created_at, player_positions(position, priority)" as const;
 
-/** Plantel del grupo con posiciones, avatar efectivo y totales. */
+/** Plantel del grupo (sin invitados) con posiciones, avatar efectivo y totales. */
 export async function listPlayers(groupId: string): Promise<PlayerListItem[]> {
   const supabase = await createClient();
   const [playersResult, statsResult, ratingOf, attributes] = await Promise.all([
-    supabase.from("players").select(PLAYER_COLUMNS).eq("group_id", groupId).order("nickname"),
+    supabase.from("players").select(PLAYER_COLUMNS).eq("group_id", groupId).eq("is_guest", false).order("nickname"),
     supabase.rpc("get_player_stats", { p_group_id: groupId }),
     getDisplayRatings(groupId),
     getGroupAttributes(groupId),
@@ -66,6 +68,7 @@ export async function listPlayers(groupId: string): Promise<PlayerListItem[]> {
     baseRating: Number(p.base_rating),
     ...ratingOf(p.id, Number(p.base_rating)),
     isActive: p.is_active,
+    isGuest: p.is_guest,
     isLinked: p.profile_id !== null,
     profileId: p.profile_id,
     dominantFoot: p.dominant_foot,
@@ -125,6 +128,7 @@ export const getPlayer = cache(async (groupId: string, playerId: string): Promis
     baseRating: Number(p.base_rating),
     ...ratingOf(p.id, Number(p.base_rating)),
     isActive: p.is_active,
+    isGuest: p.is_guest,
     isLinked: p.profile_id !== null,
     profileId: p.profile_id,
     dominantFoot: p.dominant_foot,
@@ -144,6 +148,7 @@ export async function listUnclaimedPlayers(groupId: string) {
     .eq("group_id", groupId)
     .is("profile_id", null)
     .eq("is_active", true)
+    .eq("is_guest", false)
     .order("nickname");
   if (error) throw error;
   return data.map((p) => ({ id: p.id, nickname: p.nickname, fullName: p.full_name, positions: toPlayerPositions(p.player_positions) }));

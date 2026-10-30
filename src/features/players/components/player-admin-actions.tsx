@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2, MoreHorizontal, Power, PowerOff, Trash2 } from "lucide-react";
+import { Link2, MoreHorizontal, Power, PowerOff, Trash2, UserCheck } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { type MenuItemDef, ResponsiveMenu } from "@/components/ui/responsive-menu";
 import { createInvitationAction } from "@/features/invitations/actions";
 import { ShareInvite } from "@/features/invitations/components/share-invite";
-import { deletePlayerAction, setPlayerActiveAction } from "../actions";
+import { deletePlayerAction, promoteGuestAction, setPlayerActiveAction } from "../actions";
 
 /**
  * Menú ⋯ de la ficha para admins (en el StackHeader). En mobile es una hoja
@@ -25,7 +25,7 @@ export function PlayerAdminMenu({
   slug: string;
   groupId: string;
   groupName: string;
-  player: { id: string; nickname: string; isActive: boolean; isLinked: boolean; matches: number };
+  player: { id: string; nickname: string; isActive: boolean; isGuest: boolean; isLinked: boolean; matches: number };
 }) {
   const ref = { groupId, playerId: player.id };
   const [confirm, setConfirm] = useState<"deactivate" | "delete" | null>(null);
@@ -51,8 +51,26 @@ export function PlayerAdminMenu({
     });
   }
 
+  function promote() {
+    if (isPending) return;
+    startTransition(async () => {
+      const result = await promoteGuestAction(ref);
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+    });
+  }
+
   const canDelete = player.matches === 0;
   const fichaItems: MenuItemDef[] = [];
+  if (player.isGuest) {
+    fichaItems.push({
+      key: "promote",
+      label: "Sumar al plantel",
+      icon: UserCheck,
+      description: "Deja de ser invitado: aparece en el plantel y en los rankings.",
+      onSelect: promote,
+    });
+  }
   if (!player.isLinked) {
     fichaItems.push({ key: "invite", label: "Invitar a vincular", icon: Link2, onSelect: createInvite });
   }

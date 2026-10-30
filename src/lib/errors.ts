@@ -39,6 +39,8 @@ const BUSINESS_ERRORS: Record<string, string> = {
   duplicate_participant: "Hay jugadores repetidos en la lista.",
   too_many_participants: "La convocatoria tiene demasiados jugadores.",
   invalid_participants: "La convocatoria no es válida.",
+  invalid_guest: "Escribí el nombre del invitado (hasta 30 caracteres).",
+  guest_name_taken: "Ese nombre ya es de alguien del plantel: elegilo de la lista.",
   invalid_score: "El marcador no es válido.",
   invalid_events: "Hay goles o asistencias mal cargados.",
   goals_exceed_score: "Hay más goles asignados que los del marcador.",
@@ -57,6 +59,7 @@ const BUSINESS_ERRORS: Record<string, string> = {
 const CONSTRAINT_ERRORS: Record<string, string> = {
   players_group_nickname_key: "Ya hay un jugador con ese apodo en el grupo.",
   players_group_profile_key: "Esa cuenta ya tiene una ficha en el grupo.",
+  players_guest_unlinked: "Una ficha con cuenta no puede ser de invitado.",
   players_member_fkey: "Solo se puede vincular a alguien que ya es miembro del grupo.",
   player_aliases_group_alias_key: "Ese alias ya está en uso en el grupo.",
   match_participants_player_fkey: "El jugador tiene partidos registrados: desactivalo en lugar de borrarlo.",
