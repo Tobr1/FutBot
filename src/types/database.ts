@@ -910,6 +910,7 @@ export type Database = {
           created_by: string | null
           created_at: string
           updated_at: string
+          is_guest: boolean
         }
         Insert: {
           id?: string
@@ -925,6 +926,7 @@ export type Database = {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+          is_guest?: boolean
         }
         Update: {
           id?: string
@@ -940,6 +942,7 @@ export type Database = {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+          is_guest?: boolean
         }
         Relationships: [
           {

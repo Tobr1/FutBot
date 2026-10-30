@@ -388,6 +388,7 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
                   baseRating: engine.byPlayer[p.id]?.skill ?? p.baseRating,
                   primaryPosition: p.positions.primary,
                   isActive: p.isActive,
+                  isGuest: p.isGuest,
                 }))}
               />
             )}

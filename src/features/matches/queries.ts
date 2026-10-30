@@ -162,6 +162,8 @@ export interface MatchPlayer {
   baseRating: number;
   positions: PlayerPositions;
   isActive: boolean;
+  /** Invitado: juega partidos sueltos, no está en el plantel. */
+  isGuest: boolean;
 }
 
 export interface MatchParticipant extends MatchPlayer {
@@ -201,7 +203,7 @@ export interface MatchDetail {
   teamsReady: boolean;
 }
 
-const PLAYER_COLUMNS = "id, nickname, avatar_url, base_rating, is_active, profile_id, player_positions(position, priority)" as const;
+const PLAYER_COLUMNS = "id, nickname, avatar_url, base_rating, is_active, is_guest, profile_id, player_positions(position, priority)" as const;
 
 type PlayerRow = {
   id: string;
@@ -209,6 +211,7 @@ type PlayerRow = {
   avatar_url: string | null;
   base_rating: number;
   is_active: boolean;
+  is_guest: boolean;
   profile_id: string | null;
   player_positions: Array<{ position: Position; priority: number }>;
 };
@@ -232,6 +235,7 @@ async function toMatchPlayers(rows: PlayerRow[]): Promise<Map<string, MatchPlaye
         baseRating: Number(p.base_rating),
         positions: toPlayerPositions(p.player_positions),
         isActive: p.is_active,
+        isGuest: p.is_guest,
       },
     ]),
   );

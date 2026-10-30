@@ -66,6 +66,7 @@ export interface RosterEntry {
   avatarUrl: string | null;
   baseRating: number;
   isActive: boolean;
+  isGuest: boolean;
   primaryPosition: Position | null;
 }
 
@@ -78,6 +79,9 @@ export interface GroupHistory {
   roster: RosterEntry[];
   players: PlayerProfile[];
   lines: MatchLineRow[];
+  /** Las mismas líneas sin las de invitados: no compiten en rankings, logros ni análisis. */
+  memberLines: MatchLineRow[];
+  guestIds: ReadonlySet<string>;
   aggregates: AggregateRow[];
 }
 
@@ -91,7 +95,7 @@ export const loadGroupHistory = cache(async (groupId: string): Promise<GroupHist
     supabase
       .from("players")
       .select(
-        "id, nickname, avatar_url, base_rating, is_active, profile_id, player_positions(position, priority), group_members!players_member_fkey(profiles!group_members_profile_id_fkey(avatar_url))",
+        "id, nickname, avatar_url, base_rating, is_active, is_guest, profile_id, player_positions(position, priority), group_members!players_member_fkey(profiles!group_members_profile_id_fkey(avatar_url))",
       )
       .eq("group_id", groupId)
       .order("nickname"),
@@ -119,31 +123,38 @@ export const loadGroupHistory = cache(async (groupId: string): Promise<GroupHist
     avatarUrl: p.avatar_url ?? p.group_members?.profiles?.avatar_url ?? null,
     baseRating: Number(p.base_rating),
     isActive: p.is_active,
+    isGuest: p.is_guest,
     primaryPosition: toPlayerPositions(p.player_positions).primary,
   }));
+  const guestIds = new Set(roster.filter((p) => p.isGuest).map((p) => p.id));
+
+  const allLines: MatchLineRow[] = lines.flatMap((l) =>
+    l.match_id && l.player_id && l.side && l.scheduled_at && l.goals_for !== null && l.goals_against !== null
+      ? [
+          {
+            matchId: l.match_id,
+            playerId: l.player_id,
+            side: l.side,
+            scheduledAt: l.scheduled_at,
+            goalsFor: l.goals_for,
+            goalsAgainst: l.goals_against,
+            goals: l.goals ?? 0,
+            assists: l.assists ?? 0,
+            ownGoals: l.own_goals ?? 0,
+            isMvp: l.is_mvp ?? false,
+          },
+        ]
+      : [],
+  );
 
   return {
     timeZone: group.data?.timezone ?? "America/Argentina/Buenos_Aires",
     roster,
+    // Los invitados juegan: el motor los necesita para medir la fuerza de cada equipo.
     players: roster.map((p) => ({ id: p.id, baseRating: p.baseRating, primaryPosition: p.primaryPosition })),
-    lines: lines.flatMap((l) =>
-      l.match_id && l.player_id && l.side && l.scheduled_at && l.goals_for !== null && l.goals_against !== null
-        ? [
-            {
-              matchId: l.match_id,
-              playerId: l.player_id,
-              side: l.side,
-              scheduledAt: l.scheduled_at,
-              goalsFor: l.goals_for,
-              goalsAgainst: l.goals_against,
-              goals: l.goals ?? 0,
-              assists: l.assists ?? 0,
-              ownGoals: l.own_goals ?? 0,
-              isMvp: l.is_mvp ?? false,
-            },
-          ]
-        : [],
-    ),
+    lines: allLines,
+    memberLines: guestIds.size > 0 ? allLines.filter((l) => !guestIds.has(l.playerId)) : allLines,
+    guestIds,
     aggregates: aggregates.flatMap((a) =>
       a.match_id && a.player_id
         ? [
@@ -256,7 +267,7 @@ export async function getRankings(groupId: string, seasonId: string | null, minM
     totalsFor(groupId, range.from, range.to),
   ]);
 
-  const rankings = buildRankings(result, [...totals.values()], { minMatches });
+  const rankings = buildRankings(result, [...totals.values()], { minMatches, exclude: history.guestIds });
   const players: RankingsData["players"] = {};
   for (const p of history.roster) {
     players[p.id] = { id: p.id, nickname: p.nickname, avatarUrl: p.avatarUrl, primaryPosition: p.primaryPosition, isActive: p.isActive };
@@ -472,7 +483,7 @@ export async function syncSkillHistory(groupId: string): Promise<void> {
 /** Socio ideal, rival favorito y némesis de un jugador (histórico completo). */
 export async function getPlayerRivalries(groupId: string, playerId: string, minMatches = RIVALRY_MIN_MATCHES): Promise<Rivalries> {
   const history = await loadGroupHistory(groupId);
-  return findRivalries(history.lines, playerId, minMatches);
+  return findRivalries(history.memberLines, playerId, minMatches);
 }
 
 export interface GroupInsights {
@@ -493,14 +504,15 @@ export interface GroupInsights {
 export async function getGroupInsights(groupId: string, range: DateRange, options: { duoMinMatches: number }): Promise<GroupInsights> {
   const [history, result] = await Promise.all([loadGroupHistory(groupId), getGroupRatings(groupId)]);
   const lines = linesInRange(history.lines, range, history.timeZone);
+  const memberLines = linesInRange(history.memberLines, range, history.timeZone);
   const players: GroupInsights["players"] = {};
   for (const p of history.roster) players[p.id] = { nickname: p.nickname, avatarUrl: p.avatarUrl };
   return {
     range,
     trend: goalsTrend(lines, history.timeZone, { window: 5, limit: 30 }),
     distribution: resultDistribution(lines),
-    attendance: attendanceTop(lines, 8),
-    duos: duoRanking(lines, { minMatches: Math.max(1, options.duoMinMatches), limit: 8 }),
+    attendance: attendanceTop(memberLines, 8),
+    duos: duoRanking(memberLines, { minMatches: Math.max(1, options.duoMinMatches), limit: 8 }),
     accuracy: predictionAccuracy(lines, preMatchSkills(result, history.players)),
     players,
   };

@@ -68,6 +68,26 @@ export async function setPlayerActiveAction(input: unknown, active: boolean): Pr
   return ok(active ? "Jugador reactivado." : "Jugador desactivado: no aparecerá al armar partidos.");
 }
 
+/** Un invitado pasa a ser del plantel: aparece en la lista, los rankings y los logros. */
+export async function promoteGuestAction(input: unknown): Promise<MutationResult> {
+  const parsed = playerRefSchema.safeParse(input);
+  if (!parsed.success) return fail("Datos inválidos.");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("players")
+    .update({ is_guest: false })
+    .eq("id", parsed.data.playerId)
+    .eq("group_id", parsed.data.groupId)
+    .select("id")
+    .maybeSingle();
+  if (error) return fail(toUserMessage(error));
+  if (!data) return fail(toUserMessage({ message: "forbidden" }));
+
+  revalidatePath("/g/[slug]", "layout");
+  return ok("Listo: ya es parte del plantel.");
+}
+
 export async function deletePlayerAction(input: unknown): Promise<MutationResult> {
   const parsed = playerRefSchema.safeParse(input);
   if (!parsed.success) return fail("Datos inválidos.");

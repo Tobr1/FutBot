@@ -40,6 +40,7 @@ export default async function NewMatchPage({ params }: PageProps<"/g/[slug]/part
               baseRating: engine.byPlayer[p.id]?.skill ?? p.baseRating,
               primaryPosition: p.positions.primary,
               isActive: p.isActive,
+              isGuest: p.isGuest,
             }))}
           />
         </div>

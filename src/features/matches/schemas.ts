@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidDateIso, isValidTime } from "@/domain/matches/datetime";
+import { GUEST_NAME_MAX } from "@/domain/matches/participants";
 import { MAX_SCORE } from "@/domain/matches/result";
 import { TEAM_NAME_MAX } from "@/domain/matches/teams";
 import { normalizeName } from "@/domain/names/normalize";
@@ -40,20 +41,36 @@ export const participantsSchema = z
   .max(60, "La convocatoria tiene demasiados jugadores.")
   .refine((list) => new Set(list.map((p) => p.playerId)).size === list.length, "Hay jugadores repetidos en la lista.");
 
-/** La convocatoria viaja como JSON en un input oculto del formulario. */
-const participantsJson = z
-  .string()
-  .optional()
-  .transform((value, ctx) => {
-    if (!value) return [];
-    try {
-      return JSON.parse(value) as unknown;
-    } catch {
-      ctx.addIssue({ code: "custom", message: "La convocatoria no es válida." });
-      return z.NEVER;
-    }
-  })
-  .pipe(participantsSchema);
+export const guestSchema = z.object({
+  nickname: z
+    .string()
+    .trim()
+    .min(1, "Escribí el nombre del invitado.")
+    .max(GUEST_NAME_MAX, `Usá como máximo ${GUEST_NAME_MAX} caracteres.`)
+    .refine((v) => normalizeName(v) !== null, "El nombre tiene que tener letras o números."),
+  status: z.enum(["confirmed", "reserve"]),
+});
+
+export const guestsSchema = z
+  .array(guestSchema)
+  .max(20, "Son demasiados invitados.")
+  .refine((list) => new Set(list.map((g) => normalizeName(g.nickname))).size === list.length, "Hay invitados repetidos.");
+
+/** La convocatoria y los invitados viajan como JSON en inputs ocultos del formulario. */
+const jsonField = <T extends z.ZodType>(schema: T) =>
+  z
+    .string()
+    .optional()
+    .transform((value, ctx) => {
+      if (!value) return [];
+      try {
+        return JSON.parse(value) as unknown;
+      } catch {
+        ctx.addIssue({ code: "custom", message: "La convocatoria no es válida." });
+        return z.NEVER;
+      }
+    })
+    .pipe(schema);
 
 const matchFields = {
   groupId: z.uuid(),
@@ -64,7 +81,11 @@ const matchFields = {
   notes: optionalText(500, "Usá como máximo 500 caracteres."),
 };
 
-export const createMatchSchema = z.object({ ...matchFields, participants: participantsJson });
+export const createMatchSchema = z.object({
+  ...matchFields,
+  participants: jsonField(participantsSchema),
+  guests: jsonField(guestsSchema),
+});
 
 export const updateMatchSchema = z.object({ ...matchFields, matchId: z.uuid() });
 
@@ -76,7 +97,7 @@ export const matchStatusSchema = matchRefSchema.extend({
   status: z.enum(["scheduled", "in_progress", "cancelled"]),
 });
 
-export const setParticipantsSchema = matchRefSchema.extend({ participants: participantsSchema });
+export const setParticipantsSchema = matchRefSchema.extend({ participants: participantsSchema, guests: guestsSchema.default([]) });
 
 const teamName = z.string().trim().max(TEAM_NAME_MAX, `Usá como máximo ${TEAM_NAME_MAX} caracteres.`).optional();
 
