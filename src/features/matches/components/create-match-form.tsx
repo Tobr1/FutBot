@@ -1,29 +1,23 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
 import { toast } from "sonner";
 import { StickyActionBar } from "@/components/layout/sticky-action-bar";
 import { FormMessage } from "@/components/shared/form-message";
 import { SegmentedContent, SegmentedList, SegmentedTabs, SegmentedTrigger } from "@/components/shared/segmented-tabs";
 import { SubmitButton } from "@/components/shared/submit-button";
-import { UserAvatar } from "@/components/shared/user-avatar";
-import { Badge } from "@/components/ui/badge";
 import { resolveDayHint } from "@/domain/matches/datetime";
-import type { ConvocationEntry } from "@/domain/matches/import-review";
-import { confirmedGuests, dedupeSelection, type GuestEntry, type Selection } from "@/domain/matches/participants";
+import { confirmedGuests, type GuestEntry, type Selection } from "@/domain/matches/participants";
 import { squadSize } from "@/domain/matches/status";
-import { normalizeName } from "@/domain/names/normalize";
 import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { type ActionState, errorState, formValues, idleState } from "@/lib/action-result";
 import { todayIso } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { addPlayersFromImportAction, createMatchAction } from "../actions";
+import { createMatchAction } from "../actions";
+import { type ImportedConvocation, NewPlayerRows, useImportedPlayers } from "./imported-players";
 import { type ImportRosterPlayer, LineupImport } from "./lineup-import";
 import { MatchFields } from "./match-fields";
 import { RosterPicker, type RosterOption } from "./roster-picker";
-
-type NewEntry = Extract<ConvocationEntry, { kind: "new" }>;
 
 export type CreateMatchRosterPlayer = RosterOption & ImportRosterPlayer;
 
@@ -51,48 +45,20 @@ export function CreateMatchForm({
   const [time, setTime] = useState("");
   const [mode, setMode] = useState<"plantel" | "whatsapp">("plantel");
   const [selection, setSelection] = useState<Selection[]>([]);
-  const [newPlayers, setNewPlayers] = useState<NewEntry[]>([]);
   const [guests, setGuests] = useState<GuestEntry[]>([]);
-  const [aliases, setAliases] = useState<Array<{ playerId: string; alias: string }>>([]);
   const [playersPerTeam, setPlayersPerTeam] = useState(defaultPlayersPerTeam);
-
-  // Fichas ya creadas en un intento anterior: no se crean dos veces.
-  const created = useRef<Record<string, string>>({});
-  const aliasesSaved = useRef(false);
+  const imported = useImportedPlayers(groupId);
+  const { newPlayers, aliases } = imported;
 
   const [state, action] = useActionState(async (prev: ActionState, formData: FormData): Promise<ActionState> => {
     // La convocatoria viaja en un input oculto (estado al momento de enviar).
-    const current = JSON.parse(String(formData.get("convocation") ?? "{}")) as {
-      selection: Selection[];
-      newPlayers: NewEntry[];
-      aliases: Array<{ playerId: string; alias: string }>;
+    const current = JSON.parse(String(formData.get("convocation") ?? "{}")) as ImportedConvocation & {
       guests: GuestEntry[];
     };
     formData.delete("convocation");
-    let ids = created.current;
-    const pending = current.newPlayers.filter((p) => !ids[normalizeName(p.nickname) ?? ""]);
-    const aliasesToSave = aliasesSaved.current ? [] : current.aliases;
-
-    if (pending.length > 0 || aliasesToSave.length > 0) {
-      const result = await addPlayersFromImportAction({
-        groupId,
-        players: pending.map((p) => ({ nickname: p.nickname })),
-        aliases: aliasesToSave,
-      });
-      if (!result.ok) return errorState(result.message, { values: formValues(formData) });
-      ids = { ...ids, ...result.data?.ids };
-      created.current = ids;
-      aliasesSaved.current = true;
-    }
-
-    const participants = dedupeSelection([
-      ...current.selection,
-      ...current.newPlayers.flatMap((p) => {
-        const playerId = ids[normalizeName(p.nickname) ?? ""];
-        return playerId ? [{ playerId, status: p.status }] : [];
-      }),
-    ]);
-    formData.set("participants", JSON.stringify(participants));
+    const saved = await imported.save(current);
+    if (!saved.ok) return errorState(saved.message, { values: formValues(formData) });
+    formData.set("participants", JSON.stringify(saved.participants));
     formData.set("guests", JSON.stringify(current.guests));
     return createMatchAction(prev, formData);
   }, idleState);
@@ -164,28 +130,7 @@ export function CreateMatchForm({
               capacity={Math.max(0, capacity - newPlayers.filter((p) => p.status === "confirmed").length)}
               guests={guests}
               onGuestsChange={setGuests}
-              before={newPlayers.map((p) => (
-                <li key={p.nickname} className="flex min-h-14 items-center gap-3 px-4 py-2">
-                  <UserAvatar name={p.nickname} size="sm" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-semibold">{p.nickname}</span>
-                    <span className="mt-0.5 flex items-center gap-1.5">
-                      <Badge tone="primary" size="sm">
-                        Ficha nueva
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{p.status === "confirmed" ? "Titular" : "Suplente"}</span>
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setNewPlayers((list) => list.filter((x) => x.nickname !== p.nickname))}
-                    aria-label={`No crear la ficha de ${p.nickname}`}
-                    className="pressable grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
-                  >
-                    <Trash2 className="size-5" aria-hidden="true" />
-                  </button>
-                </li>
-              ))}
+              before={<NewPlayerRows players={newPlayers} onRemove={imported.remove} />}
             />
           </SegmentedContent>
 
@@ -196,9 +141,7 @@ export function CreateMatchForm({
                 setSelection(
                   result.entries.flatMap((e) => (e.kind === "player" ? [{ playerId: e.playerId, status: e.status }] : [])),
                 );
-                setNewPlayers(result.entries.filter((e): e is NewEntry => e.kind === "new"));
-                setAliases(result.rememberAliases ? result.aliases : []);
-                aliasesSaved.current = false;
+                imported.apply(result);
                 let filled = false;
                 if (!date && result.header.dayHint) {
                   setDate(resolveDayHint(result.header.dayHint, todayIso(timeZone)));
