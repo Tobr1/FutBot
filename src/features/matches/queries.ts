@@ -196,6 +196,8 @@ export interface MatchDetail {
   finishedAt: string | null;
   votingClosesAt: string | null;
   mvp: { playerId: string; source: "votes" | "admin" } | null;
+  /** Ganador del voto al mejor gol; `decided` es false hasta que se decide al cierre. */
+  bestGoal: { playerId: string | null; decided: boolean };
   participants: MatchParticipant[];
   teams: Record<Side, MatchTeam>;
   events: MatchEvent[];
@@ -251,7 +253,9 @@ export const getMatch = cache(async (groupId: string, matchId: string): Promise<
 
   const { data: match, error } = await supabase
     .from("matches")
-    .select("id, group_id, scheduled_at, venue, players_per_team, status, notes, finished_at, voting_closes_at, mvp_player_id, mvp_source")
+    .select(
+      "id, group_id, scheduled_at, venue, players_per_team, status, notes, finished_at, voting_closes_at, mvp_player_id, mvp_source, best_goal_player_id, best_goal_decided_at",
+    )
     .eq("group_id", groupId)
     .eq("id", matchId)
     .maybeSingle();
@@ -324,6 +328,7 @@ export const getMatch = cache(async (groupId: string, matchId: string): Promise<
       match.mvp_player_id && match.mvp_source
         ? { playerId: match.mvp_player_id, source: match.mvp_source === "votes" ? "votes" : "admin" }
         : null,
+    bestGoal: { playerId: match.best_goal_player_id, decided: match.best_goal_decided_at !== null },
     participants: participantList,
     teams: teamRecord,
     events: events.data.flatMap((e) => {

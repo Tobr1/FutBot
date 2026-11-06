@@ -131,6 +131,20 @@ describe("premios del mes", () => {
     expect(months[0].mvps).toEqual([{ playerId: "manu", value: 1 }]);
   });
 
+  it("golazo del mes: más veces mejor gol, desempate por goles del mes; sin votos no hay", () => {
+    expect(monthlyAwards({ lines, timeZone: TZ, today: "2026-11-10" })[0].bestGoals).toEqual([]);
+
+    const voted = [
+      ...matchLines("o1", "2026-10-04T01:00:00Z", ["brito"], ["manu"], [2, 1], { brito: { g: 2, best: true }, manu: { g: 1 } }),
+      ...matchLines("o2", "2026-10-25T01:00:00Z", ["brito"], ["manu"], [0, 3], { manu: { g: 3, best: true } }),
+    ];
+    const months = monthlyAwards({ lines: voted, timeZone: TZ, today: "2026-11-10" });
+    // Una vez cada uno: gana Manu, que hizo 4 goles en el mes contra 2.
+    expect(months[0].bestGoals).toEqual([{ playerId: "manu", value: 1 }]);
+    const award = computeAwards({ lines: voted, timeZone: TZ, today: "2026-11-10" }).find((a) => a.kind === "month-best-goal");
+    expect(award).toMatchObject({ playerId: "manu", title: "Golazo del mes", description: "Octubre 2026 · 1 vez mejor gol", icon: "Goal" });
+  });
+
   it("sin 'hoy', un mes se cierra cuando hay partidos en un mes posterior", () => {
     expect(monthlyAwards({ lines, timeZone: TZ }).map((m) => m.key)).toEqual(["2026-10"]);
     // Al pasar a diciembre se cierra noviembre.

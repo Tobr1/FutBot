@@ -155,6 +155,17 @@ export function MonthAwardsList({
           </div>
           <MonthRow title="Goleador del mes" icon="Crown" winners={month.scorers} unit={(n) => (n === 1 ? "gol" : "goles")} players={players} playerHref={playerHref} />
           <MonthRow title="MVP del mes" icon="Star" winners={month.mvps} unit={(n) => (n === 1 ? "vez MVP" : "veces MVP")} players={players} playerHref={playerHref} />
+          {/* Sin "Desierto": los meses anteriores al voto al mejor gol no lo tuvieron. */}
+          {month.bestGoals.length > 0 && (
+            <MonthRow
+              title="Golazo del mes"
+              icon="Goal"
+              winners={month.bestGoals}
+              unit={(n) => (n === 1 ? "mejor gol" : "mejores goles")}
+              players={players}
+              playerHref={playerHref}
+            />
+          )}
         </li>
       ))}
     </ul>
@@ -170,7 +181,7 @@ function MonthRow({
   playerHref,
 }: {
   title: string;
-  icon: "Crown" | "Star";
+  icon: "Crown" | "Star" | "Goal";
   winners: MonthAwards["scorers"];
   unit: (n: number) => string;
   players: PlayerNames;

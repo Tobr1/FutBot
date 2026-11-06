@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Clock, IdCard, Lock, Star, Vote } from "lucide-react";
+import { Clock, Goal, IdCard, Lock, Star, Vote } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LinkPending } from "@/components/shared/link-pending";
@@ -101,8 +101,18 @@ export interface PublishedRating {
   adjustedAverage: number | null;
 }
 
-/** Calificaciones publicadas al cierre: promedio corregido (1 decimal) y votos; el MVP en dorado. */
-export function MatchRatingsList({ ratings, mvpId, playerHref }: { ratings: PublishedRating[]; mvpId: string | null; playerHref: (id: string) => string }) {
+/** Calificaciones publicadas al cierre: promedio corregido (1 decimal) y votos; el MVP en dorado y el mejor gol marcado. */
+export function MatchRatingsList({
+  ratings,
+  mvpId,
+  bestGoalId = null,
+  playerHref,
+}: {
+  ratings: PublishedRating[];
+  mvpId: string | null;
+  bestGoalId?: string | null;
+  playerHref: (id: string) => string;
+}) {
   if (ratings.length === 0) {
     return (
       <EmptyState
@@ -138,6 +148,12 @@ export function MatchRatingsList({ ratings, mvpId, playerHref }: { ratings: Publ
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gold/14 px-1.5 text-2xs font-semibold text-gold ring-1 ring-gold/25 ring-inset">
                       <Star className="size-3 fill-current" aria-hidden="true" />
                       MVP
+                    </span>
+                  )}
+                  {r.playerId === bestGoalId && (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/14 px-1.5 text-2xs font-semibold text-primary ring-1 ring-primary/25 ring-inset">
+                      <Goal className="size-3" aria-hidden="true" />
+                      Mejor gol
                     </span>
                   )}
                 </span>

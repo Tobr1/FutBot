@@ -10,20 +10,22 @@ import { createClient } from "@/lib/supabase/server";
 import { closeVotingSchema, submitRatingsSchema } from "./schemas";
 
 /**
- * Emite o actualiza (hasta el cierre) las calificaciones y el voto al MVP de
- * la cuenta actual, en una sola transacción. La RPC verifica que jugó, que no
- * se vota a sí mismo y que la votación está abierta.
+ * Emite o actualiza (hasta el cierre) las calificaciones y los votos al MVP
+ * y al mejor gol de la cuenta actual, en una sola transacción. La RPC
+ * verifica que jugó, que no se vota a sí mismo, que el mejor gol es de
+ * alguien que hizo gol y que la votación está abierta.
  */
 export async function submitRatingsAction(input: unknown): Promise<MutationResult> {
   const parsed = submitRatingsSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Datos inválidos.");
-  const { matchId, ratings, mvpPlayerId } = parsed.data;
+  const { matchId, ratings, mvpPlayerId, bestGoalPlayerId } = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("submit_match_votes", {
     p_match_id: matchId,
     p_ratings: ratings.map((r) => ({ player_id: r.playerId, score: r.score })),
     p_mvp_player_id: mvpPlayerId ?? undefined,
+    p_best_goal_player_id: bestGoalPlayerId ?? undefined,
   });
   if (error) return fail(toUserMessage(error));
 

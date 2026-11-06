@@ -15,9 +15,20 @@ export interface PlayerStatsSummary {
   goals: number;
   assists: number;
   mvps: number;
+  /** Veces que ganó el voto al mejor gol. */
+  bestGoals: number;
 }
 
-export const EMPTY_STATS: PlayerStatsSummary = { matches: 0, wins: 0, draws: 0, losses: 0, goals: 0, assists: 0, mvps: 0 };
+export const EMPTY_STATS: PlayerStatsSummary = {
+  matches: 0,
+  wins: 0,
+  draws: 0,
+  losses: 0,
+  goals: 0,
+  assists: 0,
+  mvps: 0,
+  bestGoals: 0,
+};
 
 export interface PlayerListItem {
   id: string;
@@ -162,7 +173,10 @@ async function linkedAvatars(profileIds: Array<string | null>): Promise<Map<stri
   return new Map((data ?? []).map((p) => [p.id, p.avatar_url]));
 }
 
-function toStats(row: Partial<Record<keyof PlayerStatsSummary, number | null>> | undefined): PlayerStatsSummary {
+/** Fila de `get_player_stats` (columnas en snake_case). */
+type StatsRow = Partial<Record<Exclude<keyof PlayerStatsSummary, "bestGoals"> | "best_goals", number | null>>;
+
+function toStats(row: StatsRow | undefined): PlayerStatsSummary {
   if (!row) return EMPTY_STATS;
   return {
     matches: row.matches ?? 0,
@@ -172,5 +186,6 @@ function toStats(row: Partial<Record<keyof PlayerStatsSummary, number | null>> |
     goals: row.goals ?? 0,
     assists: row.assists ?? 0,
     mvps: row.mvps ?? 0,
+    bestGoals: row.best_goals ?? 0,
   };
 }

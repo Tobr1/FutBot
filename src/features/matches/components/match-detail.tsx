@@ -1,4 +1,4 @@
-import { Clock, MapPin, Star, Users } from "lucide-react";
+import { Clock, Goal, MapPin, Star, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { RatingPill } from "@/components/shared/player-card";
 import { PositionBadge } from "@/components/shared/position-badge";
@@ -144,10 +144,12 @@ export function ParticipantList({ participants }: { participants: MatchParticipa
 export function TeamColumns({
   match,
   mvpId,
+  bestGoalId,
   ratings,
 }: {
   match: MatchDetail;
   mvpId?: string | null;
+  bestGoalId?: string | null;
   /** Valoración visible por jugador (motor); si falta, el nivel inicial. */
   ratings?: Record<string, number>;
 }) {
@@ -179,6 +181,7 @@ export function TeamColumns({
                 <li key={player.id} className="flex min-h-10 items-center gap-2 px-3 py-1.5">
                   <UserAvatar name={player.nickname} src={player.avatarUrl} size="xs" />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">{player.nickname}</span>
+                  {bestGoalId === player.id && <Goal className="size-4 shrink-0 text-primary" aria-label="Mejor gol" />}
                   {mvpId === player.id && (
                     <Star className="size-4 shrink-0 fill-current text-gold" aria-label="MVP" />
                   )}
@@ -202,7 +205,7 @@ function Tally({ title, items }: { title: string; items: ReactNode[] }) {
   );
 }
 
-/** Detalle del resultado: goleadores, goles en contra y sin autor, MVP y notas. */
+/** Detalle del resultado: goleadores, goles en contra y sin autor, MVP, mejor gol y notas. */
 export function ResultSummary({ match, ratings }: { match: MatchDetail; ratings?: Record<string, number> }) {
   const names = new Map(match.participants.map((p) => [p.id, p.nickname]));
   const name = (id: string | null) => (id ? (names.get(id) ?? "—") : "sin autor");
@@ -210,6 +213,7 @@ export function ResultSummary({ match, ratings }: { match: MatchDetail; ratings?
   const scoreB = match.teams.b.score ?? 0;
   const summary = summarizeEvents(scoreA, scoreB, match.events, (id) => names.get(id) ?? id);
   const mvp = match.mvp ? match.participants.find((p) => p.id === match.mvp?.playerId) : undefined;
+  const bestGoal = match.bestGoal.playerId ? match.participants.find((p) => p.id === match.bestGoal.playerId) : undefined;
 
   return (
     <div className="panel space-y-4 rounded-xl p-4">
@@ -259,6 +263,17 @@ export function ResultSummary({ match, ratings }: { match: MatchDetail; ratings?
             <span className="block truncate text-[15px] font-semibold">{mvp.nickname}</span>
           </span>
           <RatingPill rating={ratings?.[mvp.id] ?? mvp.baseRating} size="sm" />
+        </div>
+      )}
+
+      {bestGoal && (
+        <div className="flex items-center gap-3 rounded-xl bg-primary/10 p-3 ring-1 ring-primary/25 ring-inset">
+          <Goal className="size-5 shrink-0 text-primary" aria-hidden="true" />
+          <UserAvatar name={bestGoal.nickname} src={bestGoal.avatarUrl} size="sm" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-2xs font-semibold tracking-[0.12em] text-primary uppercase">Mejor gol por votos</span>
+            <span className="block truncate text-[15px] font-semibold">{bestGoal.nickname}</span>
+          </span>
         </div>
       )}
 

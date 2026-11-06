@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Goal, Star } from "lucide-react";
 import Link from "next/link";
 import { LinkPending } from "@/components/shared/link-pending";
 import { formatMatchDate } from "@/domain/matches/datetime";
@@ -64,6 +64,12 @@ export function RecentMatches({
                     <span className="inline-flex items-center gap-0.5 font-semibold text-gold">
                       <Star className="size-3 fill-current" aria-hidden="true" />
                       MVP
+                    </span>
+                  )}
+                  {m.isBestGoal && (
+                    <span className="inline-flex items-center gap-0.5 font-semibold text-primary">
+                      <Goal className="size-3" aria-hidden="true" />
+                      Mejor gol
                     </span>
                   )}
                 </span>

@@ -51,6 +51,7 @@ const BUSINESS_ERRORS: Record<string, string> = {
   not_a_participant: "Solo votan quienes jugaron el partido.",
   cannot_rate_self: "No podés votarte a vos mismo.",
   rated_not_in_match: "Solo podés calificar a quienes jugaron.",
+  best_goal_not_scorer: "El mejor gol se elige entre quienes hicieron gol en el partido.",
   invalid_ratings: "Las calificaciones no son válidas.",
   invalid_skill_history: "Los datos de valoración no son válidos.",
   too_many_rows: "Son demasiados datos para procesar de una vez.",

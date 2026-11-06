@@ -62,6 +62,20 @@ export const getMyMvpVote = cache(async (matchId: string, myPlayerId: string): P
   return data?.candidate_player_id ?? null;
 });
 
+/** Mi voto al mejor gol en un partido (RLS: solo el propio), o null. */
+export const getMyBestGoalVote = cache(async (matchId: string, myPlayerId: string): Promise<string | null> => {
+  if (!UUID.test(matchId)) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("match_best_goal_votes")
+    .select("candidate_player_id")
+    .eq("match_id", matchId)
+    .eq("voter_player_id", myPlayerId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.candidate_player_id ?? null;
+});
+
 export interface PendingVoting {
   matchId: string;
   scheduledAt: string;
@@ -110,13 +124,14 @@ export async function listPendingVotings(groupId: string, myPlayerId: string, no
 
 /**
  * Al ver un partido con la votación cerrada: fija el MVP por votos si nadie
- * lo eligió (idempotente). Devuelve el MVP resultante o null.
+ * lo eligió y decide el mejor gol (idempotente). Devuelve los dos (o null).
  */
-export async function finalizeVoting(matchId: string): Promise<string | null> {
+export async function finalizeVoting(matchId: string): Promise<{ mvpId: string | null; bestGoalId: string | null }> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("finalize_match_voting", { p_match_id: matchId });
-  if (error) return null;
-  return data ?? null;
+  if (error) return { mvpId: null, bestGoalId: null };
+  const { data: match } = await supabase.from("matches").select("best_goal_player_id").eq("id", matchId).maybeSingle();
+  return { mvpId: data ?? null, bestGoalId: match?.best_goal_player_id ?? null };
 }
 
 export interface MyPendingVoting extends PendingVoting {

@@ -120,10 +120,14 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
       />
     );
   } else if (phase === "closed") {
-    // MVP por votos de forma perezosa (idempotente) la primera vez que alguien lo ve cerrado.
-    if (!loaded.mvp) {
-      const mvpId = await finalizeVoting(loaded.id);
-      if (mvpId) match = { ...loaded, mvp: { playerId: mvpId, source: "votes" } };
+    // MVP y mejor gol por votos de forma perezosa (idempotente) la primera vez que alguien lo ve cerrado.
+    if (!loaded.mvp || !loaded.bestGoal.decided) {
+      const { mvpId, bestGoalId } = await finalizeVoting(loaded.id);
+      match = {
+        ...loaded,
+        mvp: loaded.mvp ?? (mvpId ? { playerId: mvpId, source: "votes" } : null),
+        bestGoal: { playerId: bestGoalId, decided: true },
+      };
       await syncSkillHistory(ctx.group.id);
     }
     const published = await getMatchRatings(ctx.group.id, loaded.id);
@@ -135,7 +139,12 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
         : [];
     });
     votingBlock = (
-      <MatchRatingsList ratings={ratings} mvpId={match.mvp?.playerId ?? null} playerHref={(id) => routes.player(slug, id)} />
+      <MatchRatingsList
+        ratings={ratings}
+        mvpId={match.mvp?.playerId ?? null}
+        bestGoalId={match.bestGoal.playerId}
+        playerHref={(id) => routes.player(slug, id)}
+      />
     );
   }
   const ratingById: Record<string, number> = {};
@@ -308,7 +317,7 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
           </div>
           {match.teamsReady ? (
             <>
-              <TeamColumns match={match} mvpId={match.mvp?.playerId} ratings={ratingById} />
+              <TeamColumns match={match} mvpId={match.mvp?.playerId} bestGoalId={match.bestGoal.playerId} ratings={ratingById} />
               {forecast && (
                 <ForecastCard
                   className="mt-3"
@@ -384,6 +393,7 @@ export default async function MatchPage({ params }: PageProps<"/g/[slug]/partido
                   id: p.id,
                   nickname: p.nickname,
                   fullName: p.fullName,
+                  aliases: p.aliases,
                   avatarUrl: p.avatarUrl,
                   baseRating: engine.byPlayer[p.id]?.skill ?? p.baseRating,
                   primaryPosition: p.positions.primary,

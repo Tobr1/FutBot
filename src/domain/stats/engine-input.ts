@@ -19,6 +19,7 @@ export interface MatchLineRow {
   assists: number;
   ownGoals: number;
   isMvp: boolean;
+  isBestGoal: boolean;
 }
 
 export interface HistorySource {
@@ -51,6 +52,7 @@ export function buildRatingInput(source: HistorySource, options: { range: DateRa
     assists: l.assists,
     ownGoals: l.ownGoals,
     isMvp: l.isMvp,
+    isBestGoal: l.isBestGoal,
   }));
 
   return {

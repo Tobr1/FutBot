@@ -239,6 +239,65 @@ export type Database = {
           },
         ]
       }
+      match_best_goal_votes: {
+        Row: {
+          match_id: string
+          group_id: string
+          voter_player_id: string
+          voter_profile_id: string
+          candidate_player_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          match_id: string
+          group_id: string
+          voter_player_id: string
+          voter_profile_id: string
+          candidate_player_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          match_id?: string
+          group_id?: string
+          voter_player_id?: string
+          voter_profile_id?: string
+          candidate_player_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_best_goal_votes_candidate_fkey"
+            columns: ["match_id", "candidate_player_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["match_id", "player_id"]
+          },
+          {
+            foreignKeyName: "match_best_goal_votes_match_fkey"
+            columns: ["match_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id", "group_id"]
+          },
+          {
+            foreignKeyName: "match_best_goal_votes_voter_fkey"
+            columns: ["match_id", "voter_player_id"]
+            isOneToOne: true
+            referencedRelation: "team_members"
+            referencedColumns: ["match_id", "player_id"]
+          },
+          {
+            foreignKeyName: "match_best_goal_votes_voter_profile_id_fkey"
+            columns: ["voter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_events: {
         Row: {
           id: string
@@ -531,6 +590,8 @@ export type Database = {
           created_by: string | null
           created_at: string
           updated_at: string
+          best_goal_player_id: string | null
+          best_goal_decided_at: string | null
         }
         Insert: {
           id?: string
@@ -547,6 +608,8 @@ export type Database = {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+          best_goal_player_id?: string | null
+          best_goal_decided_at?: string | null
         }
         Update: {
           id?: string
@@ -563,8 +626,17 @@ export type Database = {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+          best_goal_player_id?: string | null
+          best_goal_decided_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "matches_best_goal_fkey"
+            columns: ["best_goal_player_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id", "group_id"]
+          },
           {
             foreignKeyName: "matches_created_by_fkey"
             columns: ["created_by"]
@@ -1246,6 +1318,7 @@ export type Database = {
           assists: number | null
           own_goals: number | null
           is_mvp: boolean | null
+          is_best_goal: boolean | null
         }
         Relationships: []
       }
@@ -1399,6 +1472,7 @@ export type Database = {
           assists: number | null
           own_goals: number | null
           mvps: number | null
+          best_goals: number | null
         }[]
       }
       get_prediction_count: {
@@ -1616,6 +1690,7 @@ export type Database = {
           p_match_id: string
           p_ratings?: Json
           p_mvp_player_id?: string
+          p_best_goal_player_id?: string
         }
         Returns: undefined
       }

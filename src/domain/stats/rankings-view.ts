@@ -24,6 +24,7 @@ export const RANKING_TABS: readonly RankingTab[] = [
   { kind: "winRate", slug: "victorias", label: "% victorias", description: "Ganados más medio empate, sobre jugados.", unit: "" },
   { kind: "mostRegular", slug: "regular", label: "Más regular", description: "Calificaciones más parejas (0 a 100).", unit: "" },
   { kind: "mvps", slug: "mvp", label: "MVP", description: "Veces elegido el mejor del partido.", unit: "MVP" },
+  { kind: "bestGoals", slug: "mejor-gol", label: "Mejor gol", description: "Veces que su gol fue votado el mejor del partido.", unit: "" },
   { kind: "form", slug: "momento", label: "Mejor momento", description: "Últimos 5 partidos contra su nivel.", unit: "" },
 ];
 
@@ -67,6 +68,8 @@ export function excludedLabel(kind: RankingKind, excluded: number, minMatches: n
       return `${n} sin asistencias.`;
     case "mvps":
       return `${n} sin MVP.`;
+    case "bestGoals":
+      return `${n} sin mejor gol.`;
   }
 }
 
@@ -88,5 +91,7 @@ export function emptyRankingText(kind: RankingKind, minMatches: number): string 
       return "Todavía no hay asistencias cargadas.";
     case "mvps":
       return "Todavía no hay MVP elegidos.";
+    case "bestGoals":
+      return "Todavía no hay mejores goles elegidos.";
   }
 }

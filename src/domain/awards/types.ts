@@ -18,6 +18,7 @@ export type AwardKind =
   | "attendance"
   | "month-scorer"
   | "month-mvp"
+  | "month-best-goal"
   | "season-best";
 
 /** Nombre del ícono de lucide-react (la UI lo traduce a componente). */

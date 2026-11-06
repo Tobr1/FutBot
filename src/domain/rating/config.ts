@@ -5,7 +5,7 @@
 
 import type { RatingPosition } from "./types";
 
-export const ENGINE_VERSION = "v1";
+export const ENGINE_VERSION = "v2";
 
 export interface RatingConfig {
   /** Nivel de arranque si ningún jugador del grupo tiene nivel inicial. */
@@ -13,6 +13,8 @@ export interface RatingConfig {
   performance: {
     /** k de la contracción bayesiana P = (k·μ + n·x̄) / (k + n). */
     shrinkageK: number;
+    /** Lo que suma a P (acotado a 10) ganar el voto al mejor gol del partido. */
+    bestGoalBonus: number;
   };
   votes: {
     /** α_n = max(α_min, 1 / (n + n₀)). */
@@ -77,7 +79,7 @@ export interface RatingConfig {
 
 export const DEFAULT_RATING_CONFIG: RatingConfig = {
   defaultRating: 5,
-  performance: { shrinkageK: 2 },
+  performance: { shrinkageK: 2, bestGoalBonus: 0.5 },
   votes: { n0: 3, alphaMin: 0.12 },
   weights: { votes: 0.65, results: 0.25, offense: 0.1 },
   results: { eloScale: 2, k: 0.3, goalDiffFactor: 0.5 },

@@ -64,9 +64,9 @@ const EVOLUTION: EvolutionPoint[] = [
 ];
 
 const RECENT: RecentMatch[] = [
-  { matchId: "r1", scheduledAt: "2026-10-18T01:00:00Z", goalsFor: 5, goalsAgainst: 3, goals: 2, assists: 1, isMvp: true, performance: 8.1 },
-  { matchId: "r2", scheduledAt: "2026-10-11T01:00:00Z", goalsFor: 2, goalsAgainst: 2, goals: 0, assists: 0, isMvp: false, performance: 6.4 },
-  { matchId: "r3", scheduledAt: "2026-10-04T01:00:00Z", goalsFor: 1, goalsAgainst: 4, goals: 1, assists: 0, isMvp: false, performance: null },
+  { matchId: "r1", scheduledAt: "2026-10-18T01:00:00Z", goalsFor: 5, goalsAgainst: 3, goals: 2, assists: 1, isMvp: true, isBestGoal: true, performance: 8.1 },
+  { matchId: "r2", scheduledAt: "2026-10-11T01:00:00Z", goalsFor: 2, goalsAgainst: 2, goals: 0, assists: 0, isMvp: false, isBestGoal: false, performance: 6.4 },
+  { matchId: "r3", scheduledAt: "2026-10-04T01:00:00Z", goalsFor: 1, goalsAgainst: 4, goals: 1, assists: 0, isMvp: false, isBestGoal: false, performance: null },
 ];
 
 const HISTORY: HistoryMatch[] = [
@@ -104,12 +104,13 @@ export function StatsSection() {
         <p className="text-sm text-muted-foreground">Votación, calificaciones, rankings, evolución, historial y comparador con datos de ejemplo.</p>
       </header>
 
-      <Demo title="Votar paso a paso" note="VotingForm: un jugador por pantalla (1-10 sin valor marcado o 'No lo vi'), el MVP y un resumen antes de enviar. Con votos ya enviados arranca en el resumen.">
+      <Demo title="Votar paso a paso" note="VotingForm: un jugador por pantalla (1-10 sin valor marcado o 'No lo vi'), el MVP, el mejor gol (entre los que hicieron gol) y un resumen antes de enviar. Con votos ya enviados arranca en el resumen.">
         <div className="max-w-2xl">
           <VotingForm
             groupId="00000000-0000-4000-8000-000000000001"
             matchId="00000000-0000-4000-8000-000000000002"
             saved={{}}
+            scorers={{ "00000000-0000-4000-8000-0000000000a1": 1, "00000000-0000-4000-8000-0000000000b1": 2 }}
             groups={[
               {
                 key: "teammates",
@@ -169,7 +170,7 @@ export function StatsSection() {
       </Demo>
 
       <Demo title="MatchRatingsList" note="Calificaciones publicadas al cierre: promedio corregido con coma y votos; MVP en dorado.">
-        <MatchRatingsList ratings={RATINGS} mvpId="p1" playerHref={() => "#"} />
+        <MatchRatingsList ratings={RATINGS} mvpId="p1" bestGoalId="p2" playerHref={() => "#"} />
       </Demo>
 
       <Demo title="Podium" note="Top 3 con tokens de medalla, orden visual 2 · 1 · 3 y DOM 1-2-3.">

@@ -10,11 +10,11 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { formatMatchDate } from "@/domain/matches/datetime";
-import { closesInLabel, closesSoon, voteTargets, votingPhase } from "@/domain/voting/voting";
+import { closesInLabel, closesSoon, goalsByScorer, voteTargets, votingPhase } from "@/domain/voting/voting";
 import { getGroupContext } from "@/features/groups/queries";
 import { getMatch } from "@/features/matches/queries";
 import { type VoteGroup, VotingForm } from "@/features/voting/components/voting-form";
-import { getMyMvpVote, getMyVotes } from "@/features/voting/queries";
+import { getMyBestGoalVote, getMyMvpVote, getMyVotes } from "@/features/voting/queries";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -30,10 +30,11 @@ export default async function MatchVotePage({ params }: PageProps<"/g/[slug]/par
   const dayLabel = formatMatchDate(match.scheduledAt, ctx.group.timezone);
   const me = ctx.myPlayer?.id ?? null;
   const targets = voteTargets({ a: match.teams.a.memberIds, b: match.teams.b.memberIds }, me);
-  const [saved, savedMvp] =
+  const [saved, savedMvp, savedBestGoal] =
     me && targets.mySide
-      ? await Promise.all([getMyVotes(match.id, me), getMyMvpVote(match.id, me)])
-      : [{} as Record<string, number>, null];
+      ? await Promise.all([getMyVotes(match.id, me), getMyMvpVote(match.id, me), getMyBestGoalVote(match.id, me)])
+      : [{} as Record<string, number>, null, null];
+  const scorers = goalsByScorer(match.events);
 
   // La hora actual solo después de connection(): la página es dinámica.
   await connection();
@@ -138,7 +139,15 @@ export default async function MatchVotePage({ params }: PageProps<"/g/[slug]/par
           <EmptyState icon={Vote} headingLevel="h2" title="No hay a quién calificar" action={back} />
         ) : (
           <div className="max-w-2xl">
-            <VotingForm groupId={ctx.group.id} matchId={match.id} groups={groups} saved={saved} savedMvp={savedMvp} />
+            <VotingForm
+              groupId={ctx.group.id}
+              matchId={match.id}
+              groups={groups}
+              saved={saved}
+              savedMvp={savedMvp}
+              scorers={scorers}
+              savedBestGoal={savedBestGoal}
+            />
           </div>
         )}
       </>
@@ -151,7 +160,9 @@ export default async function MatchVotePage({ params }: PageProps<"/g/[slug]/par
         <StackHeader backHref={matchHref} backLabel={`Partido del ${dayLabel}`} title="Votar" />
         <PageHeader
           title="Votar"
-          description={`Partido del ${dayLabel}. Calificá de 1 a 10 a cada uno según cómo jugó ese día y elegí al jugador del partido.`}
+          description={`Partido del ${dayLabel}. Calificá de 1 a 10 a cada uno según cómo jugó ese día y elegí al jugador del partido${
+            Object.keys(scorers).length > 0 ? " y el mejor gol" : ""
+          }.`}
         />
         {body}
       </div>

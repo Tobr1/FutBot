@@ -10,6 +10,7 @@ export interface LineExtras {
   a?: number;
   og?: number;
   mvp?: boolean;
+  best?: boolean;
 }
 
 export function matchLines(
@@ -31,6 +32,7 @@ export function matchLines(
     assists: extras[playerId]?.a ?? 0,
     ownGoals: extras[playerId]?.og ?? 0,
     isMvp: extras[playerId]?.mvp ?? false,
+    isBestGoal: extras[playerId]?.best ?? false,
   });
   return [...teamA.map((id) => line(id, "a")), ...teamB.map((id) => line(id, "b"))];
 }

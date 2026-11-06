@@ -264,6 +264,8 @@ export interface MonthAwards {
   scorers: MonthWinner[];
   /** MVP del mes: más veces MVP, desempate por promedio de calificación. */
   mvps: MonthWinner[];
+  /** Golazo del mes: más veces mejor gol, desempate por goles del mes. */
+  bestGoals: MonthWinner[];
 }
 
 const monthKeyOf = (iso: string, timeZone: string) => isoToZoned(iso, timeZone).date.slice(0, 7);
@@ -282,7 +284,7 @@ function leaders(values: Map<string, number>, tiebreak?: Map<string, number>): M
 }
 
 /**
- * Goleador y MVP de cada mes ya cerrado, del más reciente al más viejo. Un mes
+ * Goleador, MVP y golazo de cada mes ya cerrado, del más reciente al más viejo. Un mes
  * está cerrado cuando terminó y ninguno de sus partidos tiene la votación abierta.
  */
 export function monthlyAwards(input: AwardsInput): MonthAwards[] {
@@ -293,12 +295,22 @@ export function monthlyAwards(input: AwardsInput): MonthAwards[] {
   const pending = new Set((input.openVotingAt ?? []).map((iso) => monthKeyOf(iso, input.timeZone)));
   const isClosed = (key: string) => !pending.has(key) && (key < lastMonth || (todayMonth !== null && key < todayMonth));
 
-  const months = new Map<string, { lastMatchAt: string; matches: number; goals: Map<string, number>; mvps: Map<string, number>; perf: Map<string, number[]> }>();
+  const months = new Map<
+    string,
+    {
+      lastMatchAt: string;
+      matches: number;
+      goals: Map<string, number>;
+      mvps: Map<string, number>;
+      bestGoals: Map<string, number>;
+      perf: Map<string, number[]>;
+    }
+  >();
   for (const match of matches) {
     const key = monthKeyOf(match.scheduledAt, input.timeZone);
     let month = months.get(key);
     if (!month) {
-      month = { lastMatchAt: match.scheduledAt, matches: 0, goals: new Map(), mvps: new Map(), perf: new Map() };
+      month = { lastMatchAt: match.scheduledAt, matches: 0, goals: new Map(), mvps: new Map(), bestGoals: new Map(), perf: new Map() };
       months.set(key, month);
     }
     month.lastMatchAt = match.scheduledAt;
@@ -307,6 +319,7 @@ export function monthlyAwards(input: AwardsInput): MonthAwards[] {
     for (const [id, line] of match.lines) {
       if (line.goals > 0) month.goals.set(id, (month.goals.get(id) ?? 0) + line.goals);
       if (line.isMvp) month.mvps.set(id, (month.mvps.get(id) ?? 0) + 1);
+      if (line.isBestGoal) month.bestGoals.set(id, (month.bestGoals.get(id) ?? 0) + 1);
       const p = perfs[id];
       if (typeof p === "number" && Number.isFinite(p)) month.perf.set(id, [...(month.perf.get(id) ?? []), p]);
     }
@@ -323,6 +336,7 @@ export function monthlyAwards(input: AwardsInput): MonthAwards[] {
       matches: month.matches,
       scorers: leaders(month.goals),
       mvps: leaders(month.mvps, avgPerf),
+      bestGoals: leaders(month.bestGoals, month.goals),
     });
   }
   return out.sort((x, y) => (x.key < y.key ? 1 : x.key > y.key ? -1 : 0));
@@ -350,6 +364,18 @@ function monthAwardsToList(months: readonly MonthAwards[]): Award[] {
           title: "MVP del mes",
           description: `${month.label} · ${w.value} ${w.value === 1 ? "vez" : "veces"} MVP${shared(month.mvps)}`,
           icon: "Star",
+          tier: "gold",
+          earnedAt: month.lastMatchAt,
+          matchId: null,
+        }),
+      );
+    }
+    for (const w of month.bestGoals) {
+      list.push(
+        make("month-best-goal", w.playerId, month.key, {
+          title: "Golazo del mes",
+          description: `${month.label} · ${w.value} ${w.value === 1 ? "vez" : "veces"} mejor gol${shared(month.bestGoals)}`,
+          icon: "Goal",
           tier: "gold",
           earnedAt: month.lastMatchAt,
           matchId: null,

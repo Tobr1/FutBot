@@ -143,3 +143,13 @@ export function hasPendingVotes({ members, me, ratedIds }: PendingVoteInput): bo
   const rated = new Set(ratedIds);
   return members.some((id) => id !== me && !rated.has(id));
 }
+
+/**
+ * Goles a favor con autor de cada jugador: los candidatos al mejor gol
+ * (espeja a `submit_match_votes`; los goles en contra y sin autor no cuentan).
+ */
+export function goalsByScorer(events: ReadonlyArray<{ type: string; playerId: string | null }>): Record<string, number> {
+  const goals: Record<string, number> = {};
+  for (const e of events) if (e.type === "goal" && e.playerId) goals[e.playerId] = (goals[e.playerId] ?? 0) + 1;
+  return goals;
+}

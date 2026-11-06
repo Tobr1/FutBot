@@ -19,7 +19,12 @@ export const submitRatingsSchema = z.object({
     .refine((list) => new Set(list.map((r) => r.playerId)).size === list.length, "Hay jugadores repetidos."),
   /** Jugador del partido elegido (uno solo, nunca uno mismo: lo valida la RPC). */
   mvpPlayerId: z.uuid().nullable().default(null),
-}).refine((v) => v.ratings.length > 0 || v.mvpPlayerId !== null, "Calificá al menos a un jugador o elegí al MVP.");
+  /** Quién hizo el mejor gol (entre los que hicieron gol, nunca uno mismo: lo valida la RPC). */
+  bestGoalPlayerId: z.uuid().nullable().default(null),
+}).refine(
+  (v) => v.ratings.length > 0 || v.mvpPlayerId !== null || v.bestGoalPlayerId !== null,
+  "Calificá al menos a un jugador o elegí al MVP.",
+);
 
 export const closeVotingSchema = z.object({ matchId: z.uuid() });
 

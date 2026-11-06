@@ -1,5 +1,5 @@
 /**
- * Motor de valoración v1 (docs/ANALISIS.md §6). Puro y determinista: repite
+ * Motor de valoración v2 (docs/ANALISIS.md §6; v2 suma el mejor gol a P). Puro y determinista: repite
  * el historial en orden cronológico y devuelve la habilidad estimada S de
  * cada jugador, su incertidumbre y el rendimiento P de cada partido.
  */
@@ -186,18 +186,18 @@ export function computeRatings(input: RatingInput, overrides?: RatingConfigOverr
     for (const id of participants) ensure(id);
     const before = new Map(participants.map((id) => [id, combinedSkill(states.get(id)!, weights)]));
 
-    // Rendimiento P (contracción hacia la media del partido).
+    // Rendimiento P (contracción hacia la media del partido). El mejor gol
+    // suma después de contraer y no mueve la media del partido.
     const rated = participants
       .map((id) => ({ id, agg: aggByKey.get(keyOf(match.matchId, id)) }))
       .filter((r): r is { id: string; agg: RatingAggregate } => r.agg !== undefined);
     const matchMean = mean(rated.map((r) => r.agg.adjustedAverage as number));
     const performances: Record<string, number> = {};
     for (const { id, agg } of rated) {
-      performances[id] = shrinkPerformance(
-        agg.adjustedAverage as number,
-        agg.votes,
-        matchMean as number,
-        config.performance.shrinkageK,
+      const bonus = lineByKey.get(keyOf(match.matchId, id))?.isBestGoal ? config.performance.bestGoalBonus : 0;
+      performances[id] = clampRating(
+        shrinkPerformance(agg.adjustedAverage as number, agg.votes, matchMean as number, config.performance.shrinkageK) +
+          bonus,
       );
     }
     byMatch[match.matchId] = { performances };

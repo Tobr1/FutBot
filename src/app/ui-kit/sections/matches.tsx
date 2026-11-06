@@ -178,6 +178,7 @@ const DETAIL: MatchDetail = {
   finishedAt: "2026-10-11T03:00:00Z",
   votingClosesAt: null,
   mvp: { playerId: "p1", source: "admin" },
+  bestGoal: { playerId: "p6", decided: true },
   participants: PARTICIPANTS,
   teams: {
     a: { id: "ta", name: "Azul", score: 3, memberIds: ["p1", "p2", "p3", "p4", "p5"] },
@@ -404,7 +405,7 @@ export function MatchesSection() {
       </Demo>
 
       <Demo title="Equipos y resultado" note="TeamColumns (con MVP) y ResultSummary (goles, en contra, sin autor, asistencias, MVP, notas).">
-        <TeamColumns match={DETAIL} mvpId="p1" />
+        <TeamColumns match={DETAIL} mvpId="p1" bestGoalId="p6" />
         <ResultSummary match={DETAIL} />
       </Demo>
 

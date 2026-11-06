@@ -163,6 +163,7 @@ export default async function PlayerPage({ params, searchParams }: PageProps<"/g
               { label: "PJ", srLabel: "Partidos jugados", value: stats.matches },
               { label: "Goles", value: stats.goals, tone: "primary" },
               { label: "MVP", value: stats.mvps, tone: "gold" },
+              { label: "M. gol", srLabel: "Mejor gol del partido", value: stats.bestGoals, tone: "primary" },
               {
                 label: "%Vic",
                 srLabel: "Efectividad",

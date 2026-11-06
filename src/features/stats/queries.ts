@@ -102,7 +102,7 @@ export const loadGroupHistory = cache(async (groupId: string): Promise<GroupHist
     fetchAll((from, to) =>
       supabase
         .from("player_match_lines")
-        .select("match_id, player_id, side, scheduled_at, goals_for, goals_against, goals, assists, own_goals, is_mvp")
+        .select("match_id, player_id, side, scheduled_at, goals_for, goals_against, goals, assists, own_goals, is_mvp, is_best_goal")
         .eq("group_id", groupId)
         .order("scheduled_at")
         .order("match_id")
@@ -142,6 +142,7 @@ export const loadGroupHistory = cache(async (groupId: string): Promise<GroupHist
             assists: l.assists ?? 0,
             ownGoals: l.own_goals ?? 0,
             isMvp: l.is_mvp ?? false,
+            isBestGoal: l.is_best_goal ?? false,
           },
         ]
       : [],
@@ -215,12 +216,22 @@ const totalsFor = cache(async (groupId: string, from: string | null, to: string 
       goals: row.goals ?? 0,
       assists: row.assists ?? 0,
       mvps: row.mvps ?? 0,
+      bestGoals: row.best_goals ?? 0,
     });
   }
   return map;
 });
 
-export const EMPTY_TOTALS: Omit<PlayerTotals, "playerId"> = { matches: 0, wins: 0, draws: 0, losses: 0, goals: 0, assists: 0, mvps: 0 };
+export const EMPTY_TOTALS: Omit<PlayerTotals, "playerId"> = {
+  matches: 0,
+  wins: 0,
+  draws: 0,
+  losses: 0,
+  goals: 0,
+  assists: 0,
+  mvps: 0,
+  bestGoals: 0,
+};
 
 /** Totales de un jugador (`get_player_stats`), opcionalmente en un rango. */
 export async function getPlayerStatsSummary(
@@ -293,6 +304,7 @@ export interface RecentMatch {
   goals: number;
   assists: number;
   isMvp: boolean;
+  isBestGoal: boolean;
   /** Rendimiento P (votación cerrada); null sin votos. */
   performance: number | null;
 }
@@ -308,6 +320,7 @@ export async function getRecentMatches(groupId: string, playerId: string, n = 5)
     goals: l.goals,
     assists: l.assists,
     isMvp: l.isMvp,
+    isBestGoal: l.isBestGoal,
     performance: result.byMatch[l.matchId]?.performances[playerId] ?? null,
   }));
 }

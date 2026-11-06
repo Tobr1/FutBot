@@ -3,6 +3,7 @@ import {
   changedCount,
   closesInLabel,
   closesSoon,
+  goalsByScorer,
   hasPendingVotes,
   isValidScore,
   progressPercent,
@@ -139,5 +140,19 @@ describe("hasPendingVotes", () => {
 
   it("sin pendientes si no jugó", () => {
     expect(hasPendingVotes({ members: ["a", "b"], me: "yo", ratedIds: [] })).toBe(false);
+  });
+});
+
+describe("goalsByScorer", () => {
+  it("cuenta solo los goles a favor con autor", () => {
+    const goals = goalsByScorer([
+      { type: "goal", playerId: "a" },
+      { type: "goal", playerId: "a" },
+      { type: "assist", playerId: "b" },
+      { type: "own_goal", playerId: "c" },
+      { type: "own_goal", playerId: null },
+      { type: "goal", playerId: "d" },
+    ]);
+    expect(goals).toEqual({ a: 2, d: 1 });
   });
 });

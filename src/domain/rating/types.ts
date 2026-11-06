@@ -26,6 +26,8 @@ export interface PlayerLine {
   assists: number;
   ownGoals: number;
   isMvp: boolean;
+  /** Ganó el voto al mejor gol: suma `performance.bestGoalBonus` a su P de ese partido. */
+  isBestGoal?: boolean;
 }
 
 /** Una fila de `get_rating_aggregates` (solo votaciones cerradas). */

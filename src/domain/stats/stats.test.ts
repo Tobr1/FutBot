@@ -77,6 +77,7 @@ const line = (partial: Partial<MatchLineRow> & Pick<MatchLineRow, "matchId" | "p
   assists: 0,
   ownGoals: 0,
   isMvp: false,
+  isBestGoal: false,
   ...partial,
 });
 
@@ -270,11 +271,12 @@ describe("partidos del jugador", () => {
 });
 
 describe("rankings: presentación", () => {
-  it("tiene las 7 pestañas (sin asistidores) y resuelve el slug", () => {
-    expect(RANKING_TABS).toHaveLength(7);
-    expect(new Set(RANKING_TABS.map((t) => t.slug)).size).toBe(7);
+  it("tiene las 8 pestañas (sin asistidores) y resuelve el slug", () => {
+    expect(RANKING_TABS).toHaveLength(8);
+    expect(new Set(RANKING_TABS.map((t) => t.slug)).size).toBe(8);
     expect(RANKING_TABS.some((t) => t.kind === "assisters")).toBe(false);
     expect(rankingTabBySlug("goleadores").kind).toBe("scorers");
+    expect(rankingTabBySlug("mejor-gol").kind).toBe("bestGoals");
     expect(rankingTabBySlug("cualquiera").kind).toBe("best");
   });
 

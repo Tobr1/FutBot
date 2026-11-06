@@ -44,6 +44,7 @@ function lines(matchId: string, iso: string, a: string[], b: string[], score: [n
     assists: extras[playerId]?.a ?? 0,
     ownGoals: 0,
     isMvp: extras[playerId]?.mvp ?? false,
+    isBestGoal: false,
   });
   return [...a.map((id) => row(id, "a")), ...b.map((id) => row(id, "b"))];
 }

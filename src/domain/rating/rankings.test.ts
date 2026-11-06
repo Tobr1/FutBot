@@ -30,7 +30,7 @@ function result(byPlayer: Record<string, Partial<PlayerRating>>): RatingResult {
 }
 
 function totals(playerId: string, partial: Partial<PlayerTotals>): PlayerTotals {
-  return { playerId, matches: 5, wins: 0, draws: 0, losses: 0, goals: 0, assists: 0, mvps: 0, ...partial };
+  return { playerId, matches: 5, wins: 0, draws: 0, losses: 0, goals: 0, assists: 0, mvps: 0, bestGoals: 0, ...partial };
 }
 
 const ids = (list: { entries: { playerId: string }[] }) => list.entries.map((e) => e.playerId);
@@ -91,6 +91,14 @@ describe("buildRankings · totales", () => {
     const rankings = buildRankings(result({}), t, { minMatches: 3 });
     expect(ids(rankings.assisters)).toEqual(["c", "b", "a"]);
     expect(ids(rankings.mvps)).toEqual(["b", "a"]);
+  });
+
+  it("mejor gol: veces ganado, sin los que nunca lo ganaron", () => {
+    const rankings = buildRankings(result({}), [totals("a", { matches: 10, bestGoals: 2 }), totals("b", { matches: 2, bestGoals: 3 }), totals("c", {})], {
+      minMatches: 3,
+    });
+    expect(ids(rankings.bestGoals)).toEqual(["b", "a"]);
+    expect(rankings.bestGoals.excluded).toBe(1);
   });
 
   it("a igual total y promedio, gana el de más partidos y después el id", () => {

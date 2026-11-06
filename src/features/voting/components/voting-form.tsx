@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, EyeOff, Loader2, Lock, Pencil, Star } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, EyeOff, Goal, Loader2, Lock, Pencil, Star } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { StickyActionBar } from "@/components/layout/sticky-action-bar";
@@ -50,6 +50,8 @@ interface StoredDraft {
   draft: RatingDraft;
   skipped: string[];
   mvp: string | null;
+  /** Falta en los borradores anteriores al voto al mejor gol. */
+  bestGoal?: string | null;
 }
 
 const storageKey = (matchId: string) => `fulbot:votos:${matchId}`;
@@ -75,9 +77,10 @@ function writeStored(matchId: string, value: StoredDraft | null) {
 
 /**
  * Votación paso a paso: un jugador por pantalla (escala 1-10 sin valor
- * marcado, o "No lo vi jugar", que no cuenta como voto), después el MVP y
- * un resumen antes de enviar. Se puede ir y volver; el borrador se guarda en
- * el teléfono hasta enviar. Los votos se pueden cambiar hasta el cierre.
+ * marcado, o "No lo vi jugar", que no cuenta como voto), después el MVP, el
+ * mejor gol (si alguien más hizo gol) y un resumen antes de enviar. Se puede
+ * ir y volver; el borrador se guarda en el teléfono hasta enviar. Los votos
+ * se pueden cambiar hasta el cierre.
  */
 export function VotingForm({
   groupId,
@@ -85,6 +88,8 @@ export function VotingForm({
   groups,
   saved,
   savedMvp = null,
+  scorers = {},
+  savedBestGoal = null,
   disabled = false,
 }: {
   groupId: string;
@@ -94,6 +99,10 @@ export function VotingForm({
   saved: Record<string, number>;
   /** MVP ya elegido por esta cuenta (precarga). */
   savedMvp?: string | null;
+  /** Goles a favor de cada jugador del partido: los candidatos al mejor gol. */
+  scorers?: Record<string, number>;
+  /** Mejor gol ya elegido por esta cuenta (precarga). */
+  savedBestGoal?: string | null;
   disabled?: boolean;
 }) {
   const players = useMemo<StepPlayer[]>(
@@ -101,14 +110,19 @@ export function VotingForm({
     [groups],
   );
   const ids = useMemo(() => players.map((p) => p.id), [players]);
-  const hasSaved = Object.keys(saved).length > 0 || savedMvp !== null;
+  // Uno mismo no está en `players`: nunca es candidato.
+  const candidates = useMemo(() => players.filter((p) => (scorers[p.id] ?? 0) > 0), [players, scorers]);
+  const hasSaved = Object.keys(saved).length > 0 || savedMvp !== null || savedBestGoal !== null;
 
   const [draft, setDraft] = useState<RatingDraft>(() => ({ ...saved }));
   const [skipped, setSkipped] = useState<Set<string>>(() => new Set());
   const [mvp, setMvp] = useState<string | null>(savedMvp);
-  // Pasos: 0..n-1 jugadores, n = MVP, n+1 = resumen. Si ya votó, arranca en el resumen.
+  const [bestGoal, setBestGoal] = useState<string | null>(savedBestGoal);
+  // Pasos: 0..n-1 jugadores, n = MVP, n+1 = mejor gol (si hay candidatos) y
+  // después el resumen. Si ya votó, arranca en el resumen.
   const mvpStep = players.length;
-  const summaryStep = players.length + 1;
+  const bestGoalStep = candidates.length > 0 ? players.length + 1 : -1;
+  const summaryStep = players.length + (candidates.length > 0 ? 2 : 1);
   const [step, setStep] = useState(hasSaved ? summaryStep : 0);
   const [isPending, startTransition] = useTransition();
   const restored = useRef(false);
@@ -129,14 +143,15 @@ export function VotingForm({
       });
       setSkipped(new Set(stored.skipped.filter((id) => allowed.has(id))));
       if (stored.mvp && allowed.has(stored.mvp)) setMvp(stored.mvp);
+      if (stored.bestGoal && candidates.some((p) => p.id === stored.bestGoal)) setBestGoal(stored.bestGoal);
     });
     return () => cancelAnimationFrame(frame);
-  }, [ids, matchId]);
+  }, [ids, candidates, matchId]);
 
   useEffect(() => {
     if (!restored.current) return;
-    writeStored(matchId, { draft, skipped: [...skipped], mvp });
-  }, [draft, skipped, mvp, matchId]);
+    writeStored(matchId, { draft, skipped: [...skipped], mvp, bestGoal });
+  }, [draft, skipped, mvp, bestGoal, matchId]);
 
   // Al cambiar de paso, el foco va al título (lectores de pantalla y teclado).
   const firstRender = useRef(true);
@@ -151,7 +166,8 @@ export function VotingForm({
 
   const summary = votingSummary(ids, draft, skipped);
   const mvpChanged = mvp !== null && mvp !== savedMvp;
-  const changes = changedCount(draft, saved, ids) + (mvpChanged ? 1 : 0);
+  const bestGoalChanged = bestGoal !== null && bestGoal !== savedBestGoal;
+  const changes = changedCount(draft, saved, ids) + (mvpChanged ? 1 : 0) + (bestGoalChanged ? 1 : 0);
   const payload = ratingsPayload(draft, ids);
   const busy = disabled || isPending;
 
@@ -179,13 +195,19 @@ export function VotingForm({
   function submit() {
     if (busy || changes === 0) return;
     startTransition(async () => {
-      const result = await submitRatingsAction({ groupId, matchId, ratings: payload, mvpPlayerId: mvp });
+      const result = await submitRatingsAction({
+        groupId,
+        matchId,
+        ratings: payload,
+        mvpPlayerId: mvp,
+        bestGoalPlayerId: bestGoal,
+      });
       if (result.ok) writeStored(matchId, null);
       else toast.error(result.message);
     });
   }
 
-  const totalSteps = players.length + 1;
+  const totalSteps = summaryStep;
   const progress = progressPercent(Math.min(step, totalSteps), totalSteps);
 
   // ---------- Jugador ----------
@@ -292,8 +314,68 @@ export function VotingForm({
           <Button type="button" variant="ghost" size="lg" className="px-3" disabled={players.length === 0} onClick={() => setStep(players.length - 1)} aria-label="Anterior">
             <ArrowLeft aria-hidden="true" />
           </Button>
+          <Button type="button" size="lg" onClick={() => setStep(bestGoalStep >= 0 ? bestGoalStep : summaryStep)}>
+            {mvp ? (bestGoalStep >= 0 ? "Siguiente" : "Ver resumen") : "Seguir sin MVP"}
+            <ArrowRight aria-hidden="true" />
+          </Button>
+        </StickyActionBar>
+      </div>
+    );
+  }
+
+  // ---------- Mejor gol ----------
+  if (step === bestGoalStep) {
+    return (
+      <div className="space-y-5">
+        <StepProgress label="Mejor gol" percent={progress} />
+        <section aria-labelledby="votar-mejor-gol" className="space-y-3">
+          <div className="space-y-0.5">
+            <h2
+              id="votar-mejor-gol"
+              ref={headingRef}
+              tabIndex={-1}
+              className="flex items-center gap-2 text-lg font-semibold tracking-tight outline-none"
+            >
+              <Goal className="size-5 text-primary" aria-hidden="true" />
+              ¿Quién hizo el mejor gol?
+            </h2>
+            <p className="text-sm text-muted-foreground">Elegí entre los que hicieron gol. El más votado suma a su valoración.</p>
+          </div>
+          <div role="radiogroup" aria-labelledby="votar-mejor-gol" className="grid grid-cols-2 gap-2">
+            {candidates.map((player) => {
+              const selected = bestGoal === player.id;
+              const goals = scorers[player.id] ?? 0;
+              return (
+                <button
+                  key={player.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={busy}
+                  onClick={() => setBestGoal(player.id)}
+                  className={cn(
+                    "pressable flex min-h-12 min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-left ring-1 ring-inset transition-colors disabled:opacity-50",
+                    selected ? "bg-primary/12 ring-primary/60" : "bg-surface-1 ring-hairline",
+                  )}
+                >
+                  <UserAvatar name={player.nickname} src={player.avatarUrl} size="xs" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{player.nickname}</span>
+                    <span className="block text-xs text-muted-foreground tabular">{goals === 1 ? "1 gol" : `${goals} goles`}</span>
+                  </span>
+                  <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-full", SIDE_DOT[player.side])} />
+                  {selected && <Goal className="size-4 shrink-0 text-primary" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+        <StickyActionBar className="grid grid-cols-[auto_1fr] gap-2">
+          <Button type="button" variant="ghost" size="lg" className="px-3" onClick={() => setStep(mvpStep)} aria-label="Anterior">
+            <ArrowLeft aria-hidden="true" />
+          </Button>
           <Button type="button" size="lg" onClick={() => setStep(summaryStep)}>
-            {mvp ? "Ver resumen" : "Seguir sin MVP"}
+            {bestGoal ? "Ver resumen" : "Seguir sin elegir"}
             <ArrowRight aria-hidden="true" />
           </Button>
         </StickyActionBar>
@@ -303,6 +385,7 @@ export function VotingForm({
 
   // ---------- Resumen ----------
   const mvpPlayer = players.find((p) => p.id === mvp);
+  const bestGoalPlayer = candidates.find((p) => p.id === bestGoal);
   const pendingIndex = firstPendingIndex(ids, draft, skipped);
   return (
     <div className="space-y-5">
@@ -357,6 +440,25 @@ export function VotingForm({
             <Pencil className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           </button>
         </li>
+        {bestGoalStep >= 0 && (
+          <li>
+            <button
+              type="button"
+              onClick={() => setStep(bestGoalStep)}
+              className="pressable flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-2 text-left"
+              aria-label="Cambiar el mejor gol"
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/30">
+                <Goal className="size-4" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs text-muted-foreground">Mejor gol</span>
+                <span className="block truncate text-[15px] font-semibold">{bestGoalPlayer?.nickname ?? "Sin elegir"}</span>
+              </span>
+              <Pencil className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </button>
+          </li>
+        )}
       </ul>
 
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -375,7 +477,7 @@ export function VotingForm({
           size="lg"
           className="w-full"
           onClick={submit}
-          disabled={busy || changes === 0 || (payload.length === 0 && mvp === null)}
+          disabled={busy || changes === 0 || (payload.length === 0 && mvp === null && bestGoal === null)}
           aria-busy={isPending || undefined}
         >
           {isPending ? <Loader2 className="motion-safe:animate-spin" aria-hidden="true" /> : <Check aria-hidden="true" />}

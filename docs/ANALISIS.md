@@ -289,7 +289,8 @@ Identidad visual: fondo azul casi negro (`#060A14`), superficies `#0C1322`, azul
 1. **Corrección por votante**: si un votante calificó a 3+ jugadores, sus votos se centran respecto de su propia media en ese partido (neutraliza al que pone 9 a todos o 3 a todos).
 2. **Media recortada**: con 5+ votos se descartan el máximo y el mínimo (limita el efecto de un voto malintencionado o de un "acuerdo" entre dos).
 3. **Contracción bayesiana**: `P = (k·μ + n·x̄) / (k + n)` con `k = 2` y `μ` = media del partido. Con pocos votos *P* queda cerca de la media; con muchos, refleja lo votado.
-4. Sin votos válidos → no hay *P* para ese partido (no se inventa).
+4. **Mejor gol** (`engine v2`, D-066): quien gana el voto al mejor gol suma `+0.5` a su *P* (tope 10), después de contraer y sin mover `μ`.
+5. Sin votos válidos → no hay *P* para ese partido (no se inventa).
 
 ### 6.3 Habilidad estimada (*S*)
 
@@ -301,7 +302,7 @@ Escala interna 1–10 (se muestra también como valoración 10–99 en la tarjet
 | **Resultados** (*S_r*) | 0.25 | Ajuste tipo Elo por equipo: esperado `E = 1 / (1 + 10^((R_rival − R_propio)/D))`, actualización `K·(resultado − E)·g(dif. de gol)`. Premia ganar contra equipos más fuertes y captura el aporte de defensores y arqueros que no hacen goles. |
 | **Aporte ofensivo** (*S_o*) | 0.10 | `(goles + 0.7·asistencias)` por partido **relativo a lo esperable para su posición** (a un defensor no se le exige lo de un delantero), contraído hacia la media. Peso bajo a propósito. |
 
-`S = Σ wᵢ·Sᵢ` con pesos renormalizados cuando falta un componente (p. ej., partido sin votos). Pesos y parámetros viven en un objeto de configuración versionado (`engine v1`), ajustable por grupo en el futuro.
+`S = Σ wᵢ·Sᵢ` con pesos renormalizados cuando falta un componente (p. ej., partido sin votos). Pesos y parámetros viven en un objeto de configuración versionado (`engine v2`), ajustable por grupo en el futuro.
 
 **Jugadores nuevos**: arrancan en `base_rating` (nivel inicial que fija el admin; si no lo fija, la media del grupo). La **confianza** `c = 1 − e^(−n/4)` crece con los partidos; hasta 3 partidos se marca "provisional". La incertidumbre `σ` decrece con `c` y el armado de equipos la usa para repartir "incógnitas".
 

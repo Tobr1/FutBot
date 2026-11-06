@@ -35,8 +35,8 @@ const VOTES_ONLY = { weights: { votes: 1, results: 0, offense: 0 } };
 
 describe("config", () => {
   it("expone la versión y los parámetros del §6", () => {
-    expect(ENGINE_VERSION).toBe("v1");
-    expect(DEFAULT_RATING_CONFIG.performance.shrinkageK).toBe(2);
+    expect(ENGINE_VERSION).toBe("v2");
+    expect(DEFAULT_RATING_CONFIG.performance).toEqual({ shrinkageK: 2, bestGoalBonus: 0.5 });
     expect(DEFAULT_RATING_CONFIG.votes).toEqual({ n0: 3, alphaMin: 0.12 });
     expect(DEFAULT_RATING_CONFIG.weights).toEqual({ votes: 0.65, results: 0.25, offense: 0.1 });
     expect(DEFAULT_RATING_CONFIG.results.eloScale).toBe(2);
@@ -94,7 +94,7 @@ describe("computeRatings · arranque", () => {
   it("sin partidos, el jugador queda en su nivel inicial con incertidumbre máxima", () => {
     const result = computeRatings(input({ players: [player("p1", 7.5)] }));
     const r = result.byPlayer.p1;
-    expect(result.engineVersion).toBe("v1");
+    expect(result.engineVersion).toBe("v2");
     expect(r.skill).toBe(7.5);
     expect(r.matches).toBe(0);
     expect(r.confidence).toBe(0);
@@ -159,6 +159,43 @@ describe("computeRatings · rendimiento P", () => {
     );
     expect(result.byMatch.m1.performances).toEqual({ a: 8 });
     expect(result.byMatch.m9).toBeUndefined();
+  });
+
+  it("el mejor gol suma medio punto a P sin mover la media del partido, hasta 10", () => {
+    const best = { ...line("m1", "a", "a", 1), isBestGoal: true };
+    const result = computeRatings(
+      input({
+        players: [player("a"), player("b"), player("c")],
+        matches: [match("m1", 0, ["a", "b"], ["c"], 2, 1)],
+        lines: [best, line("m1", "c", "b", 1)],
+        aggregates: [agg("m1", "a", 9, 2), agg("m1", "b", 5, 2), agg("m1", "c", 10, 200)],
+      }),
+    );
+    // μ = 8: a contrae a 8,5 y suma 0,5; b contrae a 6,5.
+    expect(result.byMatch.m1.performances.a).toBeCloseTo(9);
+    expect(result.byMatch.m1.performances.b).toBeCloseTo(6.5);
+
+    const capped = computeRatings(
+      input({
+        players: [player("a"), player("b")],
+        matches: [match("m1", 0, ["a"], ["b"], 1, 0)],
+        lines: [best],
+        aggregates: [agg("m1", "a", 10, 200), agg("m1", "b", 10, 200)],
+      }),
+    );
+    expect(capped.byMatch.m1.performances.a).toBe(10);
+  });
+
+  it("ganar el mejor gol sube la valoración", () => {
+    const base = {
+      players: [player("a"), player("b")],
+      matches: [match("m1", 0, ["a"], ["b"], 1, 0)],
+      aggregates: [agg("m1", "a", 7), agg("m1", "b", 7)],
+    };
+    const without = computeRatings(input({ ...base, lines: [line("m1", "a", "a", 1)] }));
+    const withBest = computeRatings(input({ ...base, lines: [{ ...line("m1", "a", "a", 1), isBestGoal: true }] }));
+    expect(withBest.byPlayer.a.skill).toBeGreaterThan(without.byPlayer.a.skill);
+    expect(withBest.byPlayer.b.skill).toBeCloseTo(without.byPlayer.b.skill);
   });
 });
 

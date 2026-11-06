@@ -17,6 +17,7 @@ export interface PlayerTotals {
   goals: number;
   assists: number;
   mvps: number;
+  bestGoals: number;
 }
 
 export type RankingKind =
@@ -27,6 +28,7 @@ export type RankingKind =
   | "winRate"
   | "mostRegular"
   | "mvps"
+  | "bestGoals"
   | "form";
 
 export interface RankingEntry {
@@ -175,6 +177,7 @@ export function buildRankings(
     winRate: finalize(winRate, totalsUniverse),
     mostRegular: finalize(mostRegular, ratingUniverse),
     mvps: finalize(byTotal((t) => t.mvps), totalsUniverse),
+    bestGoals: finalize(byTotal((t) => t.bestGoals), totalsUniverse),
     form: finalize(form, ratingUniverse),
   };
 }

@@ -480,3 +480,165 @@ describe("cerrar la votación a mano", () => {
     await expectDbError(t.rpc(admin.userId, "close_match_voting", { p_match_id: s.matchId }), "voting_closed");
   });
 });
+
+describe("voto al mejor gol", () => {
+  // En setupFinishedMatch hacen gol Manu (2) y Fran (1).
+  function voteBestGoal(s: VotingSetup, voter: Voter, candidate: Voter) {
+    return t.rpc(voter.userId, "submit_match_votes", {
+      p_match_id: s.matchId,
+      p_ratings: [],
+      p_best_goal_player_id: candidate.playerId,
+    });
+  }
+
+  async function finalize(s: VotingSetup) {
+    await closeVoting(s);
+    await t.rpc(s.g.adminId, "finalize_match_voting", { p_match_id: s.matchId });
+  }
+
+  async function bestGoal(s: VotingSetup) {
+    const [row] = await t.sql<{ best_goal_player_id: string | null; decided: boolean }>(
+      "select best_goal_player_id, best_goal_decided_at is not null as decided from public.matches where id = $1",
+      [s.matchId],
+    );
+    return row;
+  }
+
+  /** Corrige el resultado con el mismo marcador (2-1): solo cambian los autores (equipo A = 0..3). */
+  function correctGoals(s: VotingSetup, scorers: Voter[], mvp: Voter | null = null) {
+    return t.rpc(s.g.adminId, "record_match_result", {
+      p_match_id: s.matchId,
+      p_score_a: 2,
+      p_score_b: 1,
+      p_events: scorers.map((v) => ({ event_type: "goal", player_id: v.playerId })),
+      p_mvp_player_id: mvp?.playerId ?? null,
+    });
+  }
+
+  it("un voto por persona: cambiarlo reemplaza el anterior", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, , , fran] = s.voters;
+    await voteBestGoal(s, vece, manu);
+    await voteBestGoal(s, vece, fran);
+    const rows = await t.sql<{ candidate_player_id: string }>(
+      "select candidate_player_id from public.match_best_goal_votes where match_id = $1",
+      [s.matchId],
+    );
+    expect(rows).toEqual([{ candidate_player_id: fran.playerId }]);
+  });
+
+  it("solo a quien hizo gol, nunca a uno mismo y solo si jugó", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, paramo] = s.voters;
+    await expectDbError(voteBestGoal(s, manu, manu), "cannot_rate_self");
+    // Vece dio una asistencia, Paramo no hizo nada: ninguno hizo gol.
+    await expectDbError(voteBestGoal(s, paramo, vece), "best_goal_not_scorer");
+    const outsider = await addMemberWithPlayer(t, s.g, "NoJugó");
+    await expectDbError(voteBestGoal(s, outsider, manu), "not_a_participant");
+    await closeVoting(s);
+    await expectDbError(voteBestGoal(s, vece, manu), "voting_closed");
+  });
+
+  it("es anónimo y cuenta en el progreso", async () => {
+    const s = await setupFinishedMatch();
+    const [admin, manu, vece] = s.voters;
+    await voteBestGoal(s, vece, manu);
+    const query = "select * from public.match_best_goal_votes where match_id = $1";
+    expect(await t.queryAs(manu.userId, query, [s.matchId])).toHaveLength(0);
+    expect(await t.queryAs(admin.userId, query, [s.matchId])).toHaveLength(0);
+    expect(await t.queryAs(vece.userId, query, [s.matchId])).toHaveLength(1);
+    const [progress] = await t.rpc<{ voters: number }>(manu.userId, "get_voting_progress", { p_match_id: s.matchId });
+    expect(progress.voters).toBe(1);
+  });
+
+  it("no se escribe directamente en la tabla", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece] = s.voters;
+    await expectDbError(
+      t.queryAs(
+        vece.userId,
+        "insert into public.match_best_goal_votes (match_id, group_id, voter_player_id, voter_profile_id, candidate_player_id) values ($1, $2, $3, $4, $5)",
+        [s.matchId, s.g.groupId, vece.playerId, vece.userId, manu.playerId],
+      ),
+      "permission denied",
+    );
+  });
+
+  it("al cerrar gana el más votado y suma en las estadísticas", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, paramo, tadeo, fran] = s.voters;
+    await voteBestGoal(s, vece, fran);
+    await voteBestGoal(s, tadeo, fran);
+    await voteBestGoal(s, paramo, manu);
+    await finalize(s);
+    expect(await bestGoal(s)).toEqual({ best_goal_player_id: fran.playerId, decided: true });
+
+    const lines = await t.queryAs<{ player_id: string; is_best_goal: boolean }>(
+      manu.userId,
+      "select player_id, is_best_goal from public.player_match_lines where match_id = $1 and is_best_goal",
+      [s.matchId],
+    );
+    expect(lines).toEqual([{ player_id: fran.playerId, is_best_goal: true }]);
+    const stats = await t.rpc<{ player_id: string; best_goals: number }>(manu.userId, "get_player_stats", { p_group_id: s.g.groupId });
+    expect(stats.find((r) => r.player_id === fran.playerId)?.best_goals).toBe(1);
+    expect(stats.find((r) => r.player_id === manu.playerId)?.best_goals).toBe(0);
+  });
+
+  it("empate en votos: desempata quien hizo más goles", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, , tadeo, fran] = s.voters;
+    await voteBestGoal(s, vece, fran);
+    await voteBestGoal(s, tadeo, manu);
+    await finalize(s);
+    expect((await bestGoal(s)).best_goal_player_id).toBe(manu.playerId);
+  });
+
+  it("empate total: no hay mejor gol, pero queda decidido", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, paramo, tadeo, fran] = s.voters;
+    await correctGoals(s, [manu, paramo, fran]);
+    await voteBestGoal(s, vece, manu);
+    await voteBestGoal(s, tadeo, fran);
+    await finalize(s);
+    expect(await bestGoal(s)).toEqual({ best_goal_player_id: null, decided: true });
+  });
+
+  it("sin votos queda decidido sin ganador", async () => {
+    const s = await setupFinishedMatch();
+    await finalize(s);
+    expect(await bestGoal(s)).toEqual({ best_goal_player_id: null, decided: true });
+  });
+
+  it("se decide aunque el admin ya haya elegido el MVP", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, , , fran] = s.voters;
+    await correctGoals(s, [manu, manu, fran], vece);
+    await voteBestGoal(s, vece, manu);
+    await finalize(s);
+    expect((await bestGoal(s)).best_goal_player_id).toBe(manu.playerId);
+  });
+
+  it("los votos a quien ya no tiene goles no cuentan", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, paramo, tadeo, fran] = s.voters;
+    await voteBestGoal(s, vece, manu);
+    await voteBestGoal(s, tadeo, manu);
+    await voteBestGoal(s, paramo, fran);
+    // Corrección con la votación abierta: los goles de Manu eran de Paramo.
+    await correctGoals(s, [paramo, paramo, fran]);
+    await finalize(s);
+    expect((await bestGoal(s)).best_goal_player_id).toBe(fran.playerId);
+  });
+
+  it("una corrección que le saca los goles al ganador lo borra; si los conserva, sigue", async () => {
+    const s = await setupFinishedMatch();
+    const [, manu, vece, paramo, , fran] = s.voters;
+    await voteBestGoal(s, vece, manu);
+    await finalize(s);
+    // Mismos autores: los eventos se borran y se vuelven a cargar en la misma transacción.
+    await correctGoals(s, [manu, manu, fran]);
+    expect((await bestGoal(s)).best_goal_player_id).toBe(manu.playerId);
+    await correctGoals(s, [paramo, paramo, fran]);
+    expect(await bestGoal(s)).toEqual({ best_goal_player_id: null, decided: true });
+  });
+});
